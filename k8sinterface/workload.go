@@ -2,7 +2,6 @@ package k8sinterface
 
 import (
 	"encoding/json"
-	"fmt"
 
 	"github.com/armosec/armoapi-go/apis"
 	corev1 "k8s.io/api/core/v1"
@@ -127,14 +126,14 @@ func (w *Workload) Json() string {
 	return w.ToString()
 }
 func (w *Workload) ToString() string {
-	if w.workload == nil {
+	if w.GetWorkload() == nil {
 		return ""
 	}
-	bWorkload, err := json.Marshal(w.workload)
+	bWorkload, err := json.Marshal(w.GetWorkload())
 	if err != nil {
 		return err.Error()
 	}
-	return fmt.Sprintf("%s", bWorkload)
+	return string(bWorkload)
 }
 
 func (workload *Workload) DeepCopy(w map[string]interface{}) {

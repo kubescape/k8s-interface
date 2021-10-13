@@ -46,10 +46,7 @@ var GroupsClusterScope = []string{}
 var ResourceClusterScope = []string{"nodes", "namespaces", "clusterroles", "clusterrolebindings", "validatingwebhookconfigurations", "mutatingwebhookconfigurations"}
 
 func GetGroupVersionResource(resource string) (schema.GroupVersionResource, error) {
-	resource = strings.ToLower(resource)
-	if resource != "" && !strings.HasSuffix(resource, "s") {
-		resource = fmt.Sprintf("%ss", resource) // add 's' at the end of a resource
-	}
+	resource = updateResourceKind(resource)
 	if r, ok := ResourceGroupMapping[resource]; ok {
 		gv := strings.Split(r, "/")
 		return schema.GroupVersionResource{Group: gv[0], Version: gv[1], Resource: resource}, nil
@@ -122,10 +119,7 @@ func ResourceGroupToSlice(group, version, resource string) []string {
 	if resource == "*" {
 		resource = ""
 	}
-	resource = strings.ToLower(resource)
-	if resource != "" && !strings.HasSuffix(resource, "s") {
-		resource = fmt.Sprintf("%ss", resource) // add 's' at the end of a resource
-	}
+	resource = updateResourceKind(resource)
 	return GetResourceTriplets(group, version, resource)
 }
 
@@ -137,4 +131,18 @@ func StringToResourceGroup(str string) (string, string, string) {
 		}
 	}
 	return splitted[0], splitted[1], splitted[2]
+}
+
+func updateResourceKind(resource string) string {
+	resource = strings.ToLower(resource)
+
+	if resource != "" && !strings.HasSuffix(resource, "s") {
+		if strings.HasSuffix(resource, "y") {
+			return fmt.Sprintf("%sies", strings.TrimSuffix(resource, "y")) // e.g. NetworkPolicy -> networkpolicies
+		} else {
+			return fmt.Sprintf("%ss", resource) // add 's' at the end of a resource
+		}
+	}
+	return resource
+
 }

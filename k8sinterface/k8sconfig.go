@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"path/filepath"
+	"strings"
 
 	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/kubernetes"
@@ -13,7 +13,10 @@ import (
 
 	// DO NOT REMOVE - load cloud providers auth
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
+	"sigs.k8s.io/controller-runtime/pkg/client/config"
 )
+
+var ConnectedToCluster = true
 
 // K8SConfig pointer to k8s config
 var K8SConfig *restclient.Config
@@ -27,13 +30,23 @@ type KubernetesApi struct {
 
 // NewKubernetesApi -
 func NewKubernetesApi() *KubernetesApi {
-	kubernetesClient, err := kubernetes.NewForConfig(GetK8sConfig())
-	if err != nil {
-		panic(fmt.Sprintf("kubernetes.NewForConfig - Failed to load config file, reason: %s", err.Error()))
+	var kubernetesClient *kubernetes.Clientset
+	var err error
+
+	if !IsConnectedToCluster() {
+		fmt.Println(fmt.Errorf("failed to load kubernetes config: no configuration has been provided, try setting KUBECONFIG environment variable"))
+		os.Exit(1)
 	}
-	dynamicClient, err := dynamic.NewForConfig(GetK8sConfig())
+
+	kubernetesClient, err = kubernetes.NewForConfig(GetK8sConfig())
 	if err != nil {
-		panic(fmt.Sprintf("dynamic.NewForConfig - Failed to load config file, reason: %s", err.Error()))
+		fmt.Printf("Failed to load config file, reason: %s", err.Error())
+		os.Exit(1)
+	}
+	dynamicClient, err := dynamic.NewForConfig(K8SConfig)
+	if err != nil {
+		fmt.Printf("Failed to load config file, reason: %s", err.Error())
+		os.Exit(1)
 	}
 
 	return &KubernetesApi{
@@ -43,31 +56,68 @@ func NewKubernetesApi() *KubernetesApi {
 	}
 }
 
-var ConfigPath = filepath.Join(os.Getenv("HOME"), ".kube", "config")
+// RunningIncluster whether running in cluster
 var RunningIncluster bool
 
 // LoadK8sConfig load config from local file or from cluster
 func LoadK8sConfig() error {
-	kubeconfig, err := clientcmd.BuildConfigFromFlags("", ConfigPath)
+	kubeconfig, err := config.GetConfig()
 	if err != nil {
-		kubeconfig, err = restclient.InClusterConfig()
-		if err != nil {
-			return fmt.Errorf("Failed to load kubernetes config from file: '%s', err: %v", ConfigPath, err)
-		}
+		return fmt.Errorf("failed to load kubernetes config: %s", strings.ReplaceAll(err.Error(), "KUBERNETES_MASTER", "KUBECONFIG"))
+	}
+	if _, err := restclient.InClusterConfig(); err == nil {
 		RunningIncluster = true
 	} else {
 		RunningIncluster = false
 	}
+
 	K8SConfig = kubeconfig
 	return nil
 }
 
-// GetK8sConfig get config. load if not loaded yer
+// GetK8sConfig get config. load if not loaded yet
 func GetK8sConfig() *restclient.Config {
-	if K8SConfig == nil {
-		if err := LoadK8sConfig(); err != nil {
-			return nil
-		}
+	if !IsConnectedToCluster() {
+		return nil
 	}
 	return K8SConfig
+}
+
+func IsConnectedToCluster() bool {
+	if K8SConfig == nil {
+		if err := LoadK8sConfig(); err != nil {
+			ConnectedToCluster = false
+		}
+	}
+	return ConnectedToCluster
+}
+func GetClusterName() string {
+	if !ConnectedToCluster {
+		return ""
+	}
+
+	kubeConfig := clientcmd.NewNonInteractiveDeferredLoadingClientConfig(clientcmd.NewDefaultClientConfigLoadingRules(), &clientcmd.ConfigOverrides{})
+	config, err := kubeConfig.RawConfig()
+	if err != nil {
+		return ""
+	}
+	// TODO - Handle if empty
+	return config.CurrentContext
+}
+
+func GetDefaultNamespace() string {
+	defaultNamespace := "default"
+	clientCfg, err := clientcmd.NewDefaultClientConfigLoadingRules().Load()
+	if err != nil {
+		return defaultNamespace
+	}
+	apiContext, ok := clientCfg.Contexts[clientCfg.CurrentContext]
+	if !ok || apiContext == nil {
+		return defaultNamespace
+	}
+	namespace := apiContext.Namespace
+	if apiContext.Namespace == "" {
+		namespace = defaultNamespace
+	}
+	return namespace
 }
