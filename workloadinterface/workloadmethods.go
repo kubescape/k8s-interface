@@ -1,4 +1,4 @@
-package k8sinterface
+package workloadinterface
 
 import (
 	"encoding/json"
@@ -642,52 +642,3 @@ func InspectWorkload(workload interface{}, scopes ...string) (val interface{}, k
 	return val, k
 
 }
-
-// // InspectWorkload -
-// func InjectWorkload(workload interface{}, scopes []string, val string) {
-
-// 	if len(scopes) == 0 {
-
-// 	}
-// 	if data, ok := workload.(map[string]interface{}); ok {
-// 		InjectWorkload(data[scopes[0]], scopes[1:], val)
-// 	} else {
-
-// 	}
-
-// }
-
-// InjectWorkload -
-// func InjectWorkload(workload interface{}, scopes []string, val string) {
-
-// 	if len(scopes) == 0 {
-// 		workload = ""
-// 	}
-// 	if data, ok := workload.(map[string]interface{}); ok {
-// 		d := InjectWorkload(data[scopes[0]], scopes[1:], val)
-// 		data[scopes[0]] = d
-// 		return data
-// 	} else {
-
-// 	}
-
-// }
-// func (w *Workload) SetNamespace(ns string) {
-
-// 	if v, k := w.workload["metadata"]; k {
-// 		if vv, kk := v.(map[string]interface{}); kk {
-// 			vv["namespace"] = ""
-// 			// if v3, k3 := w.workload["namespace"]; k3 {
-// 			// 	if v4, k4 := v.(map[string]interface{}); kk {
-
-// 			// 	}
-// 			// }
-// 			v = vv
-// 		}
-// 		w.workload = v
-// 	}
-// 	// if data, ok := w.workload.(map[string]interface{}); ok {
-// 	// 	val, k = InspectWorkload(data[scopes[0]], scopes[1:]...)
-// 	// }
-
-// }

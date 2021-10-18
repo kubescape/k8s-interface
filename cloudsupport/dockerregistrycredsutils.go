@@ -1,9 +1,10 @@
-package k8sinterface
+package cloudsupport
 
 import (
 	"context"
 	"fmt"
 
+	"github.com/armosec/k8s-interface/k8sinterface"
 	"github.com/armosec/utils-k8s-go/secrethandling"
 	"github.com/docker/docker/api/types"
 	"github.com/golang/glog"
@@ -22,7 +23,7 @@ func listPodImagePullSecrets(pod *corev1.Pod) ([]string, error) {
 	return secrets, nil
 }
 
-func listServiceAccountImagePullSecrets(k8sAPI *KubernetesApi, pod *corev1.Pod) ([]string, error) {
+func listServiceAccountImagePullSecrets(k8sAPI *k8sinterface.KubernetesApi, pod *corev1.Pod) ([]string, error) {
 	if pod == nil {
 		return []string{}, fmt.Errorf("in listServiceAccountImagePullSecrets pod is nil")
 	}
@@ -42,7 +43,7 @@ func listServiceAccountImagePullSecrets(k8sAPI *KubernetesApi, pod *corev1.Pod) 
 	return secrets, nil
 }
 
-func getImagePullSecret(k8sAPI *KubernetesApi, secrets []string, namespace string) map[string]types.AuthConfig {
+func getImagePullSecret(k8sAPI *k8sinterface.KubernetesApi, secrets []string, namespace string) map[string]types.AuthConfig {
 
 	secretsAuthConfig := make(map[string]types.AuthConfig)
 
@@ -69,7 +70,7 @@ func getImagePullSecret(k8sAPI *KubernetesApi, secrets []string, namespace strin
 // imageTag empty means returns all of the credentials for all images in pod spec containers
 // pod.ObjectMeta.Namespace must be well setted
 func GetImageRegistryCredentials(imageTag string, pod *corev1.Pod) (map[string]types.AuthConfig, error) {
-	k8sAPI := NewKubernetesApi()
+	k8sAPI := k8sinterface.NewKubernetesApi()
 	listSecret, _ := listPodImagePullSecrets(pod)
 	listServiceSecret, _ := listServiceAccountImagePullSecrets(k8sAPI, pod)
 	listSecret = append(listSecret, listServiceSecret...)

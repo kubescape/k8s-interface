@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/armosec/k8s-interface/workloadinterface"
 	wlidpkg "github.com/armosec/utils-k8s-go/wlid"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
@@ -19,6 +20,8 @@ import (
 	// _ "k8s.io/client-go/plugin/pkg/client/auth/oidc"
 	// _ "k8s.io/client-go/plugin/pkg/client/auth/openstack"
 )
+
+type IWorkload workloadinterface.IWorkload
 
 func (k8sAPI *KubernetesApi) ListAllWorkload() ([]IWorkload, error) {
 	workloads := []IWorkload{}
@@ -56,7 +59,7 @@ func (k8sAPI *KubernetesApi) GetWorkload(namespace, kind, name string) (IWorkloa
 	if err != nil {
 		return nil, fmt.Errorf("failed to GET resource, kind: '%s', namespace: '%s', name: '%s', reason: %s", kind, namespace, name, err.Error())
 	}
-	return NewWorkloadObj(w.Object), nil
+	return workloadinterface.NewWorkloadObj(w.Object), nil
 }
 
 func (k8sAPI *KubernetesApi) ListWorkloads2(namespace, kind string) ([]IWorkload, error) {
@@ -71,7 +74,7 @@ func (k8sAPI *KubernetesApi) ListWorkloads2(namespace, kind string) ([]IWorkload
 	}
 	workloads := make([]IWorkload, len(uList.Items))
 	for i := range uList.Items {
-		workloads[i] = NewWorkloadObj(uList.Items[i].Object)
+		workloads[i] = workloadinterface.NewWorkloadObj(uList.Items[i].Object)
 	}
 	return workloads, nil
 }
@@ -92,7 +95,7 @@ func (k8sAPI *KubernetesApi) ListWorkloads(groupVersionResource *schema.GroupVer
 	}
 	workloads := make([]IWorkload, len(uList.Items))
 	for i := range uList.Items {
-		workloads[i] = NewWorkloadObj(uList.Items[i].Object)
+		workloads[i] = workloadinterface.NewWorkloadObj(uList.Items[i].Object)
 	}
 	return workloads, nil
 }
@@ -122,10 +125,10 @@ func (k8sAPI *KubernetesApi) CreateWorkload(workload IWorkload) (IWorkload, erro
 	if err != nil {
 		return nil, fmt.Errorf("failed to CREATE resource, workload: '%s', reason: %s", workload.ToString(), err.Error())
 	}
-	return NewWorkloadObj(w.Object), nil
+	return workloadinterface.NewWorkloadObj(w.Object), nil
 }
 
-func (k8sAPI *KubernetesApi) UpdateWorkload(workload IWorkload) (*Workload, error) {
+func (k8sAPI *KubernetesApi) UpdateWorkload(workload IWorkload) (IWorkload, error) {
 	groupVersionResource, err := GetGroupVersionResource(workload.GetKind())
 	if err != nil {
 		return nil, err
@@ -140,7 +143,7 @@ func (k8sAPI *KubernetesApi) UpdateWorkload(workload IWorkload) (*Workload, erro
 	if err != nil {
 		return nil, fmt.Errorf("failed to UPDATE resource, workload: '%s', reason: %s", workload.ToString(), err.Error())
 	}
-	return NewWorkloadObj(w.Object), nil
+	return workloadinterface.NewWorkloadObj(w.Object), nil
 }
 
 func (k8sAPI *KubernetesApi) GetNamespace(ns string) (IWorkload, error) {
@@ -152,7 +155,7 @@ func (k8sAPI *KubernetesApi) GetNamespace(ns string) (IWorkload, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to get namespace: '%s', reason: %s", ns, err.Error())
 	}
-	return NewWorkloadObj(w.Object), nil
+	return workloadinterface.NewWorkloadObj(w.Object), nil
 }
 
 func (k8sAPI *KubernetesApi) ResourceInterface(resource *schema.GroupVersionResource, namespace string) dynamic.ResourceInterface {

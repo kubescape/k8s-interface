@@ -1,4 +1,4 @@
-package k8sinterface
+package workloadinterface
 
 import (
 	"encoding/json"

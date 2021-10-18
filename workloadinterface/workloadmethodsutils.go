@@ -1,4 +1,4 @@
-package k8sinterface
+package workloadinterface
 
 func PodSpec(kind string) []string {
 	switch kind {
