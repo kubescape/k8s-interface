@@ -15,14 +15,13 @@ type IWorkload interface {
 
 	// Convert
 	ToUnstructured() (*unstructured.Unstructured, error)
-	ToString() string
-	Json() string // DEPRECATED
+	ToString() string // Return workload in string representation
+	Json() string     // DEPRECATED, use ToString
 
 	// GET
-	GetWlid() string
+	GetID() string   // Get K8S workload ID -> <api-group>/<api-version>/<kind>/<name>
+	GetWlid() string // Get ARMO workload ID -> wlid://cluster-<cluster-name>/namespace-<namespace>/<kind>-<name>
 	GetJobID() *apis.JobTracking
-	GetVersion() string
-	GetGroup() string
 
 	// SET
 	SetWlid(string)
@@ -92,6 +91,8 @@ type IBasicWorkload interface {
 	GetPodSpec() (*corev1.PodSpec, error)
 	//GetSpiffe() string
 	GetWorkload() map[string]interface{}
+	GetVersion() string
+	GetGroup() string
 
 	// REMOVE
 	RemoveLabel(string)
