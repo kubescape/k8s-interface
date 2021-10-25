@@ -38,6 +38,7 @@ var ResourceGroupMapping = map[string]string{
 	"clusterrolebindings":             "rbac.authorization.k8s.io/v1",
 	"roles":                           "rbac.authorization.k8s.io/v1",
 	"rolebindings":                    "rbac.authorization.k8s.io/v1",
+	"podsecuritypolicies":             "rbac.authorization.k8s.io/v1",
 	"mutatingwebhookconfigurations":   "admissionregistration.k8s.io/v1",
 	"validatingwebhookconfigurations": "admissionregistration.k8s.io/v1",
 }
