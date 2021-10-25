@@ -33,12 +33,12 @@ var ResourceGroupMapping = map[string]string{
 	"cronjobs":                        "batch/v1beta1",
 	"horizontalpodautoscalers":        "autoscaling/v1",
 	"ingresses":                       "extensions/v1beta1",
+	"podsecuritypolicies":             "policy/v1beta1",
 	"networkpolicies":                 "networking.k8s.io/v1",
 	"clusterroles":                    "rbac.authorization.k8s.io/v1",
 	"clusterrolebindings":             "rbac.authorization.k8s.io/v1",
 	"roles":                           "rbac.authorization.k8s.io/v1",
 	"rolebindings":                    "rbac.authorization.k8s.io/v1",
-	"podsecuritypolicies":             "rbac.authorization.k8s.io/v1",
 	"mutatingwebhookconfigurations":   "admissionregistration.k8s.io/v1",
 	"validatingwebhookconfigurations": "admissionregistration.k8s.io/v1",
 }
