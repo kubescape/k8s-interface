@@ -12,7 +12,67 @@ import (
 	"github.com/armosec/utils-k8s-go/armometadata"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 )
+
+type Workload struct {
+	workload map[string]interface{}
+}
+
+func NewWorkload(bWorkload []byte) (*Workload, error) {
+	workload := make(map[string]interface{})
+	if bWorkload != nil {
+		if err := json.Unmarshal(bWorkload, &workload); err != nil {
+			return nil, err
+		}
+	}
+	return &Workload{
+		workload: workload,
+	}, nil
+}
+
+func NewWorkloadObj(workload map[string]interface{}) *Workload {
+	return &Workload{
+		workload: workload,
+	}
+}
+
+func (w *Workload) Json() string {
+	return w.ToString()
+}
+func (w *Workload) ToString() string {
+	if w.GetWorkload() == nil {
+		return ""
+	}
+	bWorkload, err := json.Marshal(w.GetWorkload())
+	if err != nil {
+		return err.Error()
+	}
+	return string(bWorkload)
+}
+
+func (workload *Workload) DeepCopy(w map[string]interface{}) {
+	workload.workload = make(map[string]interface{})
+	byt, _ := json.Marshal(w)
+	json.Unmarshal(byt, &workload.workload)
+}
+
+func (w *Workload) ToUnstructured() (*unstructured.Unstructured, error) {
+	obj := &unstructured.Unstructured{}
+	if w.workload == nil {
+		return obj, nil
+	}
+	bWorkload, err := json.Marshal(w.workload)
+	if err != nil {
+		return obj, err
+	}
+	if err := json.Unmarshal(bWorkload, obj); err != nil {
+		return obj, err
+
+	}
+
+	return obj, nil
+}
 
 // ======================================= DELETE ========================================
 
@@ -172,6 +232,10 @@ func (w *Workload) RemoveMetadata(scope []string, metadata, key string) {
 // ========================================= SET =========================================
 
 func (w *Workload) SetWorkload(workload map[string]interface{}) {
+	w.SetObject(workload)
+}
+
+func (w *Workload) SetObject(workload map[string]interface{}) {
 	w.workload = workload
 }
 
@@ -249,6 +313,9 @@ func (w *Workload) SetMetadata(scope []string, key string, val interface{}) {
 
 // ========================================= GET =========================================
 func (w *Workload) GetWorkload() map[string]interface{} {
+	return w.GetObject()
+}
+func (w *Workload) GetObject() map[string]interface{} {
 	return w.workload
 }
 func (w *Workload) GetNamespace() string {
