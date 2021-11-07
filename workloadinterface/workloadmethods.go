@@ -690,22 +690,3 @@ func (w *Workload) IsReplaceheaders() bool {
 	}
 	return false
 }
-
-// ======================================= UTILS =========================================
-
-// InspectWorkload -
-func InspectWorkload(workload interface{}, scopes ...string) (val interface{}, k bool) {
-
-	val, k = nil, false
-	if len(scopes) == 0 {
-		if workload != nil {
-			return workload, true
-		}
-		return nil, false
-	}
-	if data, ok := workload.(map[string]interface{}); ok {
-		val, k = InspectWorkload(data[scopes[0]], scopes[1:]...)
-	}
-	return val, k
-
-}

@@ -21,3 +21,8 @@ func PodMetadata(kind string) []string {
 		return []string{"spec", "template", "metadata"}
 	}
 }
+
+// InspectWorkload - // DEPRECATED
+func InspectWorkload(workload interface{}, scopes ...string) (val interface{}, k bool) {
+	return InspectMap(workload, scopes...)
+}
