@@ -20,11 +20,10 @@ type IMetadata interface {
 	GetNamespace() string
 	GetName() string
 	GetKind() string
-	GetVersion() string
-	GetGroup() string
 	GetApiVersion() string
 	GetWorkload() map[string]interface{} // DEPRECATED
 	GetObject() map[string]interface{}
+	GetID() string // Get K8S workload ID -> <api-group>/<api-version>/<kind>/<name>
 }
 type IBasicWorkload interface {
 	IMetadata
@@ -35,6 +34,8 @@ type IBasicWorkload interface {
 
 	// Get
 
+	GetVersion() string
+	GetGroup() string
 	GetGenerateName() string
 	GetInnerAnnotation(string) (string, bool)
 	GetPodAnnotation(string) (string, bool)
@@ -75,7 +76,6 @@ type IWorkload interface {
 	Json() string     // DEPRECATED, use ToString
 
 	// GET
-	GetID() string   // Get K8S workload ID -> <api-group>/<api-version>/<kind>/<name>
 	GetWlid() string // Get ARMO workload ID -> wlid://cluster-<cluster-name>/namespace-<namespace>/<kind>-<name>
 	GetJobID() *apis.JobTracking
 
