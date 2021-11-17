@@ -19,7 +19,7 @@ import (
 
 type RegoResponseVectorObject struct {
 	Object         map[string]interface{} `json:"object,omitempty"`
-	RelatedObjects []IMetadata            `json:"-"`
+	RelatedObjects []IMetadata            `json:"relatedObjects"`
 }
 
 func NewRegoResponseVectorObject(object map[string]interface{}, relatedObjects []IMetadata) *RegoResponseVectorObject {
@@ -103,8 +103,13 @@ func (obj *RegoResponseVectorObject) GetWorkload() map[string]interface{} { // D
 
 func (obj *RegoResponseVectorObject) GetObject() map[string]interface{} {
 	var object map[string]interface{}
-	if temp, err := json.Marshal(*obj); err == nil {
+	if temp, err := json.Marshal(obj.Object); err == nil {
 		json.Unmarshal(temp, &object)
+	}
+	object["relatedObjects"] = []map[string]interface{}{}
+	for _, relatedobj := range obj.RelatedObjects {
+		ro := relatedobj.GetObject()
+		object["relatedObjects"] = append(object["relatedObjects"].([]map[string]interface{}), ro)
 	}
 	return object
 }

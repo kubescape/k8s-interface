@@ -98,8 +98,18 @@ func TestSetters(t *testing.T) {
 	if id != "/default/Group/Yossi/rbac.authorization.k8s.io/v1/default/Role/pod-reader/rbac.authorization.k8s.io/v1/default/RoleBinding/read-pods" {
 		t.Errorf("error getting id, got: '%s', should be: '%s'", id, "/default/Group/Yossi/rbac.authorization.k8s.io/v1/default/Role/pod-reader/rbac.authorization.k8s.io/v1/default/RoleBinding/read-pods")
 	}
+
+}
+
+func TestSetGetObject(t *testing.T) {
+	obj := `{"name":"Jane","namespace":"","kind":"User","apiVersion":""}`
+	relatedObjects := []IMetadata{}
+	relatedObject, _ := NewWorkload([]byte(role))
+	relatedObject2, _ := NewWorkload([]byte(rolebinding))
+	relatedObjects = append(relatedObjects, relatedObject)
+	relatedObjects = append(relatedObjects, relatedObject2)
 	m := make(map[string]interface{})
-	err = json.Unmarshal([]byte(obj), &m)
+	err := json.Unmarshal([]byte(obj), &m)
 	if err != nil {
 		t.Errorf("error unmarshaling, %s", err.Error())
 	}
@@ -108,7 +118,15 @@ func TestSetters(t *testing.T) {
 		t.Errorf(err.Error())
 	}
 	respVector2.SetObject(m)
+	respVector2.SetRelatedObjects(relatedObjects)
 	if respVector2.GetID() == "" {
 		t.Errorf("error setting object")
+	}
+	object := respVector2.GetObject()
+	if len(object) == 0 {
+		t.Errorf("error getting object")
+	}
+	if len(object["relatedObjects"].([]map[string]interface{})) == 0 {
+		t.Errorf("error getting object")
 	}
 }
