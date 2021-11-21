@@ -10,6 +10,7 @@ import (
 	"github.com/armosec/armoapi-go/apis"
 	"github.com/armosec/utils-go/utils"
 	"github.com/armosec/utils-k8s-go/armometadata"
+	wlidpkg "github.com/armosec/utils-k8s-go/wlid"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -609,6 +610,10 @@ func (w *Workload) GetWlid() string {
 		return wlid
 	}
 	return ""
+}
+
+func (w *Workload) GenerateWlid(clusterName string) string {
+	return wlidpkg.GetK8sWLID(clusterName, w.GetNamespace(), w.GetKind(), w.GetName())
 }
 
 func (w *Workload) GetJobID() *apis.JobTracking {

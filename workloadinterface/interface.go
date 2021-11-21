@@ -78,6 +78,7 @@ type IWorkload interface {
 	// GET
 	GetWlid() string // Get ARMO workload ID -> wlid://cluster-<cluster-name>/namespace-<namespace>/<kind>-<name>
 	GetJobID() *apis.JobTracking
+	GenerateWlid(string) string
 
 	// SET
 	SetWlid(string)

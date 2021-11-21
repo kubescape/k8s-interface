@@ -305,6 +305,10 @@ func (wm *WorkloadMock) GetWlid() string {
 	return wm.workload.GetWlid()
 }
 
+func (wm *WorkloadMock) GenerateWlid(clusterName string) string {
+	return wm.workload.GenerateWlid(clusterName)
+}
+
 func (wm *WorkloadMock) GetJobID() *apis.JobTracking {
 	return wm.workload.GetJobID()
 }
