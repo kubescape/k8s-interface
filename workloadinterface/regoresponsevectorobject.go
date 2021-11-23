@@ -155,21 +155,18 @@ func IsTypeRegoResponseVector(object map[string]interface{}) bool {
 	if object == nil {
 		return false
 	}
-	if _, ok := object["group"]; !ok {
-		return false
-	}
+
 	if _, ok := object["kind"]; !ok {
 		return false
 	}
 	if _, ok := object["name"]; !ok {
 		return false
 	}
-	if _, ok := object["namespace"]; !ok {
-		return false
-	}
 	if _, ok := object[RelatedObjectsKey]; !ok {
 		return false
 	}
+	// DO NOT TEST "GROUP" - Not all objects have a group
+	// DO NOT TEST "Namespace" - Not all objects have a namespace
 
 	return true
 }
