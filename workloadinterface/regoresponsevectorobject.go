@@ -17,43 +17,51 @@ import (
 // relatedObjects []IMetadata - includes related objects that need to be shown together with failed object
 // e.g subjects will have in relatedObjects - role + rolebinding
 
+const RelatedObjectsKey string = "relatedObjects"
+
 type RegoResponseVectorObject struct {
-	Object         map[string]interface{} `json:"object,omitempty"`
-	RelatedObjects []IMetadata            `json:"relatedObjects"`
+	object map[string]interface{}
 }
 
-func NewRegoResponseVectorObject(object map[string]interface{}, relatedObjects []IMetadata) *RegoResponseVectorObject {
+func NewRegoResponseVectorObject(object map[string]interface{}) *RegoResponseVectorObject {
 	return &RegoResponseVectorObject{
-		Object:         object,
-		RelatedObjects: relatedObjects,
+		object: object,
 	}
 }
 
-func NewRegoResponseVectorObjectFromBytes(object []byte, relatedObjects []IMetadata) (*RegoResponseVectorObject, error) {
+func NewRegoResponseVectorObjectFromBytes(object []byte) (*RegoResponseVectorObject, error) {
 	obj := make(map[string]interface{})
 	if object != nil {
 		if err := json.Unmarshal(object, &obj); err != nil {
 			return nil, err
 		}
 	}
-	delete(obj, "relatedObjects")
-	return &RegoResponseVectorObject{
-		Object:         obj,
-		RelatedObjects: relatedObjects,
-	}, nil
+	return NewRegoResponseVectorObject(obj), nil
+
+}
+func (obj *RegoResponseVectorObject) ToString() string {
+	o := obj.GetObject()
+	if o == nil {
+		return ""
+	}
+	bWorkload, err := json.Marshal(o)
+	if err != nil {
+		return err.Error()
+	}
+	return string(bWorkload)
 }
 
 // =================== Set ================================
 func (obj *RegoResponseVectorObject) SetNamespace(namespace string) {
-	obj.Object["namespace"] = namespace
+	obj.object["namespace"] = namespace
 }
 
 func (obj *RegoResponseVectorObject) SetName(name string) {
-	obj.Object["name"] = name
+	obj.object["name"] = name
 }
 
 func (obj *RegoResponseVectorObject) SetKind(kind string) {
-	obj.Object["kind"] = kind
+	obj.object["kind"] = kind
 }
 
 func (obj *RegoResponseVectorObject) SetWorkload(object map[string]interface{}) { // DEPRECATED
@@ -61,37 +69,37 @@ func (obj *RegoResponseVectorObject) SetWorkload(object map[string]interface{}) 
 }
 
 func (obj *RegoResponseVectorObject) SetObject(object map[string]interface{}) {
-	obj.Object = object
+	obj.object = object
 }
 
-func (obj *RegoResponseVectorObject) SetRelatedObjects(relatedObjects []IMetadata) {
-	obj.RelatedObjects = relatedObjects
+func (obj *RegoResponseVectorObject) SetRelatedObjects(relatedObjects []map[string]interface{}) {
+	obj.object[RelatedObjectsKey] = relatedObjects
 }
 
 // =================== Get ================================
 func (obj *RegoResponseVectorObject) GetApiVersion() string {
-	if v, ok := InspectMap(obj.Object, "apiVersion"); ok {
+	if v, ok := InspectMap(obj.object, "apiVersion"); ok {
 		return v.(string)
 	}
 	return ""
 }
 
 func (obj *RegoResponseVectorObject) GetNamespace() string {
-	if v, ok := InspectMap(obj.Object, "namespace"); ok {
+	if v, ok := InspectMap(obj.object, "namespace"); ok {
 		return v.(string)
 	}
 	return ""
 }
 
 func (obj *RegoResponseVectorObject) GetName() string {
-	if v, ok := InspectMap(obj.Object, "name"); ok {
+	if v, ok := InspectMap(obj.object, "name"); ok {
 		return v.(string)
 	}
 	return ""
 }
 
 func (obj *RegoResponseVectorObject) GetKind() string {
-	if v, ok := InspectMap(obj.Object, "kind"); ok {
+	if v, ok := InspectMap(obj.object, "kind"); ok {
 		return v.(string)
 	}
 	return ""
@@ -102,25 +110,36 @@ func (obj *RegoResponseVectorObject) GetWorkload() map[string]interface{} { // D
 }
 
 func (obj *RegoResponseVectorObject) GetObject() map[string]interface{} {
-	var object map[string]interface{}
-	if temp, err := json.Marshal(obj.Object); err == nil {
-		json.Unmarshal(temp, &object)
-	}
-	object["relatedObjects"] = []map[string]interface{}{}
-	for _, relatedobj := range obj.RelatedObjects {
-		ro := relatedobj.GetObject()
-		object["relatedObjects"] = append(object["relatedObjects"].([]map[string]interface{}), ro)
-	}
-	return object
+	return obj.object
 }
 
 func (obj *RegoResponseVectorObject) GetRelatedObjects() []IMetadata {
-	return obj.RelatedObjects
+	relatedObjects := []IMetadata{}
+	if r, ok := obj.object[RelatedObjectsKey]; ok {
+		switch l := r.(type) {
+		case []map[string]interface{}:
+			for _, obj := range l {
+				if o := NewObject(obj); o != nil {
+					relatedObjects = append(relatedObjects, o)
+				}
+			}
+		case []interface{}:
+			for _, obj := range l {
+				if m, ok := obj.(map[string]interface{}); ok {
+					if o := NewObject(m); o != nil {
+						relatedObjects = append(relatedObjects, o)
+					}
+				}
+			}
+		}
+	}
+	return relatedObjects
 }
 
 func (obj *RegoResponseVectorObject) GetID() string {
 	relatedObjectsIDs := []string{}
-	for _, o := range obj.RelatedObjects {
+	rr := obj.GetRelatedObjects()
+	for _, o := range rr {
 		if o != nil {
 			relatedObjectsIDs = append(relatedObjectsIDs, o.GetID())
 		}
@@ -128,4 +147,29 @@ func (obj *RegoResponseVectorObject) GetID() string {
 	relatedObjectsIDs = append(relatedObjectsIDs, fmt.Sprintf("%s/%s/%s/%s", obj.GetApiVersion(), obj.GetNamespace(), obj.GetKind(), obj.GetName()))
 	sort.Strings(relatedObjectsIDs)
 	return strings.Join(relatedObjectsIDs, "/")
+}
+
+// ===============================================================
+
+func IsTypeRegoResponseVector(object map[string]interface{}) bool {
+	if object == nil {
+		return false
+	}
+	if _, ok := object["group"]; !ok {
+		return false
+	}
+	if _, ok := object["kind"]; !ok {
+		return false
+	}
+	if _, ok := object["name"]; !ok {
+		return false
+	}
+	if _, ok := object["namespace"]; !ok {
+		return false
+	}
+	if _, ok := object[RelatedObjectsKey]; !ok {
+		return false
+	}
+
+	return true
 }
