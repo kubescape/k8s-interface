@@ -80,6 +80,8 @@ func (obj *RegoResponseVectorObject) SetRelatedObjects(relatedObjects []map[stri
 func (obj *RegoResponseVectorObject) GetApiVersion() string {
 	if v, ok := InspectMap(obj.object, "apiVersion"); ok {
 		return v.(string)
+	} else if v, ok := InspectMap(obj.object, "apiGroup"); ok {
+		return v.(string)
 	}
 	return ""
 }
