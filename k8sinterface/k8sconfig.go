@@ -10,6 +10,7 @@ import (
 	"k8s.io/client-go/kubernetes"
 	restclient "k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
+	"k8s.io/client-go/tools/clientcmd/api"
 
 	// DO NOT REMOVE - load cloud providers auth
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
@@ -81,6 +82,15 @@ func GetK8sConfig() *restclient.Config {
 		return nil
 	}
 	return K8SConfig
+}
+
+func GetCurrentContext() *api.Context {
+	kubeConfig := clientcmd.NewNonInteractiveDeferredLoadingClientConfig(clientcmd.NewDefaultClientConfigLoadingRules(), &clientcmd.ConfigOverrides{})
+	config, err := kubeConfig.RawConfig()
+	if err != nil {
+		return nil
+	}
+	return config.Contexts[config.CurrentContext]
 }
 
 func IsConnectedToCluster() bool {
