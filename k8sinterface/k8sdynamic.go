@@ -81,11 +81,11 @@ func (k8sAPI *KubernetesApi) ListWorkloads2(namespace, kind string) ([]IWorkload
 
 func (k8sAPI *KubernetesApi) ListWorkloads(groupVersionResource *schema.GroupVersionResource, namespace string, podLabels, fieldSelector map[string]string) ([]IWorkload, error) {
 	listOptions := metav1.ListOptions{}
-	if podLabels != nil && len(podLabels) > 0 {
+	if len(podLabels) > 0 {
 		set := labels.Set(podLabels)
 		listOptions.LabelSelector = SelectorToString(set)
 	}
-	if fieldSelector != nil && len(fieldSelector) > 0 {
+	if len(fieldSelector) > 0 {
 		set := labels.Set(fieldSelector)
 		listOptions.FieldSelector = SelectorToString(set)
 	}
