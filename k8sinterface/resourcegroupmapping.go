@@ -33,7 +33,8 @@ var ResourceGroupMapping = map[string]string{
 	"cronjobs":                        "batch/v1",
 	"horizontalpodautoscalers":        "autoscaling/v1",
 	"ingresses":                       "extensions/v1beta1",
-	"podsecuritypolicies":             "policy/v1",
+	"podsecuritypolicies":             "policy/v1beta1",
+	"poddisruptionbudgets":            "policy/v1",
 	"networkpolicies":                 "networking.k8s.io/v1",
 	"clusterroles":                    "rbac.authorization.k8s.io/v1",
 	"clusterrolebindings":             "rbac.authorization.k8s.io/v1",
@@ -44,7 +45,7 @@ var ResourceGroupMapping = map[string]string{
 }
 
 var GroupsClusterScope = []string{}
-var ResourceClusterScope = []string{"nodes", "namespaces", "clusterroles", "clusterrolebindings", "validatingwebhookconfigurations", "mutatingwebhookconfigurations"}
+var ResourceClusterScope = []string{"nodes", "namespaces", "podsecuritypolicies", "clusterroles", "clusterrolebindings", "validatingwebhookconfigurations", "mutatingwebhookconfigurations"}
 
 func GetGroupVersionResource(resource string) (schema.GroupVersionResource, error) {
 	resource = updateResourceKind(resource)

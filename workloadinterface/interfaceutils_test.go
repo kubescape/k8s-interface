@@ -32,9 +32,9 @@ func TestSetInMap(t *testing.T) {
 	w := `{"apiVersion":"apps/v1","kind":"Deployment","metadata":{"name":"demoservice-server"},"spec":{"replicas":1,"selector":{"matchLabels":{"app":"demoservice-server"}},"template":{"metadata":{"creationTimestamp":null,"labels":{"app":"demoservice-server"}},"spec":{"containers":[{"env":[{"name":"SERVER_PORT","value":"8089"},{"name":"SLEEP_DURATION","value":"1"},{"name":"DEMO_FOLDERS","value":"/app"},{"name":"ARMO_TEST_NAME","value":"auto_attach_deployment"},{"name":"CAA_ENABLE_CRASH_REPORTER","value":"1"}],"image":"quay.io/armosec/demoservice:v25","imagePullPolicy":"IfNotPresent","name":"demoservice","ports":[{"containerPort":8089,"protocol":"TCP"}],"resources":{},"terminationMessagePath":"/dev/termination-log","terminationMessagePolicy":"File"}],"dnsPolicy":"ClusterFirst","restartPolicy":"Always","schedulerName":"default-scheduler","securityContext":{},"terminationGracePeriodSeconds":30}}}}`
 	workload, _ := NewWorkload([]byte(w))
 	c, _ := workload.GetContainers()
-	obj := workload.GetObject()
-	SetInMap(obj, PodSpec(workload.GetKind()), "containers", append(c, corev1.Container{Name: "bla"}))
-	wc, _ := NewWorkloadObj(obj).GetContainers()
+	// obj := workload.GetObject()
+	SetInMap(workload.GetObject(), PodSpec(workload.GetKind()), "containers", append(c, corev1.Container{Name: "bla"}))
+	wc, _ := workload.GetContainers()
 	assert.Equal(t, 2, len(wc))
 	assert.Equal(t, "demoservice", wc[0].Name)
 	assert.Equal(t, "bla", wc[1].Name)
@@ -43,8 +43,7 @@ func TestSetInMap(t *testing.T) {
 func TestRemoveFromMap(t *testing.T) {
 	w := `{"apiVersion":"apps/v1","kind":"Deployment","metadata":{"name":"demoservice-server"},"spec":{"replicas":1,"selector":{"matchLabels":{"app":"demoservice-server"}},"template":{"metadata":{"creationTimestamp":null,"labels":{"app":"demoservice-server"}},"spec":{"containers":[{"env":[{"name":"SERVER_PORT","value":"8089"},{"name":"SLEEP_DURATION","value":"1"},{"name":"DEMO_FOLDERS","value":"/app"},{"name":"ARMO_TEST_NAME","value":"auto_attach_deployment"},{"name":"CAA_ENABLE_CRASH_REPORTER","value":"1"}],"image":"quay.io/armosec/demoservice:v25","imagePullPolicy":"IfNotPresent","name":"demoservice","ports":[{"containerPort":8089,"protocol":"TCP"}],"resources":{},"terminationMessagePath":"/dev/termination-log","terminationMessagePolicy":"File"}],"dnsPolicy":"ClusterFirst","restartPolicy":"Always","schedulerName":"default-scheduler","securityContext":{},"terminationGracePeriodSeconds":30}}}}`
 	workload, _ := NewWorkload([]byte(w))
-	obj := workload.GetObject()
-	RemoveFromMap(obj, append(PodSpec(workload.GetKind()), "containers")...)
-	wc, _ := NewWorkloadObj(obj).GetContainers()
+	RemoveFromMap(workload.GetObject(), append(PodSpec(workload.GetKind()), "containers")...)
+	wc, _ := workload.GetContainers()
 	assert.Equal(t, 0, len(wc))
 }
