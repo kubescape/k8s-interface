@@ -49,6 +49,26 @@ func InspectMap(mapobject interface{}, scopes ...string) (val interface{}, k boo
 
 }
 
+func SetInMap(workload map[string]interface{}, scope []string, key string, val interface{}) {
+	for i := range scope {
+		if _, ok := workload[scope[i]]; !ok {
+			workload[scope[i]] = make(map[string]interface{})
+		}
+		workload, _ = workload[scope[i]].(map[string]interface{})
+	}
+
+	workload[key] = val
+}
+
+func RemoveFromMap(workload map[string]interface{}, scope ...string) {
+	for i := 0; i < len(scope)-1; i++ {
+		if _, ok := workload[scope[i]]; ok {
+			workload, _ = workload[scope[i]].(map[string]interface{})
+		}
+	}
+	delete(workload, scope[len(scope)-1])
+}
+
 // ToUnique removes the resource duplication based on resource ID
 func ToUnique(resources []IMetadata) {
 	uniqueRuleResponses := map[string]bool{}

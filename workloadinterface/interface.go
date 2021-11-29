@@ -23,7 +23,7 @@ type IMetadata interface {
 	GetApiVersion() string
 	GetWorkload() map[string]interface{} // DEPRECATED
 	GetObject() map[string]interface{}
-	GetID() string // Get K8S workload ID -> <api-group>/<api-version>/<kind>/<name>
+	GetID() string // Get object unique ID
 }
 type IBasicWorkload interface {
 	IMetadata
