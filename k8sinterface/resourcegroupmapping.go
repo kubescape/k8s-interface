@@ -30,7 +30,7 @@ var ResourceGroupMapping = map[string]string{
 	"statefulsets":                    "apps/v1",
 	"controllerrevisions":             "apps/v1",
 	"jobs":                            "batch/v1",
-	"cronjobs":                        "batch/v1",
+	"cronjobs":                        "batch/v1beta1",
 	"horizontalpodautoscalers":        "autoscaling/v1",
 	"ingresses":                       "extensions/v1beta1",
 	"podsecuritypolicies":             "policy/v1beta1",
