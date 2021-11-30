@@ -159,7 +159,7 @@ func (k8sAPI *KubernetesApi) GetNamespace(ns string) (IWorkload, error) {
 }
 
 func (k8sAPI *KubernetesApi) ResourceInterface(resource *schema.GroupVersionResource, namespace string) dynamic.ResourceInterface {
-	if IsNamespaceScope(resource.Group, resource.Resource) {
+	if IsNamespaceScope(resource) {
 		return k8sAPI.DynamicClient.Resource(*resource).Namespace(namespace)
 	}
 	return k8sAPI.DynamicClient.Resource(*resource)

@@ -6,6 +6,7 @@ import (
 	"os"
 	"strings"
 
+	"k8s.io/client-go/discovery"
 	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/kubernetes"
 	restclient "k8s.io/client-go/rest"
@@ -26,6 +27,7 @@ var K8SConfig *restclient.Config
 type KubernetesApi struct {
 	KubernetesClient kubernetes.Interface
 	DynamicClient    dynamic.Interface
+	DiscoveryClient  discovery.DiscoveryInterface
 	Context          context.Context
 }
 
@@ -41,18 +43,29 @@ func NewKubernetesApi() *KubernetesApi {
 
 	kubernetesClient, err = kubernetes.NewForConfig(GetK8sConfig())
 	if err != nil {
-		fmt.Printf("Failed to load config file, reason: %s", err.Error())
+		fmt.Printf("failed to initialize a new kubernetes client, reason: %s", err.Error())
 		os.Exit(1)
 	}
 	dynamicClient, err := dynamic.NewForConfig(K8SConfig)
 	if err != nil {
-		fmt.Printf("Failed to load config file, reason: %s", err.Error())
+		fmt.Printf("failed to initialize a new dynamic client, reason: %s", err.Error())
+		os.Exit(1)
+	}
+
+	discoveryClient, err := discovery.NewDiscoveryClientForConfig(GetK8sConfig())
+	if err != nil {
+		fmt.Printf("failed to initialize a new discovery client, reason: %s", err.Error())
+		os.Exit(1)
+	}
+	if err := InitializeMapResources(discoveryClient); err != nil {
+		fmt.Println(err)
 		os.Exit(1)
 	}
 
 	return &KubernetesApi{
 		KubernetesClient: kubernetesClient,
 		DynamicClient:    dynamicClient,
+		DiscoveryClient:  discoveryClient,
 		Context:          context.Background(),
 	}
 }

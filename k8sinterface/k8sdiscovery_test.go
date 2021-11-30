@@ -7,6 +7,8 @@ import (
 )
 
 func TestResourceGroupToString(t *testing.T) {
+	InitializeMapResourcesMock()
+
 	allResources := ResourceGroupToString("*", "*", "*")
 	if len(allResources) != len(ResourceGroupMapping) {
 		t.Errorf("Expected len: %d, received: %d", len(ResourceGroupMapping), len(allResources))
@@ -26,6 +28,7 @@ func TestResourceGroupToString(t *testing.T) {
 }
 
 func TestGetGroupVersionResource(t *testing.T) {
+	InitializeMapResourcesMock()
 	wlid := "wlid://cluster-david-v1/namespace-default/deployment-nginx-deployment"
 	r, err := GetGroupVersionResource(wlidpkg.GetKindFromWlid(wlid))
 	if err != nil {

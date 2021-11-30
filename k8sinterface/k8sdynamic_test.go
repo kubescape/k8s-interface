@@ -20,7 +20,7 @@ import (
 
 // NewKubernetesApi -
 func NewKubernetesApiMock() *KubernetesApi {
-
+	InitializeMapResourcesMock()
 	return &KubernetesApi{
 		KubernetesClient: kubernetesfake.NewSimpleClientset(),
 		DynamicClient:    dynamicfake.NewSimpleDynamicClient(&runtime.Scheme{}),

@@ -4,48 +4,38 @@ import (
 	"fmt"
 	"strings"
 
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/discovery"
+
 	"github.com/golang/glog"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 )
 
 const ValueNotFound = -1
 
-// https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.21/#-strong-api-groups-strong-
-var ResourceGroupMapping = map[string]string{
-	"services":                        "/v1",
-	"pods":                            "/v1",
-	"replicationcontrollers":          "/v1",
-	"podtemplates":                    "/v1",
-	"namespaces":                      "/v1",
-	"nodes":                           "/v1",
-	"configmaps":                      "/v1",
-	"secrets":                         "/v1",
-	"serviceaccounts":                 "/v1",
-	"persistentvolumeclaims":          "/v1",
-	"limitranges":                     "/v1",
-	"resourcequotas":                  "/v1",
-	"daemonsets":                      "apps/v1",
-	"deployments":                     "apps/v1",
-	"replicasets":                     "apps/v1",
-	"statefulsets":                    "apps/v1",
-	"controllerrevisions":             "apps/v1",
-	"jobs":                            "batch/v1",
-	"cronjobs":                        "batch/v1beta1",
-	"horizontalpodautoscalers":        "autoscaling/v1",
-	"ingresses":                       "extensions/v1beta1",
-	"podsecuritypolicies":             "policy/v1beta1",
-	"poddisruptionbudgets":            "policy/v1",
-	"networkpolicies":                 "networking.k8s.io/v1",
-	"clusterroles":                    "rbac.authorization.k8s.io/v1",
-	"clusterrolebindings":             "rbac.authorization.k8s.io/v1",
-	"roles":                           "rbac.authorization.k8s.io/v1",
-	"rolebindings":                    "rbac.authorization.k8s.io/v1",
-	"mutatingwebhookconfigurations":   "admissionregistration.k8s.io/v1",
-	"validatingwebhookconfigurations": "admissionregistration.k8s.io/v1",
-}
+var ResourceGroupMapping = map[string]string{}
+var ResourceClusterScope = []string{}
 
-var GroupsClusterScope = []string{}
-var ResourceClusterScope = []string{"nodes", "namespaces", "podsecuritypolicies", "clusterroles", "clusterrolebindings", "validatingwebhookconfigurations", "mutatingwebhookconfigurations"}
+func InitializeMapResources(discoveryClient discovery.DiscoveryInterface) error {
+	resourceList, err := discoveryClient.ServerPreferredResources()
+	if err != nil {
+		return err
+	}
+	setMapResources(resourceList)
+	return nil
+}
+func setMapResources(resourceList []*metav1.APIResourceList) {
+	for i := range resourceList {
+		gv, _ := schema.ParseGroupVersion(resourceList[i].GroupVersion)
+
+		for _, apiResource := range resourceList[i].APIResources {
+			ResourceGroupMapping[apiResource.Name] = JoinGroupVersion(gv.Group, gv.Version)
+			if apiResource.Namespaced {
+				ResourceClusterScope = append(ResourceClusterScope, JoinResourceTriplets(gv.Group, gv.Version, apiResource.Name))
+			}
+		}
+	}
+}
 
 func GetGroupVersionResource(resource string) (schema.GroupVersionResource, error) {
 	resource = updateResourceKind(resource)
@@ -53,12 +43,11 @@ func GetGroupVersionResource(resource string) (schema.GroupVersionResource, erro
 		gv := strings.Split(r, "/")
 		return schema.GroupVersionResource{Group: gv[0], Version: gv[1], Resource: resource}, nil
 	}
-	return schema.GroupVersionResource{}, fmt.Errorf("resource '%s' not found in resourceMap", resource)
+	return schema.GroupVersionResource{}, fmt.Errorf("resource '%s' unknown. Make sure the resource is found at `kubectl api-resources`", resource)
 }
 
-func IsNamespaceScope(apiGroup, resource string) bool {
-	return StringInSlice(GroupsClusterScope, apiGroup) == ValueNotFound &&
-		StringInSlice(ResourceClusterScope, resource) == ValueNotFound
+func IsNamespaceScope(resource *schema.GroupVersionResource) bool {
+	return StringInSlice(ResourceClusterScope, GroupVersionResourceToString(resource)) == ValueNotFound
 }
 
 func StringInSlice(strSlice []string, str string) int {
@@ -70,8 +59,16 @@ func StringInSlice(strSlice []string, str string) int {
 	return ValueNotFound
 }
 
+func JoinGroupVersion(group, version string) string {
+	return fmt.Sprintf("%s/%s", group, version)
+}
+
 func JoinResourceTriplets(group, version, resource string) string {
 	return fmt.Sprintf("%s/%s/%s", group, version, resource)
+}
+
+func GroupVersionResourceToString(resource *schema.GroupVersionResource) string {
+	return JoinResourceTriplets(resource.Group, resource.Version, resource.Resource)
 }
 func GetResourceTriplets(group, version, resource string) []string {
 	resourceTriplets := []string{}
