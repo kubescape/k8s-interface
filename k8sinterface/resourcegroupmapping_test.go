@@ -20,7 +20,7 @@ func TestResourceGroupToString(t *testing.T) {
 		t.Errorf("deployments: %v", deployments)
 	}
 	cronjobs := ResourceGroupToString("*", "*", "cronjobs")
-	if len(cronjobs) == 0 || cronjobs[0] != "batch/v1/cronjobs" {
+	if len(cronjobs) == 0 || cronjobs[0] != "batch/v1beta1/cronjobs" {
 		t.Errorf("cronjobs: %v", cronjobs)
 	}
 }
