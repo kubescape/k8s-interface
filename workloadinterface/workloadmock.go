@@ -167,10 +167,6 @@ func (wm *WorkloadMock) SetPodAnnotation(key, value string) {
 	wm.workload.SetPodAnnotation(key, value)
 }
 
-func (wm *WorkloadMock) SetMetadata(scope []string, key string, val interface{}) {
-	wm.workload.SetMetadata(scope, key, val)
-}
-
 // ========================================= GET =========================================
 func (wm *WorkloadMock) GetWorkload() map[string]interface{} {
 	return wm.workload.GetWorkload()

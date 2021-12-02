@@ -28,14 +28,14 @@ func SetAgentCompatibleAnnotation(annotations map[string]string, val bool) {
 	SetLabel(annotations, armometadata.ArmoCompatibleAnnotation, val)
 }
 func IsLabel(labels map[string]string, key string) *bool {
-	if labels == nil || len(labels) == 0 {
+	if len(labels) == 0 {
 		return nil
 	}
 	var k bool
 	if l, ok := labels[key]; ok {
-		if l == "true" {
+		if cautils.StringToBool(l) {
 			k = true
-		} else if l == "false" {
+		} else if !cautils.StringToBool(l) {
 			k = false
 		}
 		return &k
@@ -46,13 +46,7 @@ func SetLabel(labels map[string]string, key string, val bool) {
 	if labels == nil {
 		return
 	}
-	v := ""
-	if val {
-		v = "true"
-	} else {
-		v = "false"
-	}
-	labels[key] = v
+	labels[key] = cautils.BoolToString(val)
 }
 func (k8sAPI *KubernetesApi) ListAttachedPods(namespace string) ([]corev1.Pod, error) {
 	return k8sAPI.ListPods(namespace, map[string]string{armometadata.ArmoAttach: cautils.BoolToString(true)})
@@ -60,7 +54,7 @@ func (k8sAPI *KubernetesApi) ListAttachedPods(namespace string) ([]corev1.Pod, e
 
 func (k8sAPI *KubernetesApi) ListPods(namespace string, podLabels map[string]string) ([]corev1.Pod, error) {
 	listOptions := metav1.ListOptions{}
-	if podLabels != nil && len(podLabels) > 0 {
+	if len(podLabels) > 0 {
 		set := labels.Set(podLabels)
 		listOptions.LabelSelector = set.AsSelector().String()
 	}

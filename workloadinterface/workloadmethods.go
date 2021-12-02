@@ -27,9 +27,9 @@ func NewWorkload(bWorkload []byte) (*Workload, error) {
 			return nil, err
 		}
 	}
-	if !IsTypeWorkload(workload) {
-		return nil, fmt.Errorf("invalid workload - expected k8s workload")
-	}
+	// if !IsTypeWorkload(workload) {
+	// 	return nil, fmt.Errorf("invalid workload - expected k8s workload")
+	// }
 	return &Workload{
 		workload: workload,
 	}, nil
@@ -310,37 +310,25 @@ func (w *Workload) SetUpdateTime() {
 }
 
 func (w *Workload) SetNamespace(namespace string) {
-	w.SetMetadata([]string{"metadata"}, "namespace", namespace)
+	SetInMap(w.workload, []string{"metadata"}, "namespace", namespace)
 }
 
 func (w *Workload) SetName(name string) {
-	w.SetMetadata([]string{"metadata"}, "name", name)
+	SetInMap(w.workload, []string{"metadata"}, "name", name)
 }
 
 func (w *Workload) SetLabel(key, value string) {
-	w.SetMetadata([]string{"metadata", "labels"}, key, value)
+	SetInMap(w.workload, []string{"metadata", "labels"}, key, value)
 }
 
 func (w *Workload) SetPodLabel(key, value string) {
-	w.SetMetadata(append(PodMetadata(w.GetKind()), "labels"), key, value)
+	SetInMap(w.workload, append(PodMetadata(w.GetKind()), "labels"), key, value)
 }
 func (w *Workload) SetAnnotation(key, value string) {
-	w.SetMetadata([]string{"metadata", "annotations"}, key, value)
+	SetInMap(w.workload, []string{"metadata", "annotations"}, key, value)
 }
 func (w *Workload) SetPodAnnotation(key, value string) {
-	w.SetMetadata(append(PodMetadata(w.GetKind()), "annotations"), key, value)
-}
-
-func (w *Workload) SetMetadata(scope []string, key string, val interface{}) {
-	workload := w.workload
-	for i := range scope {
-		if _, ok := workload[scope[i]]; !ok {
-			workload[scope[i]] = make(map[string]interface{})
-		}
-		workload, _ = workload[scope[i]].(map[string]interface{})
-	}
-
-	workload[key] = val
+	SetInMap(w.workload, append(PodMetadata(w.GetKind()), "annotations"), key, value)
 }
 
 // ========================================= GET =========================================
