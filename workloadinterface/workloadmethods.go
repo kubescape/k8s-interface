@@ -406,6 +406,10 @@ func (w *Workload) GetReplicas() int {
 		if isok {
 			return int(replicas)
 		}
+		if replicas, isok := v.(int64); isok {
+			return int(replicas)
+		}
+
 	}
 	return 1
 }
