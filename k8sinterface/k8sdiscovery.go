@@ -26,9 +26,20 @@ func InitializeMapResources(discoveryClient discovery.DiscoveryInterface) error 
 }
 func setMapResources(resourceList []*metav1.APIResourceList) {
 	for i := range resourceList {
-		gv, _ := schema.ParseGroupVersion(resourceList[i].GroupVersion)
-
+		if len(resourceList[i].APIResources) == 0 {
+			continue
+		}
+		gv, err := schema.ParseGroupVersion(resourceList[i].GroupVersion)
+		if err != nil {
+			continue
+		}
 		for _, apiResource := range resourceList[i].APIResources {
+			if len(apiResource.Verbs) == 0 {
+				continue
+			}
+			if _, ok := ResourceGroupMapping[apiResource.Name]; ok {
+				continue
+			}
 			ResourceGroupMapping[apiResource.Name] = JoinGroupVersion(gv.Group, gv.Version)
 			if !apiResource.Namespaced {
 				ResourceClusterScope = append(ResourceClusterScope, JoinResourceTriplets(gv.Group, gv.Version, apiResource.Name))

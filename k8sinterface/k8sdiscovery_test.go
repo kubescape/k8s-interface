@@ -1,6 +1,7 @@
 package k8sinterface
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -60,8 +61,50 @@ func TestGetGroupVersionResource(t *testing.T) {
 
 func TestIsNamespaceScope(t *testing.T) {
 	InitializeMapResourcesMock()
-	ResourceClusterScope = ResourceClusterScopeMock
 	assert.True(t, IsNamespaceScope(&schema.GroupVersionResource{Group: "apps", Version: "v1", Resource: "deployments"}))
 	assert.True(t, IsNamespaceScope(&schema.GroupVersionResource{Version: "v1", Resource: "serviceaccounts"}))
 	assert.False(t, IsNamespaceScope(&schema.GroupVersionResource{Version: "v1", Resource: "nodes"}))
+}
+
+func TestInitializeMapResourcesMock(t *testing.T) {
+
+	InitializeMapResourcesMock()
+	sampleMap := map[string]string{
+		"services":                        "/v1",
+		"pods":                            "/v1",
+		"replicationcontrollers":          "/v1",
+		"podtemplates":                    "/v1",
+		"namespaces":                      "/v1",
+		"nodes":                           "/v1",
+		"configmaps":                      "/v1",
+		"secrets":                         "/v1",
+		"serviceaccounts":                 "/v1",
+		"persistentvolumeclaims":          "/v1",
+		"limitranges":                     "/v1",
+		"resourcequotas":                  "/v1",
+		"daemonsets":                      "apps/v1",
+		"deployments":                     "apps/v1",
+		"replicasets":                     "apps/v1",
+		"statefulsets":                    "apps/v1",
+		"controllerrevisions":             "apps/v1",
+		"jobs":                            "batch/v1",
+		"cronjobs":                        "batch/v1beta1",
+		"horizontalpodautoscalers":        "autoscaling/v1",
+		"podsecuritypolicies":             "policy/v1beta1",
+		"poddisruptionbudgets":            "policy/v1beta1",
+		"ingresses":                       "networking.k8s.io/v1",
+		"networkpolicies":                 "networking.k8s.io/v1",
+		"clusterroles":                    "rbac.authorization.k8s.io/v1",
+		"clusterrolebindings":             "rbac.authorization.k8s.io/v1",
+		"roles":                           "rbac.authorization.k8s.io/v1",
+		"rolebindings":                    "rbac.authorization.k8s.io/v1",
+		"mutatingwebhookconfigurations":   "admissionregistration.k8s.io/v1",
+		"validatingwebhookconfigurations": "admissionregistration.k8s.io/v1",
+	}
+
+	for k, v := range sampleMap {
+		v2, ok := ResourceGroupMapping[k]
+		assert.True(t, ok)
+		assert.Equal(t, v, v2, fmt.Sprintf("resource: %s", k))
+	}
 }
