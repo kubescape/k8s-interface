@@ -3,7 +3,10 @@ package k8sinterface
 import (
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+
 	wlidpkg "github.com/armosec/utils-k8s-go/wlid"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 )
 
 func TestResourceGroupToString(t *testing.T) {
@@ -53,4 +56,12 @@ func TestGetGroupVersionResource(t *testing.T) {
 	if r2.Resource != "networkpolicies" {
 		t.Errorf("wrong Resource")
 	}
+}
+
+func TestIsNamespaceScope(t *testing.T) {
+	InitializeMapResourcesMock()
+	ResourceClusterScope = ResourceClusterScopeMock
+	assert.True(t, IsNamespaceScope(&schema.GroupVersionResource{Group: "apps", Version: "v1", Resource: "deployments"}))
+	assert.True(t, IsNamespaceScope(&schema.GroupVersionResource{Version: "v1", Resource: "serviceaccounts"}))
+	assert.False(t, IsNamespaceScope(&schema.GroupVersionResource{Version: "v1", Resource: "nodes"}))
 }

@@ -34,7 +34,7 @@ var ResourceGroupMappingMock = map[string]string{
 	"validatingwebhookconfigurations": "admissionregistration.k8s.io/v1",
 }
 
-var ResourceClusterScopeMock = []string{"nodes", "namespaces", "podsecuritypolicies", "clusterroles", "clusterrolebindings", "validatingwebhookconfigurations", "mutatingwebhookconfigurations"}
+var ResourceClusterScopeMock = []string{"/v1/nodes", "/v1/namespaces", "policy/v1beta1/podsecuritypolicies", "rbac.authorization.k8s.io/v1/clusterroles", "rbac.authorization.k8s.io/v1/clusterrolebindings", "admissionregistration.k8s.io/v1/validatingwebhookconfigurations", "admissionregistration.k8s.io/v1/mutatingwebhookconfigurations"}
 
 func InitializeMapResourcesMock() {
 	ResourceClusterScope = ResourceClusterScopeMock

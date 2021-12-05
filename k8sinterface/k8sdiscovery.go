@@ -30,7 +30,7 @@ func setMapResources(resourceList []*metav1.APIResourceList) {
 
 		for _, apiResource := range resourceList[i].APIResources {
 			ResourceGroupMapping[apiResource.Name] = JoinGroupVersion(gv.Group, gv.Version)
-			if apiResource.Namespaced {
+			if !apiResource.Namespaced {
 				ResourceClusterScope = append(ResourceClusterScope, JoinResourceTriplets(gv.Group, gv.Version, apiResource.Name))
 			}
 		}
