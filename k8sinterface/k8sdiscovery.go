@@ -33,6 +33,9 @@ func setMapResources(resourceList []*metav1.APIResourceList) {
 		if err != nil {
 			continue
 		}
+		if StringInSlice(ignoreGroups(), gv.Group) != ValueNotFound {
+			continue
+		}
 		for _, apiResource := range resourceList[i].APIResources {
 			if len(apiResource.Verbs) == 0 {
 				continue
@@ -155,4 +158,8 @@ func updateResourceKind(resource string) string {
 	}
 	return resource
 
+}
+
+func ignoreGroups() []string {
+	return []string{"metrics.k8s.io"}
 }
