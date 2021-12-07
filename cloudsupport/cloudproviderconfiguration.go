@@ -119,6 +119,26 @@ func IsTypeDescriptiveInfoFromCloudProvider(object map[string]interface{}) bool 
 	return true
 }
 
+func IsRunningInCloudProvider() bool {
+	currContext := k8sinterface.GetCurrentContext()
+	if currContext == nil {
+		return false
+	}
+	if strings.Contains(currContext.Cluster, strings.ToLower("eks")) || strings.Contains(currContext.Cluster, strings.ToLower("gke")) {
+		return true
+	}
+	return false
+}
+
+func GetCloudProvider(currContext string) string {
+	if strings.Contains(currContext, strings.ToLower("eks")) {
+		return "eks"
+	} else if strings.Contains(currContext, strings.ToLower("gke")) {
+		return "gke"
+	}
+	return ""
+}
+
 func GetDescriptiveInfoFromCloudProvider() (workloadinterface.IMetadata, error) {
 	currContext := k8sinterface.GetCurrentContext()
 	var clusterInfo *CloudProviderDescription
@@ -126,11 +146,14 @@ func GetDescriptiveInfoFromCloudProvider() (workloadinterface.IMetadata, error) 
 	if currContext == nil {
 		return nil, nil
 	}
-	if strings.Contains(currContext.Cluster, strings.ToLower("eks")) {
+	cloudProvider := GetCloudProvider(currContext.Cluster)
+	switch cloudProvider {
+	case "eks":
 		clusterInfo, err = GetClusterInfoForEKS(currContext)
-	} else if strings.Contains(currContext.Cluster, strings.ToLower("gke")) {
+	case "gke":
 		clusterInfo, err = GetClusterInfoForGKE()
 	}
+
 	if err != nil {
 		return nil, err
 	}
