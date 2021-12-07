@@ -8,6 +8,7 @@ import (
 
 	container "cloud.google.com/go/container/apiv1"
 	k8sinterface "github.com/armosec/k8s-interface/k8sinterface"
+	"github.com/armosec/k8s-interface/workloadinterface"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/eks"
@@ -15,21 +16,131 @@ import (
 	"k8s.io/client-go/tools/clientcmd/api"
 )
 
-func GetDescriptiveInfoFromCloudProvider() (map[string]interface{}, error) {
+type CloudProviderDescription struct {
+	object map[string]interface{}
+}
+
+// Setters
+func (obj *CloudProviderDescription) SetNamespace(namespace string) {
+	obj.object["provider"] = namespace
+}
+
+func (obj *CloudProviderDescription) SetGroup(group string) {
+	obj.object["group"] = group
+}
+
+func (obj *CloudProviderDescription) SetName(name string) {
+	obj.object["name"] = name
+}
+
+func (obj *CloudProviderDescription) SetProvider(provider string) {
+	obj.object["provider"] = provider
+}
+
+func (obj *CloudProviderDescription) SetKind(kind string) {
+	obj.object["kind"] = kind
+}
+
+func (obj *CloudProviderDescription) SetWorkload(object map[string]interface{}) {
+	obj.SetObject(object)
+}
+
+func (obj *CloudProviderDescription) SetObject(object map[string]interface{}) {
+	obj.object = object
+}
+
+// Getters
+func (obj *CloudProviderDescription) GetApiVersion() string {
+	if v, ok := workloadinterface.InspectMap(obj.object, "group"); ok {
+		return v.(string)
+	}
+	return ""
+}
+
+func (obj *CloudProviderDescription) GetKind() string {
+	if v, ok := workloadinterface.InspectMap(obj.object, "kind"); ok {
+		return v.(string)
+	}
+	return ""
+}
+
+func (obj *CloudProviderDescription) GetName() string {
+	if v, ok := workloadinterface.InspectMap(obj.object, "name"); ok {
+		return v.(string)
+	}
+	return ""
+}
+
+func (obj *CloudProviderDescription) GetProvider() string {
+	if v, ok := workloadinterface.InspectMap(obj.object, "provider"); ok {
+		return v.(string)
+	}
+	return ""
+}
+
+func (obj *CloudProviderDescription) GetNamespace() string {
+	return obj.GetProvider()
+}
+
+func (obj *CloudProviderDescription) GetWorkload() map[string]interface{} {
+	return obj.GetObject()
+}
+
+func (obj *CloudProviderDescription) GetObject() map[string]interface{} {
+	return obj.object
+}
+
+func (obj *CloudProviderDescription) GetID() string {
+	return fmt.Sprintf("%s/%s/%s/%s", obj.GetApiVersion(), obj.GetKind(), obj.GetProvider(), obj.GetName())
+}
+
+func NewDescriptiveInfoFromCloudProvider(object map[string]interface{}) *CloudProviderDescription {
+	return &CloudProviderDescription{
+		object: object,
+	}
+}
+
+func IsTypeDescriptiveInfoFromCloudProvider(object map[string]interface{}) bool {
+	if object == nil {
+		return false
+	}
+	if _, ok := object["kind"]; !ok {
+		return false
+	} else {
+		if object["kind"] != "CloudProviderDescription" {
+			return false
+		}
+	}
+
+	if _, ok := object["name"]; !ok {
+		return false
+	}
+
+	return true
+}
+
+func GetDescriptiveInfoFromCloudProvider() (workloadinterface.IMetadata, error) {
 	currContext := k8sinterface.GetCurrentContext()
+	var clusterInfo *CloudProviderDescription
+	var err error
 	if currContext == nil {
 		return nil, nil
 	}
 	if strings.Contains(currContext.Cluster, strings.ToLower("eks")) {
-		return GetClusterInfoForEKS(currContext)
+		clusterInfo, err = GetClusterInfoForEKS(currContext)
 	} else if strings.Contains(currContext.Cluster, strings.ToLower("gke")) {
-		return GetClusterInfoForGKE()
+		clusterInfo, err = GetClusterInfoForGKE()
 	}
-	return nil, nil
+	if err != nil {
+		return nil, err
+	}
+	clusterInfo.SetKind("Description")
+	clusterInfo.SetGroup("CloudProviderData")
+	return clusterInfo, nil
 }
 
 // Get descriptive info about cluster running in EKS.
-func GetClusterInfoForEKS(currContext *api.Context) (map[string]interface{}, error) {
+func GetClusterInfoForEKS(currContext *api.Context) (*CloudProviderDescription, error) {
 	s, err := session.NewSession()
 	if err != nil {
 		return nil, err
@@ -53,16 +164,18 @@ func GetClusterInfoForEKS(currContext *api.Context) (map[string]interface{}, err
 	if err != nil {
 		return nil, err
 	}
-	var clusterInfo map[string]interface{}
-	err = json.Unmarshal(resultInJson, &clusterInfo)
+	var clusterInfo *CloudProviderDescription
+	err = json.Unmarshal(resultInJson, &clusterInfo.object)
 	if err != nil {
 		return nil, err
 	}
+	clusterInfo.SetName(*result.Cluster.Name)
+	clusterInfo.SetProvider("eks")
 	return clusterInfo, nil
 }
 
 // Get descriptive info about cluster running in GKE.
-func GetClusterInfoForGKE() (map[string]interface{}, error) {
+func GetClusterInfoForGKE() (*CloudProviderDescription, error) {
 	ctx := context.Background()
 	c, err := container.NewClusterManagerClient(ctx)
 	if err != nil {
@@ -85,10 +198,11 @@ func GetClusterInfoForGKE() (map[string]interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	var clusterInfo map[string]interface{}
-	err = json.Unmarshal(resultInJson, &clusterInfo)
+	var clusterInfo *CloudProviderDescription
+	err = json.Unmarshal(resultInJson, &clusterInfo.object)
 	if err != nil {
 		return nil, err
 	}
+	clusterInfo.SetProvider("gke")
 	return clusterInfo, nil
 }
