@@ -22,7 +22,7 @@ type CloudProviderDescription struct {
 
 // Setters
 func (obj *CloudProviderDescription) SetNamespace(namespace string) {
-	obj.object["provider"] = namespace
+	obj.SetProvider(namespace)
 }
 
 func (obj *CloudProviderDescription) SetGroup(group string) {
@@ -106,13 +106,18 @@ func IsTypeDescriptiveInfoFromCloudProvider(object map[string]interface{}) bool 
 	}
 	if _, ok := object["kind"]; !ok {
 		return false
+	} else if _, ok := object["group"]; !ok {
+		return false
 	} else {
-		if object["kind"] != "CloudProviderDescription" {
+		if object["kind"] != "Description" || object["group"] != "CloudProviderData" {
 			return false
 		}
 	}
 
 	if _, ok := object["name"]; !ok {
+		return false
+	}
+	if _, ok := object["provider"]; !ok {
 		return false
 	}
 
