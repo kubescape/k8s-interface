@@ -50,11 +50,17 @@ func (obj *CloudProviderDescription) SetObject(object map[string]interface{}) {
 }
 
 // Getters
-func (obj *CloudProviderDescription) GetApiVersion() string {
+
+//group -> cloudvendordata.armo.cloud
+func (obj *CloudProviderDescription) GetGroup() string {
 	if v, ok := workloadinterface.InspectMap(obj.object, "group"); ok {
 		return v.(string)
 	}
 	return ""
+}
+
+func (obj *CloudProviderDescription) GetApiVersion() string {
+	return fmt.Sprintf("%s/%s", obj.GetGroup(), "v1beta0")
 }
 
 func (obj *CloudProviderDescription) GetKind() string {
@@ -71,6 +77,7 @@ func (obj *CloudProviderDescription) GetName() string {
 	return ""
 }
 
+// provider -> eks/gke
 func (obj *CloudProviderDescription) GetProvider() string {
 	if v, ok := workloadinterface.InspectMap(obj.object, "provider"); ok {
 		return v.(string)
@@ -90,8 +97,9 @@ func (obj *CloudProviderDescription) GetObject() map[string]interface{} {
 	return obj.object
 }
 
+// cloudvendordata.armo.cloud/provider/description/clusterName
 func (obj *CloudProviderDescription) GetID() string {
-	return fmt.Sprintf("%s/%s/%s/%s", obj.GetApiVersion(), obj.GetKind(), obj.GetProvider(), obj.GetName())
+	return fmt.Sprintf("%s/%s/%s/%s", obj.GetGroup(), obj.GetProvider(), obj.GetKind(), obj.GetName())
 }
 
 func NewDescriptiveInfoFromCloudProvider(object map[string]interface{}) *CloudProviderDescription {
@@ -109,7 +117,7 @@ func IsTypeDescriptiveInfoFromCloudProvider(object map[string]interface{}) bool 
 	} else if _, ok := object["group"]; !ok {
 		return false
 	} else {
-		if object["kind"] != "Description" || object["group"] != "CloudProviderData" {
+		if object["kind"] != "description" || object["group"] != "cloudvendordata.armo.cloud" {
 			return false
 		}
 	}
@@ -162,8 +170,8 @@ func GetDescriptiveInfoFromCloudProvider() (workloadinterface.IMetadata, error) 
 	if err != nil {
 		return nil, err
 	}
-	clusterInfo.SetKind("Description")
-	clusterInfo.SetGroup("CloudProviderData")
+	clusterInfo.SetKind("description")
+	clusterInfo.SetGroup("cloudvendordata.armo.cloud")
 	return clusterInfo, nil
 }
 
