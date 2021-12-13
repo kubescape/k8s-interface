@@ -16,16 +16,22 @@ const ValueNotFound = -1
 var ResourceGroupMapping = map[string]string{}
 var ResourceClusterScope = []string{}
 
-func InitializeMapResources(discoveryClient discovery.DiscoveryInterface) error {
-	resourceList, err := discoveryClient.ServerPreferredResources()
-	if err != nil {
-		return err
+func InitializeMapResources(discoveryClient discovery.DiscoveryInterface) {
+
+	resourceList, _ := discoveryClient.ServerPreferredResources()
+	if len(resourceList) != 0 {
+		setMapResources(resourceList)
 	}
-	setMapResources(resourceList)
-	return nil
+
+	// set mock initialization (if resources where missing from discovery. this can happen when an error accurse while pulling the resources)
+	InitializeMapResourcesMock()
+
 }
 func setMapResources(resourceList []*metav1.APIResourceList) {
 	for i := range resourceList {
+		if resourceList[i] == nil {
+			continue
+		}
 		if len(resourceList[i].APIResources) == 0 {
 			continue
 		}
@@ -40,7 +46,7 @@ func setMapResources(resourceList []*metav1.APIResourceList) {
 			if len(apiResource.Verbs) == 0 {
 				continue
 			}
-			if _, ok := ResourceGroupMapping[apiResource.Name]; ok {
+			if _, ok := ResourceGroupMapping[apiResource.Name]; ok { // do not override resources in map
 				continue
 			}
 			ResourceGroupMapping[apiResource.Name] = JoinGroupVersion(gv.Group, gv.Version)

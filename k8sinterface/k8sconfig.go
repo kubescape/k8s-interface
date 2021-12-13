@@ -57,10 +57,7 @@ func NewKubernetesApi() *KubernetesApi {
 		fmt.Printf("failed to initialize a new discovery client, reason: %s", err.Error())
 		os.Exit(1)
 	}
-	if err := InitializeMapResources(discoveryClient); err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
+	InitializeMapResources(discoveryClient)
 
 	return &KubernetesApi{
 		KubernetesClient: kubernetesClient,
