@@ -18,10 +18,10 @@ var ResourceClusterScope = []string{}
 
 func InitializeMapResources(discoveryClient discovery.DiscoveryInterface) {
 
-	resourceList, _ := discoveryClient.ServerPreferredResources()
-	if len(resourceList) != 0 {
-		setMapResources(resourceList)
-	}
+	// resourceList, _ := discoveryClient.ServerPreferredResources()
+	// if len(resourceList) != 0 {
+	// 	setMapResources(resourceList)
+	// }
 
 	// set mock initialization (if resources where missing from discovery. this can happen when an error accurse while pulling the resources)
 	InitializeMapResourcesMock()
