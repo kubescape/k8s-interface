@@ -20,6 +20,13 @@ type CloudProviderDescription struct {
 	object map[string]interface{}
 }
 
+const TypeCloudProviderDescription workloadinterface.ObjectType = "cloudProviderDescription"
+
+const (
+	CloudProviderGroup           = "cloudvendordata.armo.cloud"
+	CloudProviderDescriptionKind = "description"
+)
+
 // Setters
 func (obj *CloudProviderDescription) SetNamespace(namespace string) {
 	obj.SetProvider(namespace)
@@ -63,6 +70,9 @@ func (obj *CloudProviderDescription) GetApiVersion() string {
 	return fmt.Sprintf("%s/%s", obj.GetGroup(), "v1beta0")
 }
 
+func (obj *CloudProviderDescription) GetObjectType() workloadinterface.ObjectType {
+	return TypeCloudProviderDescription
+}
 func (obj *CloudProviderDescription) GetKind() string {
 	if v, ok := workloadinterface.InspectMap(obj.object, "kind"); ok {
 		return v.(string)
@@ -112,12 +122,12 @@ func IsTypeDescriptiveInfoFromCloudProvider(object map[string]interface{}) bool 
 	if object == nil {
 		return false
 	}
-	if _, ok := object["kind"]; !ok {
+	if kind, ok := object["kind"]; !ok || kind != CloudProviderDescriptionKind {
 		return false
 	} else if _, ok := object["group"]; !ok {
 		return false
 	} else {
-		if object["kind"] != "description" || object["group"] != "cloudvendordata.armo.cloud" {
+		if object["kind"] != CloudProviderDescriptionKind || object["group"] != CloudProviderGroup {
 			return false
 		}
 	}
@@ -170,8 +180,8 @@ func GetDescriptiveInfoFromCloudProvider() (workloadinterface.IMetadata, error) 
 	if err != nil {
 		return nil, err
 	}
-	clusterInfo.SetKind("description")
-	clusterInfo.SetGroup("cloudvendordata.armo.cloud")
+	clusterInfo.SetKind(CloudProviderDescriptionKind)
+	clusterInfo.SetGroup(CloudProviderGroup)
 	return clusterInfo, nil
 }
 

@@ -7,6 +7,8 @@ import (
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 )
 
+const TypeWorkloadObjectMock ObjectType = "workloadMock"
+
 type WorkloadMock struct {
 	workload *Workload
 }
@@ -168,6 +170,10 @@ func (wm *WorkloadMock) SetPodAnnotation(key, value string) {
 }
 
 // ========================================= GET =========================================
+
+func (wm *WorkloadMock) GetObjectType() ObjectType {
+	return TypeWorkloadObjectMock
+}
 func (wm *WorkloadMock) GetWorkload() map[string]interface{} {
 	return wm.workload.GetWorkload()
 }

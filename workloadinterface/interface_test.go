@@ -12,9 +12,8 @@ func TestIWorkload(t *testing.T) {
 	fmt.Printf("%v", a.GetName())
 
 }
-func TestIMetadata(t *testing.T) {
+func TestWorkloadWithIMetadata(t *testing.T) {
 	var a IMetadata
-	a = NewRegoResponseVectorObject(nil)
 	a = NewWorkloadObj(nil)
 	fmt.Printf("%v", a.GetName())
 }

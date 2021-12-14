@@ -16,6 +16,8 @@ import (
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 )
 
+const TypeWorkloadObject ObjectType = "workload"
+
 type Workload struct {
 	workload map[string]interface{}
 }
@@ -39,6 +41,10 @@ func NewWorkloadObj(workload map[string]interface{}) *Workload {
 	return &Workload{
 		workload: workload,
 	}
+}
+
+func (w *Workload) GetObjectType() ObjectType {
+	return TypeWorkloadObject
 }
 
 func (w *Workload) Json() string {

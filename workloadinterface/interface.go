@@ -8,6 +8,8 @@ import (
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 )
 
+type ObjectType string
+
 type IMetadata interface {
 	// Set
 	SetNamespace(string)
@@ -24,6 +26,9 @@ type IMetadata interface {
 	GetWorkload() map[string]interface{} // DEPRECATED
 	GetObject() map[string]interface{}
 	GetID() string // Get object unique ID
+
+	GetObjectType() ObjectType // Get struct type
+
 }
 type IBasicWorkload interface {
 	IMetadata

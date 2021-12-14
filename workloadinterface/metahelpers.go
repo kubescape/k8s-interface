@@ -1,15 +1,5 @@
 package workloadinterface
 
-func ListMapToMeta(resourceMap []map[string]interface{}) []IMetadata {
-	workloads := []IMetadata{}
-	for i := range resourceMap {
-		if w := NewObject(resourceMap[i]); w != nil {
-			workloads = append(workloads, w)
-		}
-	}
-	return workloads
-}
-
 func ListMetaToMap(meta []IMetadata) []map[string]interface{} {
 	resourceMap := []map[string]interface{}{}
 	for i := range meta {
