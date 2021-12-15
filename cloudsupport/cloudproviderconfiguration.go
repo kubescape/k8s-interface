@@ -147,7 +147,7 @@ func IsRunningInCloudProvider() bool {
 	if currContext == nil {
 		return false
 	}
-	if strings.Contains(currContext.Cluster, strings.ToLower("eks")) || strings.Contains(currContext.Cluster, strings.ToLower("gke")) {
+	if strings.Contains(currContext.Cluster, strings.ToLower("eks")) || strings.Contains(currContext.Cluster, strings.ToLower("gke")) || strings.Contains(currContext.Cluster, strings.ToLower("aks")) {
 		return true
 	}
 	return false
@@ -158,6 +158,8 @@ func GetCloudProvider(currContext string) string {
 		return "eks"
 	} else if strings.Contains(currContext, strings.ToLower("gke")) {
 		return "gke"
+	} else if strings.Contains(currContext, strings.ToLower("aks")) {
+		return "aks"
 	}
 	return ""
 }
@@ -175,6 +177,8 @@ func GetDescriptiveInfoFromCloudProvider() (workloadinterface.IMetadata, error) 
 		clusterInfo, err = GetClusterInfoForEKS(currContext)
 	case "gke":
 		clusterInfo, err = GetClusterInfoForGKE()
+	case "aks":
+		return nil, fmt.Errorf("we currently do not support reading cloud provider description from aks")
 	}
 
 	if err != nil {
