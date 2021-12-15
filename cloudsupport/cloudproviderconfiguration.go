@@ -24,7 +24,7 @@ const TypeCloudProviderDescription workloadinterface.ObjectType = "cloudProvider
 
 const (
 	CloudProviderGroup           = "cloudvendordata.armo.cloud"
-	CloudProviderDescriptionKind = "description"
+	CloudProviderDescriptionKind = "ClusterDescription"
 )
 
 // Setters
@@ -107,7 +107,7 @@ func (obj *CloudProviderDescription) GetObject() map[string]interface{} {
 	return obj.object
 }
 
-// cloudvendordata.armo.cloud/provider/description/clusterName
+// cloudvendordata.armo.cloud/provider/ClusterDescription/clusterName
 func (obj *CloudProviderDescription) GetID() string {
 	return fmt.Sprintf("%s/%s/%s/%s", obj.GetGroup(), obj.GetProvider(), obj.GetKind(), obj.GetName())
 }
