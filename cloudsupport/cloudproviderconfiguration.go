@@ -210,7 +210,7 @@ func GetClusterInfoForEKS(currContext *api.Context) (*CloudProviderDescription, 
 	if err != nil {
 		return nil, err
 	}
-	var clusterInfo *CloudProviderDescription
+	clusterInfo := &CloudProviderDescription{}
 	err = json.Unmarshal(resultInJson, &clusterInfo.object)
 	if err != nil {
 		return nil, err
@@ -244,7 +244,7 @@ func GetClusterInfoForGKE() (*CloudProviderDescription, error) {
 	if err != nil {
 		return nil, err
 	}
-	var clusterInfo *CloudProviderDescription
+	clusterInfo := &CloudProviderDescription{}
 	err = json.Unmarshal(resultInJson, &clusterInfo.object)
 	if err != nil {
 		return nil, err
