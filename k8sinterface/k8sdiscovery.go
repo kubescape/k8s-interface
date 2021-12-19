@@ -12,10 +12,11 @@ import (
 
 const ValueNotFound = -1
 
-var ResourceGroupMapping = map[string]string{}
-var ResourceClusterScope = []string{}    // DEPRECATED
-var ResourceNamesapcedScope = []string{} // use this to determan if the resource is namespaced
+var ResourceGroupMapping = map[string]string{} // mapping of all supported Kubernetes cluster resources to apiVersion
+var ResourceClusterScope = []string{}          // DEPRECATED - use the 'ResourceNamesapcedScope' instead
+var ResourceNamesapcedScope = []string{}       // use this to determan if the resource is namespaced
 
+// InitializeMapResources get supported api-resource (similar to 'kubectl api-resources') and map to 'ResourceGroupMapping' and 'ResourceNamesapcedScope'. If this function is not called, many functions may not work
 func InitializeMapResources(discoveryClient discovery.DiscoveryInterface) {
 
 	// resourceList, _ := discoveryClient.ServerPreferredResources()
@@ -35,10 +36,14 @@ func setMapResources(resourceList []*metav1.APIResourceList) {
 		if len(resourceList[i].APIResources) == 0 {
 			continue
 		}
+
+		// get group and version, we first split and then join for keeping our convention
 		gv, err := schema.ParseGroupVersion(resourceList[i].GroupVersion)
 		if err != nil {
 			continue
 		}
+
+		// pre-defined resources to ignore
 		if StringInSlice(ignoreGroups(), gv.Group) != ValueNotFound {
 			continue
 		}
@@ -60,19 +65,32 @@ func setMapResources(resourceList []*metav1.APIResourceList) {
 	}
 }
 
+// IsKindKubernetes check if the kind is known to be a kubernetes kind. In this check we do not test the apiVersion
+func IsKindKubernetes(kind string) bool {
+	if _, err := GetGroupVersionResource(kind); err == nil {
+		return true
+	}
+	return false
+}
+
+// GetGroupVersionResource get the group and version from the resource name. Returns error if not found
 func GetGroupVersionResource(resource string) (schema.GroupVersionResource, error) {
 	resource = updateResourceKind(resource)
 	if r, ok := ResourceGroupMapping[resource]; ok {
 		gv := strings.Split(r, "/")
-		return schema.GroupVersionResource{Group: gv[0], Version: gv[1], Resource: resource}, nil
+		if len(gv) >= 2 {
+			return schema.GroupVersionResource{Group: gv[0], Version: gv[1], Resource: resource}, nil
+		}
 	}
 	return schema.GroupVersionResource{}, fmt.Errorf("resource '%s' unknown. Make sure the resource is found at `kubectl api-resources`", resource)
 }
 
+// IsNamespaceScope returns true if the resource is a kubernetes namespaced resource
 func IsNamespaceScope(resource *schema.GroupVersionResource) bool {
 	return StringInSlice(ResourceNamesapcedScope, GroupVersionResourceToString(resource)) != ValueNotFound
 }
 
+// StringInSlice utility for finding a string in a slice. Returns ValueNotFound (-1) if the string is not found in the slice
 func StringInSlice(strSlice []string, str string) int {
 	for i := range strSlice {
 		if strSlice[i] == str {
@@ -82,41 +100,57 @@ func StringInSlice(strSlice []string, str string) int {
 	return ValueNotFound
 }
 
+// JoinGroupVersion returns the group and version with the '/' separator
 func JoinGroupVersion(group, version string) string {
 	return fmt.Sprintf("%s/%s", group, version)
 }
 
+// JoinResourceTriplets returns the group, version and kind with the '/' separator
 func JoinResourceTriplets(group, version, resource string) string {
 	return fmt.Sprintf("%s/%s/%s", group, version, resource)
 }
 
+// JoinResourceTriplets converts the schema.GroupVersionResource object to string by returning the group, version and kind with the '/' separator
 func GroupVersionResourceToString(resource *schema.GroupVersionResource) string {
 	return JoinResourceTriplets(resource.Group, resource.Version, resource.Resource)
 }
-func GetResourceTriplets(group, version, resource string) []string {
+
+// getResourceTriplets receives a partly defined schema.GroupVersionResource and returns a list of all resources (kinds) in the representation of group/version/resource that support what was missing
+/*
+Examples:
+
+GetResourceTriplets("","","pods") -> []string{"/v1/pods"}
+GetResourceTriplets("apps","v1","") -> []string{"apps/v1/deployments", "apps/v1/replicasets", ... }
+
+*/
+func getResourceTriplets(group, version, resource string) []string {
 	resourceTriplets := []string{}
 	if resource == "" {
 		// load full map
 		for k, v := range ResourceGroupMapping {
-			g := strings.Split(v, "/")
-			resourceTriplets = append(resourceTriplets, JoinResourceTriplets(g[0], g[1], k))
+			if g := strings.Split(v, "/"); len(g) >= 2 {
+				resourceTriplets = append(resourceTriplets, JoinResourceTriplets(g[0], g[1], k))
+			}
 		}
 	} else if version == "" {
 		// load by resource
 		if v, ok := ResourceGroupMapping[resource]; ok {
 			g := strings.Split(v, "/")
-			if group == "" {
-				group = g[0]
+			if len(g) >= 2 {
+				if group == "" {
+					group = g[0]
+				}
+				resourceTriplets = append(resourceTriplets, JoinResourceTriplets(group, g[1], resource))
 			}
-			resourceTriplets = append(resourceTriplets, JoinResourceTriplets(group, g[1], resource))
 		} else {
 			// glog.Errorf("Resource '%s' unknown", resource)
 		}
 	} else if group == "" {
 		// load by resource and version
 		if v, ok := ResourceGroupMapping[resource]; ok {
-			g := strings.Split(v, "/")
-			resourceTriplets = append(resourceTriplets, JoinResourceTriplets(g[0], version, resource))
+			if g := strings.Split(v, "/"); len(g) >= 1 {
+				resourceTriplets = append(resourceTriplets, JoinResourceTriplets(g[0], version, resource))
+			}
 		} else {
 			// glog.Errorf("Resource '%s' unknown", resource)
 		}
@@ -131,7 +165,20 @@ func ResourceGroupToString(group, version, resource string) []string {
 	return ResourceGroupToSlice(group, version, resource)
 }
 
+// ResourceGroupToSlice receives a partly defined schema.GroupVersionResource and returns a list of all resources (kinds) in the representation of group/version/resource that support what was missing. Will ignore if kind is not Kubernetes
+/*
+Examples:
+
+GetResourceTriplets("*","*","pods") -> []string{"/v1/pods"}
+GetResourceTriplets("apps","v1","*") -> []string{"apps/v1/deployments", "apps/v1/replicasets", ... }
+
+*/
 func ResourceGroupToSlice(group, version, resource string) []string {
+	// if the resource is not kubernetes, do not edit or look for the group/version/kind in map
+	if !IsKindKubernetes(resource) {
+		return []string{JoinResourceTriplets(group, version, resource)}
+	}
+
 	if group == "*" {
 		group = ""
 	}
@@ -141,10 +188,18 @@ func ResourceGroupToSlice(group, version, resource string) []string {
 	if resource == "*" {
 		resource = ""
 	}
+
 	resource = updateResourceKind(resource)
-	return GetResourceTriplets(group, version, resource)
+	return getResourceTriplets(group, version, resource)
 }
 
+// StringToResourceGroup convert a representation to the original triplet
+/*
+Examples:
+
+StringToResourceGroup("apps/v1/deployments") -> "apps", "v1", "deployments"
+StringToResourceGroup("/v1/pods") -> "", "v1", "pods"
+*/
 func StringToResourceGroup(str string) (string, string, string) {
 	splitted := strings.Split(str, "/")
 	for i := range splitted {
@@ -152,9 +207,13 @@ func StringToResourceGroup(str string) (string, string, string) {
 			splitted[i] = ""
 		}
 	}
-	return splitted[0], splitted[1], splitted[2]
+	if len(splitted) == 3 {
+		return splitted[0], splitted[1], splitted[2]
+	}
+	return "", "", ""
 }
 
+// updateResourceKind update kind from single to parallel
 func updateResourceKind(resource string) string {
 	resource = strings.ToLower(resource)
 
