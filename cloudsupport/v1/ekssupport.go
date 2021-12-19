@@ -1,4 +1,4 @@
-package cloudsupport
+package v1
 
 import (
 	"fmt"
@@ -11,6 +11,11 @@ import (
 	"k8s.io/client-go/tools/clientcmd/api"
 )
 
+type IEKSSupport interface {
+	GetClusterDescribe(currContext *api.Context) (*eks.DescribeClusterOutput, error)
+	GetName(*eks.DescribeClusterOutput) string
+}
+
 type EKSSupport struct {
 }
 
@@ -19,7 +24,7 @@ func NewEKSSupport() *EKSSupport {
 }
 
 // Get descriptive info about cluster running in EKS.
-func (eksSupport *EKSSupport) getClusterDescribe(currContext *api.Context) (*eks.DescribeClusterOutput, error) {
+func (eksSupport *EKSSupport) GetClusterDescribe(currContext *api.Context) (*eks.DescribeClusterOutput, error) {
 	s, err := session.NewSession()
 	if err != nil {
 		return nil, err
@@ -44,6 +49,6 @@ func (eksSupport *EKSSupport) getClusterDescribe(currContext *api.Context) (*eks
 }
 
 // getName get cluster name from describe
-func (eksSupport *EKSSupport) getName(describe *eks.DescribeClusterOutput) string {
+func (eksSupport *EKSSupport) GetName(describe *eks.DescribeClusterOutput) string {
 	return *describe.Cluster.Name
 }

@@ -1,4 +1,4 @@
-package cloudsupport
+package v1
 
 import (
 	"context"
@@ -10,15 +10,19 @@ import (
 	containerpb "google.golang.org/genproto/googleapis/container/v1"
 )
 
+type IGKESupport interface {
+	GetClusterDescribe() (*containerpb.Cluster, error)
+	GetName(clusterDescribe *containerpb.Cluster) string
+}
 type GKESupport struct {
 }
 
-func newGKESupport() *GKESupport {
+func NewGKESupport() *GKESupport {
 	return &GKESupport{}
 }
 
 // Get descriptive info about cluster running in GKE.
-func (gkeSupport *GKESupport) getClusterDescribe() (*containerpb.Cluster, error) {
+func (gkeSupport *GKESupport) GetClusterDescribe() (*containerpb.Cluster, error) {
 	ctx := context.Background()
 	c, err := container.NewClusterManagerClient(ctx)
 	if err != nil {
@@ -40,6 +44,6 @@ func (gkeSupport *GKESupport) getClusterDescribe() (*containerpb.Cluster, error)
 	return result, nil
 }
 
-func (gkeSupport *GKESupport) getName(clusterDescribe *containerpb.Cluster) string {
+func (gkeSupport *GKESupport) GetName(clusterDescribe *containerpb.Cluster) string {
 	return clusterDescribe.Name
 }

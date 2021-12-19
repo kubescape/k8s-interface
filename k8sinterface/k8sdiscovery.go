@@ -82,6 +82,9 @@ func GetGroupVersionResource(resource string) (schema.GroupVersionResource, erro
 			return schema.GroupVersionResource{Group: gv[0], Version: gv[1], Resource: resource}, nil
 		}
 	}
+	if resource == "" || resource == "*" {
+		return schema.GroupVersionResource{}, nil
+	}
 	return schema.GroupVersionResource{}, fmt.Errorf("resource '%s' unknown. Make sure the resource is found at `kubectl api-resources`", resource)
 }
 
@@ -174,10 +177,6 @@ GetResourceTriplets("apps","v1","*") -> []string{"apps/v1/deployments", "apps/v1
 
 */
 func ResourceGroupToSlice(group, version, resource string) []string {
-	// if the resource is not kubernetes, do not edit or look for the group/version/kind in map
-	if !IsKindKubernetes(resource) {
-		return []string{JoinResourceTriplets(group, version, resource)}
-	}
 
 	if group == "*" {
 		group = ""
@@ -189,6 +188,10 @@ func ResourceGroupToSlice(group, version, resource string) []string {
 		resource = ""
 	}
 
+	// if the resource is not kubernetes, do not edit or look for the group/version/kind in map
+	if !IsKindKubernetes(resource) {
+		return []string{JoinResourceTriplets(group, version, resource)}
+	}
 	resource = updateResourceKind(resource)
 	return getResourceTriplets(group, version, resource)
 }

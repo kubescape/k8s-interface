@@ -1,4 +1,4 @@
-package cloudsupport
+package v1
 
 import (
 	"encoding/json"
@@ -62,7 +62,18 @@ func (description *CloudProviderDescribe) SetWorkload(object map[string]interfac
 }
 
 func (description *CloudProviderDescribe) SetObject(object map[string]interface{}) {
-
+	if !IsTypeDescriptiveInfoFromCloudProvider(object) {
+		return
+	}
+	if b := workloadinterface.MapToBytes(object); len(b) > 0 {
+		d := &CloudProviderDescribe{}
+		if err := json.Unmarshal(b, d); err == nil {
+			description.SetApiVersion(d.GetApiVersion())
+			description.SetKind(d.GetKind())
+			description.SetData(d.GetData())
+			description.Metadata = d.Metadata
+		}
+	}
 }
 
 // Getters
