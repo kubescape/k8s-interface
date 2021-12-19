@@ -7,14 +7,14 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/discovery"
 
-	"github.com/golang/glog"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 )
 
 const ValueNotFound = -1
 
 var ResourceGroupMapping = map[string]string{}
-var ResourceClusterScope = []string{}
+var ResourceClusterScope = []string{}    // DEPRECATED
+var ResourceNamesapcedScope = []string{} // use this to determan if the resource is namespaced
 
 func InitializeMapResources(discoveryClient discovery.DiscoveryInterface) {
 
@@ -50,8 +50,11 @@ func setMapResources(resourceList []*metav1.APIResourceList) {
 				continue
 			}
 			ResourceGroupMapping[apiResource.Name] = JoinGroupVersion(gv.Group, gv.Version)
-			if !apiResource.Namespaced {
+			if apiResource.Namespaced {
+				ResourceNamesapcedScope = append(ResourceNamesapcedScope, JoinResourceTriplets(gv.Group, gv.Version, apiResource.Name))
+			} else { // DEPRECATED
 				ResourceClusterScope = append(ResourceClusterScope, JoinResourceTriplets(gv.Group, gv.Version, apiResource.Name))
+
 			}
 		}
 	}
@@ -67,7 +70,7 @@ func GetGroupVersionResource(resource string) (schema.GroupVersionResource, erro
 }
 
 func IsNamespaceScope(resource *schema.GroupVersionResource) bool {
-	return StringInSlice(ResourceClusterScope, GroupVersionResourceToString(resource)) == ValueNotFound
+	return StringInSlice(ResourceNamesapcedScope, GroupVersionResourceToString(resource)) != ValueNotFound
 }
 
 func StringInSlice(strSlice []string, str string) int {
@@ -107,7 +110,7 @@ func GetResourceTriplets(group, version, resource string) []string {
 			}
 			resourceTriplets = append(resourceTriplets, JoinResourceTriplets(group, g[1], resource))
 		} else {
-			glog.Errorf("Resource '%s' unknown", resource)
+			// glog.Errorf("Resource '%s' unknown", resource)
 		}
 	} else if group == "" {
 		// load by resource and version
@@ -115,7 +118,7 @@ func GetResourceTriplets(group, version, resource string) []string {
 			g := strings.Split(v, "/")
 			resourceTriplets = append(resourceTriplets, JoinResourceTriplets(g[0], version, resource))
 		} else {
-			glog.Errorf("Resource '%s' unknown", resource)
+			// glog.Errorf("Resource '%s' unknown", resource)
 		}
 	} else {
 		resourceTriplets = append(resourceTriplets, JoinResourceTriplets(group, version, resource))

@@ -90,6 +90,7 @@ func IsTypeWorkload(object map[string]interface{}) bool {
 	if object == nil {
 		return false
 	}
+	// TODO - check if found in supported objects
 	if _, ok := object["apiVersion"]; !ok {
 		return false
 	}
@@ -159,7 +160,7 @@ func (w *Workload) RemoveArmoMetadata() {
 
 func (w *Workload) RemoveArmoAnnotations() {
 	l := w.GetAnnotations()
-	if l != nil {
+	if len(l) > 0 {
 		for k := range l {
 			if strings.HasPrefix(k, armometadata.ArmoPrefix) {
 				w.RemoveAnnotation(k)
@@ -170,7 +171,7 @@ func (w *Workload) RemoveArmoAnnotations() {
 		}
 	}
 	lp := w.GetPodAnnotations()
-	if lp != nil {
+	if len(lp) > 0 {
 		for k := range lp {
 			if strings.HasPrefix(k, armometadata.ArmoPrefix) {
 				w.RemovePodAnnotation(k)
@@ -183,7 +184,7 @@ func (w *Workload) RemoveArmoAnnotations() {
 }
 func (w *Workload) RemoveArmoLabels() {
 	l := w.GetLabels()
-	if l != nil {
+	if len(l) > 0 {
 		for k := range l {
 			if strings.HasPrefix(k, armometadata.ArmoPrefix) {
 				w.RemoveLabel(k)
@@ -194,7 +195,7 @@ func (w *Workload) RemoveArmoLabels() {
 		}
 	}
 	lp := w.GetPodLabels()
-	if lp != nil {
+	if len(lp) > 0 {
 		for k := range lp {
 			if strings.HasPrefix(k, armometadata.ArmoPrefix) {
 				w.RemovePodLabel(k)
@@ -352,6 +353,9 @@ func (w *Workload) GetNamespace() string {
 }
 func (w *Workload) GetID() string {
 	return fmt.Sprintf("%s/%s/%s/%s/%s", w.GetGroup(), w.GetVersion(), w.GetNamespace(), w.GetKind(), w.GetName())
+
+	// TODO - return like selfLink - e.g. /apis/apps/v1/namespaces/monitoring/statefulsets/alertmanager-prometheus-
+	// return fmt.Sprintf("apps/%s/%s/%s/%s", w.GetApiVersion(), w.GetNamespace(), w.GetKind(), w.GetName())
 }
 func (w *Workload) GetName() string {
 	if v, ok := InspectWorkload(w.workload, "metadata", "name"); ok {
