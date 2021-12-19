@@ -61,7 +61,10 @@ func TestGetGroupVersionResource(t *testing.T) {
 
 func TestIsNamespaceScope(t *testing.T) {
 	InitializeMapResourcesMock()
+	assert.True(t, IsResourceInNamespaceScope("pods"))
+	assert.False(t, IsResourceInNamespaceScope("nodes"))
 	assert.True(t, IsNamespaceScope(&schema.GroupVersionResource{Group: "apps", Version: "v1", Resource: "deployments"}))
+	assert.False(t, IsNamespaceScope(&schema.GroupVersionResource{Group: "", Version: "", Resource: "pods"}))
 	assert.True(t, IsNamespaceScope(&schema.GroupVersionResource{Version: "v1", Resource: "serviceaccounts"}))
 	assert.False(t, IsNamespaceScope(&schema.GroupVersionResource{Version: "v1", Resource: "nodes"}))
 }

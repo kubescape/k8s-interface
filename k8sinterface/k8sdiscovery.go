@@ -88,9 +88,20 @@ func GetGroupVersionResource(resource string) (schema.GroupVersionResource, erro
 	return schema.GroupVersionResource{}, fmt.Errorf("resource '%s' unknown. Make sure the resource is found at `kubectl api-resources`", resource)
 }
 
-// IsNamespaceScope returns true if the resource is a kubernetes namespaced resource
+// IsNamespaceScope returns true if the schema.GroupVersionResource is a kubernetes namespaced resource
 func IsNamespaceScope(resource *schema.GroupVersionResource) bool {
+
+	GetGroupVersionResource(resource.Resource)
 	return StringInSlice(ResourceNamesapcedScope, GroupVersionResourceToString(resource)) != ValueNotFound
+}
+
+// IsResourceInNamespaceScope returns true if the resource is a kubernetes namespaced resource
+func IsResourceInNamespaceScope(resource string) bool {
+	gvr, err := GetGroupVersionResource(resource)
+	if err != nil {
+		return false
+	}
+	return IsNamespaceScope(&gvr)
 }
 
 // StringInSlice utility for finding a string in a slice. Returns ValueNotFound (-1) if the string is not found in the slice
