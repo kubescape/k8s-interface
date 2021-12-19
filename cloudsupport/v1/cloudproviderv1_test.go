@@ -29,3 +29,40 @@ func TestGetClusterDescribeEKS(t *testing.T) {
 	assert.Equal(t, "ca-terraform-eks-dev-stage", des.GetName())
 	assert.Equal(t, 1, len(des.GetData()))
 }
+
+func TestNewDescriptiveInfoFromCloudProvider(t *testing.T) {
+	g := NewEKSSupportMock()
+	des, err := GetClusterDescribeEKS(g, nil)
+	assert.NoError(t, err)
+
+	assert.True(t, IsTypeDescriptiveInfoFromCloudProvider(des.GetObject()))
+	d := NewDescriptiveInfoFromCloudProvider(des.GetObject())
+	assert.NotNil(t, d)
+
+	assert.Equal(t, d.GetID(), des.GetID())
+
+}
+func TestSetObject(t *testing.T) {
+	g := NewEKSSupportMock()
+	des, err := GetClusterDescribeEKS(g, nil)
+	assert.NoError(t, err)
+
+	d := CloudProviderDescribe{}
+	d.SetObject(des.GetObject())
+
+	assert.Equal(t, d.GetID(), des.GetID())
+	assertMap(t, d.GetObject(), des.GetObject())
+}
+
+func assertMap(t *testing.T, expected, actual map[string]interface{}) {
+	for k0, v0 := range expected {
+		if v1, ok := actual[k0]; ok {
+			switch f := v1.(type) {
+			case string:
+				assert.Equal(t, v0.(string), f)
+			case map[string]interface{}:
+				assertMap(t, v0.(map[string]interface{}), f)
+			}
+		}
+	}
+}

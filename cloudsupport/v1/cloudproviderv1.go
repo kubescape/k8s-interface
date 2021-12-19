@@ -2,6 +2,7 @@ package v1
 
 import (
 	"encoding/json"
+	"strings"
 
 	"github.com/armosec/k8s-interface/cloudsupport/apis"
 	"github.com/armosec/k8s-interface/k8sinterface"
@@ -20,7 +21,7 @@ func NewDescriptiveInfoFromCloudProvider(object map[string]interface{}) *CloudPr
 
 	description := &CloudProviderDescribe{}
 	if b := workloadinterface.MapToBytes(object); b != nil {
-		if err := json.Unmarshal(b, &description); err != nil {
+		if err := json.Unmarshal(b, description); err != nil {
 			return nil
 		}
 	} else {
@@ -33,8 +34,16 @@ func IsTypeDescriptiveInfoFromCloudProvider(object map[string]interface{}) bool 
 	if object == nil {
 		return false
 	}
-	if kind, ok := object["kind"]; ok && kind != apis.CloudProviderDescribeKind {
-		return true
+	if apiVersion, ok := object["apiVersion"]; ok {
+		if p, k := apiVersion.(string); k {
+			if group := strings.Split(p, "/"); group[0] == apis.ApiVersionGKE || group[0] == apis.ApiVersionEKS {
+				if kind, ok := object["kind"]; ok {
+					if k, kk := kind.(string); kk && k == apis.CloudProviderDescribeKind {
+						return true
+					}
+				}
+			}
+		}
 	}
 	return false
 }
