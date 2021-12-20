@@ -2,6 +2,6 @@ package apis
 
 const (
 	ApiVersionEKS             = "eks.amazonaws.com"
-	ApiVersionGKE             = "cloud.google.com"
+	ApiVersionGKE             = "container.googleapis.com"
 	CloudProviderDescribeKind = "Describe"
 )
