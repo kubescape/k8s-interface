@@ -111,3 +111,8 @@ func TestInitializeMapResourcesMock(t *testing.T) {
 		assert.Equal(t, v, v2, fmt.Sprintf("resource: %s", k))
 	}
 }
+
+func TestIsTypeWorkload(t *testing.T) {
+	InitializeMapResourcesMock()
+	assert.True(t, IsTypeWorkload(cronJobObjectMock()))
+}

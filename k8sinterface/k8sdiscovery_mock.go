@@ -27,3 +27,11 @@ func GetResourceListMock() ([]*metav1.APIResourceList, error) {
 	}
 	return resourceListMock, nil
 }
+
+func cronJobObjectMock() map[string]interface{} {
+
+	cronJobMock := `{"apiVersion":"batch/v1","kind":"CronJob","metadata":{"annotations":{"meta.helm.sh/release-name":"armo","meta.helm.sh/release-namespace":"armo-system"},"creationTimestamp":"2021-12-09T13:25:00Z","generation":1,"labels":{"app":"armo-kubescape","app.kubernetes.io/managed-by":"Helm","tier":"armo-system-control-plane"},"name":"armo-kubescape","namespace":"armo-system","resourceVersion":"605805","uid":"9b1a0990-1b60-4d9f-bee5-e198f6934af5"},"spec":{"concurrencyPolicy":"Allow","failedJobsHistoryLimit":1,"jobTemplate":{"metadata":{"creationTimestamp":null},"spec":{"template":{"metadata":{"creationTimestamp":null},"spec":{"containers":[{"args":["kubescape scan --submit --environment=dev"],"command":["/bin/sh","-c"],"image":"quay.io/armosec/kubescape:latest","imagePullPolicy":"IfNotPresent","name":"kubescape","resources":{},"terminationMessagePath":"/dev/termination-log","terminationMessagePolicy":"File","volumeMounts":[{"mountPath":"/root/.kubescape/config.json","name":"kubescape-config-volume","subPath":"config.json"}]}],"dnsPolicy":"ClusterFirst","restartPolicy":"OnFailure","schedulerName":"default-scheduler","securityContext":{},"serviceAccount":"armo-kubescape-service-account","serviceAccountName":"armo-kubescape-service-account","terminationGracePeriodSeconds":30,"volumes":[{"configMap":{"defaultMode":420,"name":"armo-kubescape-config"},"name":"kubescape-config-volume"}]}}}},"schedule":"0 8 * * *","successfulJobsHistoryLimit":3,"suspend":false},"status":{"lastScheduleTime":"2021-12-20T08:00:00Z","lastSuccessfulTime":"2021-12-20T08:00:04Z"}}`
+	c := map[string]interface{}{}
+	json.Unmarshal([]byte(cronJobMock), &c)
+	return c
+}

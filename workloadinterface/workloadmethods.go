@@ -84,35 +84,6 @@ func (w *Workload) ToUnstructured() (*unstructured.Unstructured, error) {
 	return obj, nil
 }
 
-// TODO - consider using a k8s manifest validator
-// Return if this object is a valide k8s workload
-func IsTypeWorkload(object map[string]interface{}) bool {
-	if object == nil {
-		return false
-	}
-	// TODO - check if found in supported objects
-	if _, ok := object["apiVersion"]; !ok {
-		return false
-	}
-	if _, ok := object["kind"]; !ok {
-		return false
-	}
-	if imetadata, ok := object["metadata"]; ok {
-		if metadata, ok := imetadata.(map[string]interface{}); ok {
-			if _, ok := metadata["name"]; !ok {
-				return false
-			}
-			// DO NOT TEST NAMESPACE - Not all k8s workloads have a namespace
-		} else {
-			return false
-		}
-
-	} else {
-		return false
-	}
-	return true
-}
-
 // ======================================= DELETE ========================================
 
 func (w *Workload) RemoveInject() {

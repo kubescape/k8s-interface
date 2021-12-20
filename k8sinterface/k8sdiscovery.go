@@ -119,6 +119,19 @@ func JoinGroupVersion(group, version string) string {
 	return fmt.Sprintf("%s/%s", group, version)
 }
 
+// SplitApiVersion receives apiVersion ("group/version") returns the group and version splitted
+func SplitApiVersion(apiVersion string) (string, string) {
+	group, version := "", ""
+	p := strings.Split(apiVersion, "/")
+	if len(p) >= 1 {
+		group = p[0]
+	}
+	if len(p) >= 2 {
+		version = p[1]
+	}
+	return group, version
+}
+
 // JoinResourceTriplets returns the group, version and kind with the '/' separator
 func JoinResourceTriplets(group, version, resource string) string {
 	return fmt.Sprintf("%s/%s/%s", group, version, resource)
@@ -244,4 +257,24 @@ func updateResourceKind(resource string) string {
 
 func ignoreGroups() []string {
 	return []string{"metrics.k8s.io"}
+}
+
+// TODO - consider using a k8s manifest validator
+// Return if this object is a valide k8s workload
+func IsTypeWorkload(object map[string]interface{}) bool {
+	if object == nil {
+		return false
+	}
+	// TODO - check if found in supported objects
+	if _, ok := object["apiVersion"]; !ok {
+		return false
+	}
+	if kind, ok := object["kind"]; ok {
+		if k, ok := kind.(string); ok {
+			if IsKindKubernetes(k) {
+				return true
+			}
+		}
+	}
+	return false
 }
