@@ -13,7 +13,7 @@ func TestGetClusterDescribeGKE(t *testing.T) {
 	des, err := GetClusterDescribeGKE(g)
 	assert.NoError(t, err)
 	assert.Equal(t, apis.CloudProviderDescribeKind, des.GetKind())
-	assert.Equal(t, "cloud.google.com/v1/Describe/kubescape-demo-01", des.GetID())
+	assert.Equal(t, "container.googleapis.com/v1/Describe/kubescape-demo-01", des.GetID())
 	assert.Equal(t, k8sinterface.JoinGroupVersion(apis.ApiVersionGKE, Version), des.GetApiVersion())
 	assert.Equal(t, "kubescape-demo-01", des.GetName())
 	assert.Equal(t, 34, len(des.GetData()))
