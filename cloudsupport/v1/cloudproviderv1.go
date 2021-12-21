@@ -30,6 +30,7 @@ func NewDescriptiveInfoFromCloudProvider(object map[string]interface{}) *CloudPr
 	return description
 }
 
+// DEPRECATED - Use apis.IsTypeDescriptiveInfoFromCloudProvider instead
 func IsTypeDescriptiveInfoFromCloudProvider(object map[string]interface{}) bool {
 	if object == nil {
 		return false
@@ -38,7 +39,7 @@ func IsTypeDescriptiveInfoFromCloudProvider(object map[string]interface{}) bool 
 		if p, k := apiVersion.(string); k {
 			if group := strings.Split(p, "/"); group[0] == apis.ApiVersionGKE || group[0] == apis.ApiVersionEKS {
 				if kind, ok := object["kind"]; ok {
-					if k, kk := kind.(string); kk && k == apis.CloudProviderDescribeKind {
+					if k, kk := kind.(string); kk && k == apis.CloudProviderDescribeKind || k == "Describe" {
 						return true
 					}
 				}
