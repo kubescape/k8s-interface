@@ -152,11 +152,11 @@ func JoinGroupVersion(group, version string) string {
 func SplitApiVersion(apiVersion string) (string, string) {
 	group, version := "", ""
 	p := strings.Split(apiVersion, "/")
-	if len(p) >= 1 {
-		group = p[0]
-	}
 	if len(p) >= 2 {
+		group = p[0]
 		version = p[1]
+	} else if len(p) >= 1 {
+		version = p[0]
 	}
 	return group, version
 }

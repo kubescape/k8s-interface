@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/armosec/k8s-interface/cloudsupport/apis"
+	"github.com/armosec/k8s-interface/k8sinterface"
 	"github.com/armosec/k8s-interface/workloadinterface"
 )
 
@@ -123,5 +124,5 @@ func (description *CloudProviderDescribe) GetObject() map[string]interface{} {
 
 // ApiVersion/Kind/Name
 func (description *CloudProviderDescribe) GetID() string {
-	return fmt.Sprintf("%s/%s/%s", description.GetApiVersion(), description.GetKind(), description.GetName())
+	return fmt.Sprintf("%s/%s/%s", k8sinterface.JoinGroupVersion(k8sinterface.SplitApiVersion(description.GetApiVersion())), description.GetKind(), description.GetName())
 }
