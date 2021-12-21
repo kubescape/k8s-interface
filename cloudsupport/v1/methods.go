@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/armosec/k8s-interface/cloudsupport/apis"
 	"github.com/armosec/k8s-interface/workloadinterface"
 )
 
@@ -62,7 +63,7 @@ func (description *CloudProviderDescribe) SetWorkload(object map[string]interfac
 }
 
 func (description *CloudProviderDescribe) SetObject(object map[string]interface{}) {
-	if !IsTypeDescriptiveInfoFromCloudProvider(object) {
+	if !apis.IsTypeDescriptiveInfoFromCloudProvider(object) {
 		return
 	}
 	if b := workloadinterface.MapToBytes(object); len(b) > 0 {

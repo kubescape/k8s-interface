@@ -13,48 +13,47 @@ import (
 const ValueNotFound = -1
 
 // ResourceGroupMapping mapping of all supported Kubernetes cluster resources to apiVersion
-var ResourceGroupMapping = map[string]string{
-	"services":                        "/v1",
-	"pods":                            "/v1",
-	"replicationcontrollers":          "/v1",
-	"podtemplates":                    "/v1",
-	"namespaces":                      "/v1",
-	"nodes":                           "/v1",
-	"configmaps":                      "/v1",
-	"secrets":                         "/v1",
-	"serviceaccounts":                 "/v1",
-	"persistentvolumeclaims":          "/v1",
-	"limitranges":                     "/v1",
-	"resourcequotas":                  "/v1",
-	"daemonsets":                      "apps/v1",
-	"deployments":                     "apps/v1",
-	"replicasets":                     "apps/v1",
-	"statefulsets":                    "apps/v1",
-	"controllerrevisions":             "apps/v1",
-	"jobs":                            "batch/v1",
-	"cronjobs":                        "batch/v1beta1",
-	"horizontalpodautoscalers":        "autoscaling/v1",
-	"podsecuritypolicies":             "policy/v1beta1",
-	"poddisruptionbudgets":            "policy/v1beta1",
-	"ingresses":                       "networking.k8s.io/v1",
-	"networkpolicies":                 "networking.k8s.io/v1",
-	"clusterroles":                    "rbac.authorization.k8s.io/v1",
-	"clusterrolebindings":             "rbac.authorization.k8s.io/v1",
-	"roles":                           "rbac.authorization.k8s.io/v1",
-	"rolebindings":                    "rbac.authorization.k8s.io/v1",
-	"mutatingwebhookconfigurations":   "admissionregistration.k8s.io/v1",
-	"validatingwebhookconfigurations": "admissionregistration.k8s.io/v1",
+var resourceGroupMapping = map[string]string{}
+var resourceNamesapcedScope = []string{} // use this to determan if the resource is namespaced
+
+// DEPRECATED - use the 'ResourceNamesapcedScope' instead
+var ResourceClusterScope = []string{}
+
+func GetSingleResourceFromGroupMapping(resource string) (string, bool) {
+	if len(resourceGroupMapping) == 0 {
+		InitializeMapResources(nil)
+	}
+	r, k := resourceGroupMapping[updateResourceKind(resource)]
+	return r, k
 }
-var ResourceClusterScope = []string{}    // DEPRECATED - use the 'ResourceNamesapcedScope' instead
-var ResourceNamesapcedScope = []string{} // use this to determan if the resource is namespaced
+
+func GetResourceGroupMapping() map[string]string {
+	if len(resourceGroupMapping) == 0 {
+		InitializeMapResources(nil)
+	}
+	return resourceGroupMapping
+}
+
+func GetResourceNamesapcedScope() []string {
+	if len(resourceNamesapcedScope) == 0 {
+		InitializeMapResources(nil)
+	}
+	return resourceNamesapcedScope
+}
 
 // InitializeMapResources get supported api-resource (similar to 'kubectl api-resources') and map to 'ResourceGroupMapping' and 'ResourceNamesapcedScope'. If this function is not called, many functions may not work
 func InitializeMapResources(discoveryClient discovery.DiscoveryInterface) {
-
-	// resourceList, _ := discoveryClient.ServerPreferredResources()
-	// if len(resourceList) != 0 {
-	// 	setMapResources(resourceList)
+	// if discoveryClient != nil {
+	// 	resourceList, _ := discoveryClient.ServerPreferredResources()
+	// 	if len(resourceList) != 0 {
+	// 		setMapResources(resourceList)
+	// 	}
 	// }
+
+	// load from mock only if the map is empty
+	if len(resourceNamesapcedScope) == 0 {
+		InitializeMapResourcesMock()
+	}
 
 }
 func setMapResources(resourceList []*metav1.APIResourceList) {
@@ -80,12 +79,12 @@ func setMapResources(resourceList []*metav1.APIResourceList) {
 			if len(apiResource.Verbs) == 0 {
 				continue
 			}
-			if _, ok := ResourceGroupMapping[apiResource.Name]; ok { // do not override resources in map
+			if _, ok := resourceGroupMapping[apiResource.Name]; ok { // do not override resources in map
 				continue
 			}
-			ResourceGroupMapping[apiResource.Name] = JoinGroupVersion(gv.Group, gv.Version)
+			resourceGroupMapping[apiResource.Name] = JoinGroupVersion(gv.Group, gv.Version)
 			if apiResource.Namespaced {
-				ResourceNamesapcedScope = append(ResourceNamesapcedScope, JoinResourceTriplets(gv.Group, gv.Version, apiResource.Name))
+				resourceNamesapcedScope = append(resourceNamesapcedScope, JoinResourceTriplets(gv.Group, gv.Version, apiResource.Name))
 			} else { // DEPRECATED
 				ResourceClusterScope = append(ResourceClusterScope, JoinResourceTriplets(gv.Group, gv.Version, apiResource.Name))
 
@@ -105,7 +104,7 @@ func IsKindKubernetes(kind string) bool {
 // GetGroupVersionResource get the group and version from the resource name. Returns error if not found
 func GetGroupVersionResource(resource string) (schema.GroupVersionResource, error) {
 	resource = updateResourceKind(resource)
-	if r, ok := ResourceGroupMapping[resource]; ok {
+	if r, ok := GetSingleResourceFromGroupMapping(resource); ok {
 		gv := strings.Split(r, "/")
 		if len(gv) >= 2 {
 			return schema.GroupVersionResource{Group: gv[0], Version: gv[1], Resource: resource}, nil
@@ -121,7 +120,8 @@ func GetGroupVersionResource(resource string) (schema.GroupVersionResource, erro
 func IsNamespaceScope(resource *schema.GroupVersionResource) bool {
 
 	GetGroupVersionResource(resource.Resource)
-	return StringInSlice(ResourceNamesapcedScope, GroupVersionResourceToString(resource)) != ValueNotFound
+
+	return StringInSlice(GetResourceNamesapcedScope(), GroupVersionResourceToString(resource)) != ValueNotFound
 }
 
 // IsResourceInNamespaceScope returns true if the resource is a kubernetes namespaced resource
@@ -196,17 +196,18 @@ GetResourceTriplets("apps","v1","") -> []string{"apps/v1/deployments", "apps/v1/
 
 */
 func getResourceTriplets(group, version, resource string) []string {
+
 	resourceTriplets := []string{}
 	if resource == "" {
 		// load full map
-		for k, v := range ResourceGroupMapping {
+		for k, v := range GetResourceGroupMapping() {
 			if g := strings.Split(v, "/"); len(g) >= 2 {
 				resourceTriplets = append(resourceTriplets, JoinResourceTriplets(g[0], g[1], k))
 			}
 		}
 	} else if version == "" {
 		// load by resource
-		if v, ok := ResourceGroupMapping[resource]; ok {
+		if v, ok := GetSingleResourceFromGroupMapping(resource); ok {
 			g := strings.Split(v, "/")
 			if len(g) >= 2 {
 				if group == "" {
@@ -219,7 +220,7 @@ func getResourceTriplets(group, version, resource string) []string {
 		}
 	} else if group == "" {
 		// load by resource and version
-		if v, ok := ResourceGroupMapping[resource]; ok {
+		if v, ok := GetSingleResourceFromGroupMapping(resource); ok {
 			if g := strings.Split(v, "/"); len(g) >= 1 {
 				resourceTriplets = append(resourceTriplets, JoinResourceTriplets(g[0], version, resource))
 			}

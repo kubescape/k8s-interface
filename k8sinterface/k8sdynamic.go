@@ -26,7 +26,7 @@ type IWorkload workloadinterface.IWorkload
 func (k8sAPI *KubernetesApi) ListAllWorkload() ([]IWorkload, error) {
 	workloads := []IWorkload{}
 	var errs error
-	for resource := range ResourceGroupMapping {
+	for resource := range GetResourceGroupMapping() {
 		groupVersionResource, err := GetGroupVersionResource(resource)
 		if err != nil {
 			errs = fmt.Errorf("%v\n%s", errs, err.Error())

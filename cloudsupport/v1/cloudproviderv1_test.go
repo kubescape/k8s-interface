@@ -35,7 +35,7 @@ func TestNewDescriptiveInfoFromCloudProvider(t *testing.T) {
 	des, err := GetClusterDescribeEKS(g, nil)
 	assert.NoError(t, err)
 
-	assert.True(t, IsTypeDescriptiveInfoFromCloudProvider(des.GetObject()))
+	assert.True(t, apis.IsTypeDescriptiveInfoFromCloudProvider(des.GetObject()))
 	d := NewDescriptiveInfoFromCloudProvider(des.GetObject())
 	assert.NotNil(t, d)
 

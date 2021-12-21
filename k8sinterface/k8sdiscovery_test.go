@@ -14,8 +14,8 @@ func TestResourceGroupToString(t *testing.T) {
 	InitializeMapResourcesMock()
 
 	allResources := ResourceGroupToString("*", "*", "*")
-	if len(allResources) != len(ResourceGroupMapping) {
-		t.Errorf("Expected len: %d, received: %d", len(ResourceGroupMapping), len(allResources))
+	if len(allResources) != len(GetResourceGroupMapping()) {
+		t.Errorf("Expected len: %d, received: %d", len(GetResourceGroupMapping()), len(allResources))
 	}
 	pod := ResourceGroupToString("*", "*", "Pod")
 	if len(pod) == 0 || pod[0] != "/v1/pods" {
@@ -106,7 +106,7 @@ func TestInitializeMapResourcesMock(t *testing.T) {
 	}
 
 	for k, v := range sampleMap {
-		v2, ok := ResourceGroupMapping[k]
+		v2, ok := GetSingleResourceFromGroupMapping(k)
 		assert.True(t, ok)
 		assert.Equal(t, v, v2, fmt.Sprintf("resource: %s", k))
 	}

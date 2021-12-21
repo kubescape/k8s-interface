@@ -15,7 +15,7 @@ const Version = "v1"
 
 // NewDescriptiveInfoFromCloudProvider construct a CloudProviderDescribe from map[string]interface{}. If the map does not match the object, will return nil
 func NewDescriptiveInfoFromCloudProvider(object map[string]interface{}) *CloudProviderDescribe {
-	if !IsTypeDescriptiveInfoFromCloudProvider(object) {
+	if !apis.IsTypeDescriptiveInfoFromCloudProvider(object) {
 		return nil
 	}
 
