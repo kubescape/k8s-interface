@@ -12,9 +12,41 @@ import (
 
 const ValueNotFound = -1
 
-var ResourceGroupMapping = map[string]string{} // mapping of all supported Kubernetes cluster resources to apiVersion
-var ResourceClusterScope = []string{}          // DEPRECATED - use the 'ResourceNamesapcedScope' instead
-var ResourceNamesapcedScope = []string{}       // use this to determan if the resource is namespaced
+// ResourceGroupMapping mapping of all supported Kubernetes cluster resources to apiVersion
+var ResourceGroupMapping = map[string]string{
+	"services":                        "/v1",
+	"pods":                            "/v1",
+	"replicationcontrollers":          "/v1",
+	"podtemplates":                    "/v1",
+	"namespaces":                      "/v1",
+	"nodes":                           "/v1",
+	"configmaps":                      "/v1",
+	"secrets":                         "/v1",
+	"serviceaccounts":                 "/v1",
+	"persistentvolumeclaims":          "/v1",
+	"limitranges":                     "/v1",
+	"resourcequotas":                  "/v1",
+	"daemonsets":                      "apps/v1",
+	"deployments":                     "apps/v1",
+	"replicasets":                     "apps/v1",
+	"statefulsets":                    "apps/v1",
+	"controllerrevisions":             "apps/v1",
+	"jobs":                            "batch/v1",
+	"cronjobs":                        "batch/v1beta1",
+	"horizontalpodautoscalers":        "autoscaling/v1",
+	"podsecuritypolicies":             "policy/v1beta1",
+	"poddisruptionbudgets":            "policy/v1beta1",
+	"ingresses":                       "networking.k8s.io/v1",
+	"networkpolicies":                 "networking.k8s.io/v1",
+	"clusterroles":                    "rbac.authorization.k8s.io/v1",
+	"clusterrolebindings":             "rbac.authorization.k8s.io/v1",
+	"roles":                           "rbac.authorization.k8s.io/v1",
+	"rolebindings":                    "rbac.authorization.k8s.io/v1",
+	"mutatingwebhookconfigurations":   "admissionregistration.k8s.io/v1",
+	"validatingwebhookconfigurations": "admissionregistration.k8s.io/v1",
+}
+var ResourceClusterScope = []string{}    // DEPRECATED - use the 'ResourceNamesapcedScope' instead
+var ResourceNamesapcedScope = []string{} // use this to determan if the resource is namespaced
 
 // InitializeMapResources get supported api-resource (similar to 'kubectl api-resources') and map to 'ResourceGroupMapping' and 'ResourceNamesapcedScope'. If this function is not called, many functions may not work
 func InitializeMapResources(discoveryClient discovery.DiscoveryInterface) {
@@ -23,9 +55,6 @@ func InitializeMapResources(discoveryClient discovery.DiscoveryInterface) {
 	// if len(resourceList) != 0 {
 	// 	setMapResources(resourceList)
 	// }
-
-	// set mock initialization (if resources where missing from discovery. this can happen when an error accurse while pulling the resources)
-	InitializeMapResourcesMock()
 
 }
 func setMapResources(resourceList []*metav1.APIResourceList) {
@@ -130,6 +159,22 @@ func SplitApiVersion(apiVersion string) (string, string) {
 		version = p[1]
 	}
 	return group, version
+}
+
+// SplitResourceTriplets receives group, version and kind with the '/' separator and returns them separated
+func SplitResourceTriplets(resourceTriplets string) (string, string, string) {
+	group, version, resource := "", "", ""
+	splitted := strings.Split(resourceTriplets, "/")
+	if len(splitted) >= 1 {
+		group = splitted[0]
+	}
+	if len(splitted) >= 2 {
+		version = splitted[1]
+	}
+	if len(splitted) >= 3 {
+		resource = splitted[3]
+	}
+	return group, version, resource
 }
 
 // JoinResourceTriplets returns the group, version and kind with the '/' separator
