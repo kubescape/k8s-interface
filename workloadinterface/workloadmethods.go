@@ -371,14 +371,20 @@ func (w *Workload) GetGenerateName() string {
 
 func (w *Workload) GetReplicas() int {
 	if v, ok := InspectWorkload(w.workload, "spec", "replicas"); ok {
-		replicas, isok := v.(float64)
-		if isok {
-			return int(replicas)
+		switch n := v.(type) {
+		case float64:
+			return int(n)
+		case int64:
+			return int(n)
+		case float32:
+			return int(n)
+		case int32:
+			return int(n)
+		case int16:
+			return int(n)
+		case int:
+			return n
 		}
-		if replicas, isok := v.(int64); isok {
-			return int(replicas)
-		}
-
 	}
 	return 1
 }
@@ -391,15 +397,22 @@ func (w *Workload) GetKind() string {
 }
 func (w *Workload) GetSelector() (*metav1.LabelSelector, error) {
 	selector := &metav1.LabelSelector{}
-	if v, ok := InspectWorkload(w.workload, "spec", "selector", "matchLabels"); ok && v != nil {
-		b, err := json.Marshal(v)
+	if matchLabels, ok := InspectWorkload(w.workload, "spec", "selector", "matchLabels"); ok && matchLabels != nil {
+		if m, ok := matchLabels.(map[string]interface{}); ok {
+			selector.MatchLabels = make(map[string]string, len(m))
+			for k, v := range m {
+				selector.MatchLabels[k] = v.(string)
+			}
+		}
+	}
+	if matchExpressions, ok := InspectWorkload(w.workload, "spec", "selector", "matchExpressions"); ok && matchExpressions != nil {
+		b, err := json.Marshal(matchExpressions)
 		if err != nil {
 			return selector, err
 		}
-		if err := json.Unmarshal(b, selector); err != nil {
-			return selector, err
+		if err := json.Unmarshal(b, &selector.MatchExpressions); err != nil {
+			return selector, nil
 		}
-		return selector, nil
 	}
 	return selector, nil
 }
