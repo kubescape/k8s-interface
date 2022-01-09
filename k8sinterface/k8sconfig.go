@@ -18,7 +18,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client/config"
 )
 
-var ConnectedToCluster = true
+var connectedToCluster = true
+var clusterContextName = ""
 
 // K8SConfig pointer to k8s config
 var K8SConfig *restclient.Config
@@ -72,7 +73,7 @@ var RunningIncluster bool
 
 // LoadK8sConfig load config from local file or from cluster
 func LoadK8sConfig() error {
-	kubeconfig, err := config.GetConfig()
+	kubeconfig, err := config.GetConfigWithContext(GetClusterContextName())
 	if err != nil {
 		return fmt.Errorf("failed to load kubernetes config: %s", strings.ReplaceAll(err.Error(), "KUBERNETES_MASTER", "KUBECONFIG"))
 	}
@@ -93,7 +94,6 @@ func GetK8sConfig() *restclient.Config {
 	}
 	return K8SConfig
 }
-
 func GetCurrentContext() *api.Context {
 	kubeConfig := clientcmd.NewNonInteractiveDeferredLoadingClientConfig(clientcmd.NewDefaultClientConfigLoadingRules(), &clientcmd.ConfigOverrides{})
 	config, err := kubeConfig.RawConfig()
@@ -106,13 +106,13 @@ func GetCurrentContext() *api.Context {
 func IsConnectedToCluster() bool {
 	if K8SConfig == nil {
 		if err := LoadK8sConfig(); err != nil {
-			ConnectedToCluster = false
+			connectedToCluster = false
 		}
 	}
-	return ConnectedToCluster
+	return connectedToCluster
 }
 func GetClusterName() string {
-	if !ConnectedToCluster {
+	if !connectedToCluster {
 		return ""
 	}
 
@@ -140,4 +140,14 @@ func GetDefaultNamespace() string {
 		namespace = defaultNamespace
 	}
 	return namespace
+}
+
+// SetClusterContextName set the name of desired cluster context. The package will use this name when loading the context
+func SetClusterContextName(contextName string) {
+	clusterContextName = contextName
+}
+
+// SetClusterContextName get defined cluster context name. Set the context by calling 'SetClusterContextName'
+func GetClusterContextName() string {
+	return clusterContextName
 }

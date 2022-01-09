@@ -2,6 +2,7 @@ package k8sinterface
 
 import (
 	"context"
+	"testing"
 
 	"k8s.io/apimachinery/pkg/runtime"
 	dynamicfake "k8s.io/client-go/dynamic/fake"
@@ -28,16 +29,24 @@ func NewKubernetesApiMock() *KubernetesApi {
 	}
 }
 
-// func TestListDynamic(t *testing.T) {
-// 	k8s := NewKubernetesApi()
-// 	resource := schema.GroupVersionResource{Group: "", Version: "v1", Resource: "pods"}
-// 	clientResource, err := k8s.DynamicClient.Resource(resource).Namespace("default").List(k8s.Context, metav1.ListOptions{})
-// 	if err != nil {
-// 		t.Errorf("err: %v", err)
-// 	} else {
-// 		bla, _ := json.Marshal(clientResource)
-// 		// t.Errorf("BearerToken: %v", *K8SConfig)
-// 		// ioutil.WriteFile("bla.json", bla, 777)
-// 		t.Errorf("clientResource: %s", string(bla))
-// 	}
-// }
+func TestListDynamic(t *testing.T) {
+	k8s := NewKubernetesApi()
+	// resource := schema.GroupVersionResource{Group: "", Version: "v1", Resource: "pods"}
+	ww, err := k8s.ListWorkloads2("nginx-ingress", "Deployment")
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	if len(ww) == 0 {
+		t.Error("empty list")
+		return
+	}
+	s, _ := ww[0].GetSelector()
+	g, _ := GetGroupVersionResource("pods")
+	w, err := k8s.ListWorkloads(&g, "nginx-ingress", s.MatchLabels, nil)
+	if len(w) != 1 {
+		t.Error("empty list")
+		return
+	}
+
+}
