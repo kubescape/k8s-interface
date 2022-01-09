@@ -73,7 +73,7 @@ var RunningIncluster bool
 
 // LoadK8sConfig load config from local file or from cluster
 func LoadK8sConfig() error {
-	kubeconfig, err := config.GetConfigWithContext(GetClusterContextName())
+	kubeconfig, err := config.GetConfigWithContext(clusterContextName)
 	if err != nil {
 		return fmt.Errorf("failed to load kubernetes config: %s", strings.ReplaceAll(err.Error(), "KUBERNETES_MASTER", "KUBECONFIG"))
 	}
@@ -95,7 +95,7 @@ func GetK8sConfig() *restclient.Config {
 	return K8SConfig
 }
 func GetCurrentContext() *api.Context {
-	kubeConfig := clientcmd.NewNonInteractiveDeferredLoadingClientConfig(clientcmd.NewDefaultClientConfigLoadingRules(), &clientcmd.ConfigOverrides{})
+	kubeConfig := clientcmd.NewNonInteractiveDeferredLoadingClientConfig(clientcmd.NewDefaultClientConfigLoadingRules(), &clientcmd.ConfigOverrides{CurrentContext: clusterContextName})
 	config, err := kubeConfig.RawConfig()
 	if err != nil {
 		return nil
@@ -111,12 +111,14 @@ func IsConnectedToCluster() bool {
 	}
 	return connectedToCluster
 }
+
+// GetClusterName get
 func GetClusterName() string {
 	if !connectedToCluster {
 		return ""
 	}
 
-	kubeConfig := clientcmd.NewNonInteractiveDeferredLoadingClientConfig(clientcmd.NewDefaultClientConfigLoadingRules(), &clientcmd.ConfigOverrides{})
+	kubeConfig := clientcmd.NewNonInteractiveDeferredLoadingClientConfig(clientcmd.NewDefaultClientConfigLoadingRules(), &clientcmd.ConfigOverrides{CurrentContext: clusterContextName})
 	config, err := kubeConfig.RawConfig()
 	if err != nil {
 		return ""
@@ -131,7 +133,12 @@ func GetDefaultNamespace() string {
 	if err != nil {
 		return defaultNamespace
 	}
-	apiContext, ok := clientCfg.Contexts[clientCfg.CurrentContext]
+
+	tempClusterContextName := clusterContextName
+	if tempClusterContextName == "" {
+		tempClusterContextName = clientCfg.CurrentContext
+	}
+	apiContext, ok := clientCfg.Contexts[tempClusterContextName]
 	if !ok || apiContext == nil {
 		return defaultNamespace
 	}
@@ -145,9 +152,4 @@ func GetDefaultNamespace() string {
 // SetClusterContextName set the name of desired cluster context. The package will use this name when loading the context
 func SetClusterContextName(contextName string) {
 	clusterContextName = contextName
-}
-
-// SetClusterContextName get defined cluster context name. Set the context by calling 'SetClusterContextName'
-func GetClusterContextName() string {
-	return clusterContextName
 }
