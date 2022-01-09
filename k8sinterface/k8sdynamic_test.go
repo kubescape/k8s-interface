@@ -30,6 +30,9 @@ func NewKubernetesApiMock() *KubernetesApi {
 }
 
 func TestListDynamic(t *testing.T) {
+	if !IsConnectedToCluster() {
+		return
+	}
 	k8s := NewKubernetesApi()
 	// resource := schema.GroupVersionResource{Group: "", Version: "v1", Resource: "pods"}
 	ww, err := k8s.ListWorkloads2("nginx-ingress", "Deployment")
