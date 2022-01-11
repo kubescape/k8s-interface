@@ -7,7 +7,6 @@ import (
 	"github.com/armosec/k8s-interface/cloudsupport/apis"
 	"github.com/armosec/k8s-interface/k8sinterface"
 	"github.com/armosec/k8s-interface/workloadinterface"
-	"k8s.io/client-go/tools/clientcmd/api"
 )
 
 const TypeCloudProviderDescribe workloadinterface.ObjectType = "CloudProviderDescribe"
@@ -50,7 +49,7 @@ func IsTypeDescriptiveInfoFromCloudProvider(object map[string]interface{}) bool 
 }
 
 // Get descriptive info about cluster running in EKS.
-func GetClusterDescribeEKS(eksSupport IEKSSupport, currContext *api.Context) (*CloudProviderDescribe, error) {
+func GetClusterDescribeEKS(eksSupport IEKSSupport, currContext string) (*CloudProviderDescribe, error) {
 
 	clusterDescribe, err := eksSupport.GetClusterDescribe(currContext)
 	if err != nil {

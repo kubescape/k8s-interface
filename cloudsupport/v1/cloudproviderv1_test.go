@@ -21,7 +21,7 @@ func TestGetClusterDescribeGKE(t *testing.T) {
 
 func TestGetClusterDescribeEKS(t *testing.T) {
 	g := NewEKSSupportMock()
-	des, err := GetClusterDescribeEKS(g, nil)
+	des, err := GetClusterDescribeEKS(g, "ca-terraform-eks-dev-stage")
 	assert.NoError(t, err)
 	assert.Equal(t, apis.CloudProviderDescribeKind, des.GetKind())
 	assert.Equal(t, "eks.amazonaws.com/v1/ClusterDescribe/ca-terraform-eks-dev-stage", des.GetID())
@@ -32,7 +32,7 @@ func TestGetClusterDescribeEKS(t *testing.T) {
 
 func TestNewDescriptiveInfoFromCloudProvider(t *testing.T) {
 	g := NewEKSSupportMock()
-	des, err := GetClusterDescribeEKS(g, nil)
+	des, err := GetClusterDescribeEKS(g, "ca-terraform-eks-dev-stage")
 	assert.NoError(t, err)
 
 	assert.True(t, apis.IsTypeDescriptiveInfoFromCloudProvider(des.GetObject()))
@@ -44,7 +44,7 @@ func TestNewDescriptiveInfoFromCloudProvider(t *testing.T) {
 }
 func TestSetObject(t *testing.T) {
 	g := NewEKSSupportMock()
-	des, err := GetClusterDescribeEKS(g, nil)
+	des, err := GetClusterDescribeEKS(g, "ca-terraform-eks-dev-stage")
 	assert.NoError(t, err)
 
 	d := CloudProviderDescribe{}

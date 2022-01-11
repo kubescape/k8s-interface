@@ -41,7 +41,6 @@ func TestListDynamic(t *testing.T) {
 		return
 	}
 	if len(ww) == 0 {
-		t.Error("empty list")
 		return
 	}
 	s, _ := ww[0].GetSelector()

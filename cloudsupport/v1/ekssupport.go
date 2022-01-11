@@ -8,11 +8,10 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/eks"
-	"k8s.io/client-go/tools/clientcmd/api"
 )
 
 type IEKSSupport interface {
-	GetClusterDescribe(currContext *api.Context) (*eks.DescribeClusterOutput, error)
+	GetClusterDescribe(currContext string) (*eks.DescribeClusterOutput, error)
 	GetName(*eks.DescribeClusterOutput) string
 }
 
@@ -24,12 +23,12 @@ func NewEKSSupport() *EKSSupport {
 }
 
 // Get descriptive info about cluster running in EKS.
-func (eksSupport *EKSSupport) GetClusterDescribe(currContext *api.Context) (*eks.DescribeClusterOutput, error) {
+func (eksSupport *EKSSupport) GetClusterDescribe(currContext string) (*eks.DescribeClusterOutput, error) {
 	s, err := session.NewSession()
 	if err != nil {
 		return nil, err
 	}
-	splittedClusterContext := strings.Split(k8sinterface.GetCurrentContext().Cluster, ".")
+	splittedClusterContext := strings.Split(currContext, ".")
 	if len(splittedClusterContext) < 2 {
 		return nil, fmt.Errorf("error: failed to get region")
 	}
