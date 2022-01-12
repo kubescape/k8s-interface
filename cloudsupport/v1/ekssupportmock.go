@@ -15,7 +15,7 @@ type EKSSupportMock struct {
 }
 
 // Get descriptive info about cluster running in EKS.
-func (eksSupportM *EKSSupportMock) GetClusterDescribe(currContext string) (*eks.DescribeClusterOutput, error) {
+func (eksSupportM *EKSSupportMock) GetClusterDescribe(currContext string, region string) (*eks.DescribeClusterOutput, error) {
 	describeClusterOutput := &eks.DescribeClusterOutput{}
 	err := json.Unmarshal([]byte(mockobjects.EksDescriptor), describeClusterOutput)
 	return describeClusterOutput, err
