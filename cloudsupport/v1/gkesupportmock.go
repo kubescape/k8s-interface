@@ -15,7 +15,7 @@ type GKESupportMock struct {
 }
 
 // Get descriptive info about cluster running in GKE.
-func (gkeSupportM *GKESupportMock) GetClusterDescribe() (*containerpb.Cluster, error) {
+func (gkeSupportM *GKESupportMock) GetClusterDescribe(cluster string, region string, project string) (*containerpb.Cluster, error) {
 	c := &containerpb.Cluster{}
 	err := json.Unmarshal([]byte(mockobjects.GkeDescriptor), c)
 	return c, err

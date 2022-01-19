@@ -5,7 +5,6 @@ import (
 	"strings"
 
 	cloudsupportv1 "github.com/armosec/k8s-interface/cloudsupport/v1"
-	k8sinterface "github.com/armosec/k8s-interface/k8sinterface"
 	"github.com/armosec/k8s-interface/workloadinterface"
 )
 
@@ -15,12 +14,11 @@ const (
 	CloudProviderDescriptionKind = "ClusterDescription" // DEPRECATED
 )
 
-func IsRunningInCloudProvider() bool {
-	currContext := k8sinterface.GetCurrentContext()
-	if currContext == nil {
+func IsRunningInCloudProvider(cluster string) bool {
+	if cluster == "" {
 		return false
 	}
-	if strings.Contains(currContext.Cluster, strings.ToLower("eks")) || strings.Contains(currContext.Cluster, strings.ToLower("gke")) || strings.Contains(currContext.Cluster, strings.ToLower("aks")) {
+	if strings.Contains(cluster, strings.ToLower("eks")) || strings.Contains(cluster, strings.ToLower("gke")) || strings.Contains(cluster, strings.ToLower("aks")) {
 		return true
 	}
 	return false
@@ -37,19 +35,14 @@ func GetCloudProvider(currContext string) string {
 	return ""
 }
 
-func GetDescriptiveInfoFromCloudProvider() (workloadinterface.IMetadata, error) {
-	currContext := k8sinterface.GetCurrentContext()
+func GetDescriptiveInfoFromCloudProvider(cluster string, cloudProvider string, region string, project string) (workloadinterface.IMetadata, error) {
 	var clusterInfo *cloudsupportv1.CloudProviderDescribe
 	var err error
-	if currContext == nil {
-		return nil, nil
-	}
-	cloudProvider := GetCloudProvider(currContext.Cluster)
 	switch cloudProvider {
 	case "eks":
-		clusterInfo, err = cloudsupportv1.GetClusterDescribeEKS(cloudsupportv1.NewEKSSupport(), currContext)
+		clusterInfo, err = cloudsupportv1.GetClusterDescribeEKS(cloudsupportv1.NewEKSSupport(), cluster, region)
 	case "gke":
-		clusterInfo, err = cloudsupportv1.GetClusterDescribeGKE(cloudsupportv1.NewGKESupport())
+		clusterInfo, err = cloudsupportv1.GetClusterDescribeGKE(cloudsupportv1.NewGKESupport(), cluster, region, project)
 	case "aks":
 		return nil, fmt.Errorf("we currently do not support reading cloud provider description from aks")
 	}

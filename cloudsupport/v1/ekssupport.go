@@ -12,10 +12,11 @@ import (
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/eks"
 	"k8s.io/client-go/tools/clientcmd/api"
+
 )
 
 type IEKSSupport interface {
-	GetClusterDescribe(currContext *api.Context) (*eks.DescribeClusterOutput, error)
+	GetClusterDescribe(currContext string, region string) (*eks.DescribeClusterOutput, error)
 	GetName(*eks.DescribeClusterOutput) string
 }
 
@@ -27,13 +28,13 @@ func NewEKSSupport() *EKSSupport {
 }
 
 // Get descriptive info about cluster running in EKS.
-func (eksSupport *EKSSupport) GetClusterDescribe(currContext *api.Context) (*eks.DescribeClusterOutput, error) {
-	splittedClusterContext := strings.Split(k8sinterface.GetCurrentContext().Cluster, ".")
-	if len(splittedClusterContext) < 2 {
-		return nil, fmt.Errorf("error: failed to get region")
-	}
-	region := splittedClusterContext[1]
 
+func (eksSupport *EKSSupport) GetClusterDescribe(cluster string, region string) (*eks.DescribeClusterOutput, error) {
+	s, err := session.NewSession()
+	if err != nil {
+		return nil, err
+	}
+  
 	// Configure cluster name and region for request
 	awsConfig, err := config.LoadDefaultConfig(context.TODO())
 	if err != nil {
@@ -42,7 +43,7 @@ func (eksSupport *EKSSupport) GetClusterDescribe(currContext *api.Context) (*eks
 	awsConfig.Region = region
 	svc := eks.NewFromConfig(awsConfig)
 	input := &eks.DescribeClusterInput{
-		Name: aws.String(k8sinterface.GetClusterName()),
+		Name: aws.String(cluster),
 	}
 
 	result, err := svc.DescribeCluster(context.TODO(), input)

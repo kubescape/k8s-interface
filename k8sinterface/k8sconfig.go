@@ -94,6 +94,8 @@ func GetK8sConfig() *restclient.Config {
 	}
 	return K8SConfig
 }
+
+// DEPRECATED
 func GetCurrentContext() *api.Context {
 	kubeConfig := clientcmd.NewNonInteractiveDeferredLoadingClientConfig(clientcmd.NewDefaultClientConfigLoadingRules(), &clientcmd.ConfigOverrides{CurrentContext: clusterContextName})
 	config, err := kubeConfig.RawConfig()
@@ -116,6 +118,10 @@ func IsConnectedToCluster() bool {
 func GetClusterName() string {
 	if !connectedToCluster {
 		return ""
+	}
+
+	if clusterContextName != "" {
+		return clusterContextName
 	}
 
 	kubeConfig := clientcmd.NewNonInteractiveDeferredLoadingClientConfig(clientcmd.NewDefaultClientConfigLoadingRules(), &clientcmd.ConfigOverrides{CurrentContext: clusterContextName})
