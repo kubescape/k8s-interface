@@ -3,16 +3,12 @@ package v1
 import (
 	"context"
 	"fmt"
-	"strings"
 
-	k8sinterface "github.com/armosec/k8s-interface/k8sinterface"
 	"github.com/aws/aws-sdk-go-v2/aws"
 
 	//"github.com/aws/aws-sdk-go-v2/aws/session"
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/eks"
-	"k8s.io/client-go/tools/clientcmd/api"
-
 )
 
 type IEKSSupport interface {
@@ -30,11 +26,6 @@ func NewEKSSupport() *EKSSupport {
 // Get descriptive info about cluster running in EKS.
 
 func (eksSupport *EKSSupport) GetClusterDescribe(cluster string, region string) (*eks.DescribeClusterOutput, error) {
-	s, err := session.NewSession()
-	if err != nil {
-		return nil, err
-	}
-  
 	// Configure cluster name and region for request
 	awsConfig, err := config.LoadDefaultConfig(context.TODO())
 	if err != nil {
