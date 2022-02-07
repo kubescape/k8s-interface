@@ -1,9 +1,14 @@
 package v1
 
 import (
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/eks"
+	"context"
+	"fmt"
+
+	"github.com/aws/aws-sdk-go-v2/aws"
+
+	//"github.com/aws/aws-sdk-go-v2/aws/session"
+	"github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/service/eks"
 )
 
 type IEKSSupport interface {
@@ -19,18 +24,20 @@ func NewEKSSupport() *EKSSupport {
 }
 
 // Get descriptive info about cluster running in EKS.
+
 func (eksSupport *EKSSupport) GetClusterDescribe(cluster string, region string) (*eks.DescribeClusterOutput, error) {
-	s, err := session.NewSession()
-	if err != nil {
-		return nil, err
-	}
 	// Configure cluster name and region for request
-	svc := eks.New(s, &aws.Config{Region: aws.String(region)})
+	awsConfig, err := config.LoadDefaultConfig(context.TODO())
+	if err != nil {
+		return nil, fmt.Errorf("error: fail to load AWS SDK default %v", err)
+	}
+	awsConfig.Region = region
+	svc := eks.NewFromConfig(awsConfig)
 	input := &eks.DescribeClusterInput{
 		Name: aws.String(cluster),
 	}
 
-	result, err := svc.DescribeCluster(input)
+	result, err := svc.DescribeCluster(context.TODO(), input)
 	if err != nil {
 		return nil, err
 	}
