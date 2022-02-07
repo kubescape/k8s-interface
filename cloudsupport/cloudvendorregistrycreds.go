@@ -11,6 +11,7 @@ import (
 	"strings"
 	"time"
 
+	cloudsupportv1 "github.com/armosec/k8s-interface/cloudsupport/v1"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/ecr"
@@ -196,30 +197,13 @@ func CheckIsGCRImage(imageTag string) bool {
 
 // GetLoginDetailsForGCR return user name + password to use
 func GetLoginDetailsForGCR(imageTag string) (string, string, error) {
-	msi_endpoint, err := url.Parse(fmt.Sprintf("http://169.254.169.254/computeMetadata/v1/instance/service-accounts/%s/token", gcrDefaultServiceAccountName))
-	if err != nil {
-		return "", "", fmt.Errorf("creating URL : %v", err)
-	}
-	req, err := http.NewRequest("GET", msi_endpoint.String(), nil)
-	if err != nil {
-		return "", "", fmt.Errorf("creating HTTP request : %v", err)
-	}
-	req.Header.Add("Metadata-Flavor", "Google")
 
-	// Call managed services for Azure resources token endpoint
-	resp, err := httpClient.Do(req)
-	if err != nil {
-		return "", "", fmt.Errorf("calling token endpoint : %v", err)
+	gs := cloudsupportv1.NewGKESupport()
+	accesstoken, err := gs.GetAuthorizationKey()
+	if err == nil {
+		return "oauth2accesstoken", accesstoken, nil
 	}
-	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		return "", "", fmt.Errorf("HTTP Status : %v, make sure the '%s' service account is configured for ARMO pod", resp.Status, gcrDefaultServiceAccountName)
-	}
-	defer resp.Body.Close()
-	respMap := make(map[string]interface{})
-	if err := json.NewDecoder(resp.Body).Decode(&respMap); err != nil {
-		return "", "", fmt.Errorf("json Decode : %v", err)
-	}
-	return "oauth2accesstoken", fmt.Sprintf("%v", respMap["access_token"]), nil
+	return "", "", err
 }
 
 func GetCloudVendorRegistryCredentials(imageTag string) (map[string]types.AuthConfig, error) {
