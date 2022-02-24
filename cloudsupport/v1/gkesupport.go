@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	container "cloud.google.com/go/container/apiv1"
+	"golang.org/x/oauth2/google"
 	containerpb "google.golang.org/genproto/googleapis/container/v1"
 )
 
@@ -40,4 +41,21 @@ func (gkeSupport *GKESupport) GetClusterDescribe(cluster string, region string, 
 
 func (gkeSupport *GKESupport) GetName(clusterDescribe *containerpb.Cluster) string {
 	return clusterDescribe.Name
+}
+
+func (gkeSupport *GKESupport) GetAuthorizationKey() (string, error) {
+	ctx := context.Background()
+
+	token, err := google.DefaultTokenSource(ctx, nil...)
+	if err != nil {
+		fmt.Printf("GetAuthorizationKey: DefaultTokenSource failed with error: %v\n", err)
+		return "", fmt.Errorf("failed to find creds")
+	}
+	t, err := token.Token()
+	if err != nil {
+		fmt.Printf("GetAuthorizationKey: DefaultTokenSource failed with error: %v\n", err)
+		return "", fmt.Errorf("failed to find creds")
+	}
+	fmt.Printf("GetAuthorizationKey: t.AccessToken %v\n", t.AccessToken)
+	return t.AccessToken, nil
 }
