@@ -216,6 +216,7 @@ func getResourceTriplets(group, version, resource string) []string {
 				resourceTriplets = append(resourceTriplets, JoinResourceTriplets(group, g[1], resource))
 			}
 		} else {
+			// DO NOT USE GLOG
 			// glog.Errorf("Resource '%s' unknown", resource)
 		}
 	} else if group == "" {
@@ -225,6 +226,7 @@ func getResourceTriplets(group, version, resource string) []string {
 				resourceTriplets = append(resourceTriplets, JoinResourceTriplets(g[0], version, resource))
 			}
 		} else {
+			// DO NOT USE GLOG
 			// glog.Errorf("Resource '%s' unknown", resource)
 		}
 	} else {

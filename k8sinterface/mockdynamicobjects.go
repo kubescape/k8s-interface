@@ -2,8 +2,8 @@ package k8sinterface
 
 import (
 	"encoding/json"
+	"fmt"
 
-	"github.com/golang/glog"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 )
 
@@ -13,7 +13,7 @@ func V1KubeSystemNamespaceMock() *unstructured.UnstructuredList {
 	`
 	unstructuredList := unstructured.UnstructuredList{}
 	if err := json.Unmarshal([]byte(podsList), &unstructuredList); err != nil {
-		glog.Error(err)
+		fmt.Println(err)
 	}
 	return &unstructuredList
 }
@@ -1957,7 +1957,7 @@ func V1AllClusterWithCompromisedRegistriesMock() *unstructured.UnstructuredList 
 	`
 	unstructuredList := unstructured.UnstructuredList{}
 	if err := json.Unmarshal([]byte(podsList), &unstructuredList); err != nil {
-		glog.Error(err)
+		fmt.Println(err)
 	}
 	return &unstructuredList
 }

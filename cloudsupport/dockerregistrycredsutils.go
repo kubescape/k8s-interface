@@ -7,7 +7,6 @@ import (
 	"github.com/armosec/k8s-interface/k8sinterface"
 	"github.com/armosec/utils-k8s-go/secrethandling"
 	"github.com/docker/docker/api/types"
-	"github.com/golang/glog"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -46,19 +45,20 @@ func getImagePullSecret(k8sAPI *k8sinterface.KubernetesApi, secrets []string, na
 	for i := range secrets {
 		res, err := k8sAPI.KubernetesClient.CoreV1().Secrets(namespace).Get(context.Background(), secrets[i], metav1.GetOptions{})
 		if err != nil {
-			glog.Errorf("%s", err.Error())
+			// TODO - handle error
+			fmt.Println(err.Error())
 			continue
 		}
 		sec, err := secrethandling.ParseSecret(res, secrets[i])
 		if err == nil {
 			secretsAuthConfig[secrets[i]] = *sec
 		} else {
-			glog.Errorf("unable to get secret: %s", err.Error())
+			// TODO - handle error
+			fmt.Printf("unable to get secret: %s", err.Error())
 		}
 
 	}
 
-	// glog.Infof("secrets array: %v", secretsAuthConfig)
 	return secretsAuthConfig
 }
 
@@ -80,8 +80,8 @@ func GetImageRegistryCredentials(imageTag string, pod *corev1.Pod) (map[string]t
 	if imageTag != "" {
 		cloudVendorSecrets, err := GetCloudVendorRegistryCredentials(imageTag)
 		if err != nil {
-			glog.Errorf("Failed to GetCloudVendorRegistryCredentials(%s): %v", imageTag, err)
-
+			// TODO - handle error
+			fmt.Printf("failed to GetCloudVendorRegistryCredentials(%s): %v", imageTag, err.Error())
 		} else if len(cloudVendorSecrets) > 0 {
 			for secName := range cloudVendorSecrets {
 				secrets[secName] = cloudVendorSecrets[secName]
@@ -90,11 +90,12 @@ func GetImageRegistryCredentials(imageTag string, pod *corev1.Pod) (map[string]t
 	} else {
 		for contIdx := range pod.Spec.Containers {
 			imageTag := pod.Spec.Containers[contIdx].Image
-			glog.Infof("GetCloudVendorRegistryCredentials for image: %v", imageTag)
+
+			// todo - remove print
+			fmt.Printf("GetCloudVendorRegistryCredentials for image: %v", imageTag)
 			cloudVendorSecrets, err := GetCloudVendorRegistryCredentials(imageTag)
 			if err != nil {
-				glog.Errorf("Failed to GetCloudVendorRegistryCredentials(%s): %v", imageTag, err)
-
+				fmt.Printf("failed to GetCloudVendorRegistryCredentials(%s): %s", imageTag, err.Error())
 			} else if len(cloudVendorSecrets) > 0 {
 				for secName := range cloudVendorSecrets {
 					secrets[secName] = cloudVendorSecrets[secName]
@@ -135,7 +136,7 @@ func GetWorkloadImageRegistryCredentials(imageTag string, workload k8sinterface.
 	} else {
 		images := GetWorkloadsImages(workload)
 		for imageTag := range images {
-			glog.Infof("GetCloudVendorRegistryCredentials for image: %v", imageTag)
+			fmt.Printf("GetCloudVendorRegistryCredentials for image: %v", imageTag)
 			if cloudVendorSecrets, err := GetCloudVendorRegistryCredentials(imageTag); err != nil {
 				return secrets, fmt.Errorf("failed to GetCloudVendorRegistryCredentials, image: %s, message: %v", imageTag, err)
 			} else if len(cloudVendorSecrets) > 0 {
