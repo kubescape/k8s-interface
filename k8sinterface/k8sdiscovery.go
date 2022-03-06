@@ -329,9 +329,5 @@ func IsTypeWorkload(object map[string]interface{}) bool {
 	}
 	group, version := SplitApiVersion(s)
 
-	if len(getResourceTriplets(group, version, s2)) != 1 {
-		return false
-	}
-
-	return false
+	return len(getResourceTriplets(group, version, s2)) == 1
 }
