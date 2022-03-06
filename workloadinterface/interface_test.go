@@ -17,3 +17,9 @@ func TestWorkloadWithIMetadata(t *testing.T) {
 	a = NewWorkloadObj(nil)
 	fmt.Printf("%v", a.GetName())
 }
+
+func TestBasicObject(t *testing.T) {
+	var a IMetadata
+	a = NewBaseObject(nil)
+	fmt.Printf("%v", a.GetName())
+}
