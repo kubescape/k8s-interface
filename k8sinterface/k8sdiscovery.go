@@ -314,15 +314,24 @@ func IsTypeWorkload(object map[string]interface{}) bool {
 		return false
 	}
 	// TODO - check if found in supported objects
-	if _, ok := object["apiVersion"]; !ok {
+	apiVersion, ok := object["apiVersion"]
+	if !ok {
 		return false
 	}
-	if kind, ok := object["kind"]; ok {
-		if k, ok := kind.(string); ok {
-			if IsKindKubernetes(k) {
-				return true
-			}
-		}
+	kind, ok := object["kind"]
+	if !ok {
+		return false
 	}
+	s, k := apiVersion.(string)
+	s2, k2 := kind.(string)
+	if !k || !k2 {
+		return false
+	}
+	group, version := SplitApiVersion(s)
+
+	if len(getResourceTriplets(group, version, s2)) != 1 {
+		return false
+	}
+
 	return false
 }

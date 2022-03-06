@@ -133,13 +133,13 @@ func (b *BaseObject) SetName(name string) {
 
 // ===================== UTILS =======================
 func IsBaseObject(b map[string]interface{}) bool {
-	if _, ok := InspectMap(b, "kind"); !ok {
+	if kind, ok := InspectMap(b, "kind"); !ok || kind == "" {
 		return false
 	}
-	if _, ok := InspectMap(b, "apiVersion"); !ok {
+	if apiVersion, ok := InspectMap(b, "apiVersion"); !ok || apiVersion == "" {
 		return false
 	}
-	if _, ok := InspectMap(b, "metadata", "name"); !ok {
+	if name, ok := InspectMap(b, "metadata", "name"); !ok || name == "" {
 		return false
 	}
 	return true
