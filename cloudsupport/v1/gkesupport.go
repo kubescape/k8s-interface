@@ -48,14 +48,11 @@ func (gkeSupport *GKESupport) GetAuthorizationKey() (string, error) {
 
 	token, err := google.DefaultTokenSource(ctx, nil...)
 	if err != nil {
-		fmt.Printf("GetAuthorizationKey: DefaultTokenSource failed with error: %v\n", err)
-		return "", fmt.Errorf("failed to find creds")
+		return "", fmt.Errorf("failed to find creds: %v", err)
 	}
 	t, err := token.Token()
 	if err != nil {
-		fmt.Printf("GetAuthorizationKey: DefaultTokenSource failed with error: %v\n", err)
-		return "", fmt.Errorf("failed to find creds")
+		return "", fmt.Errorf("failed to parse token: %v", err)
 	}
-	fmt.Printf("GetAuthorizationKey: t.AccessToken %v\n", t.AccessToken)
 	return t.AccessToken, nil
 }

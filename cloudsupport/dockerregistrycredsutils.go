@@ -91,8 +91,6 @@ func GetImageRegistryCredentials(imageTag string, pod *corev1.Pod) (map[string]t
 		for contIdx := range pod.Spec.Containers {
 			imageTag := pod.Spec.Containers[contIdx].Image
 
-			// todo - remove print
-			fmt.Printf("GetCloudVendorRegistryCredentials for image: %v", imageTag)
 			cloudVendorSecrets, err := GetCloudVendorRegistryCredentials(imageTag)
 			if err != nil {
 				fmt.Printf("failed to GetCloudVendorRegistryCredentials(%s): %s", imageTag, err.Error())
@@ -136,7 +134,6 @@ func GetWorkloadImageRegistryCredentials(imageTag string, workload k8sinterface.
 	} else {
 		images := GetWorkloadsImages(workload)
 		for imageTag := range images {
-			fmt.Printf("GetCloudVendorRegistryCredentials for image: %v", imageTag)
 			if cloudVendorSecrets, err := GetCloudVendorRegistryCredentials(imageTag); err != nil {
 				return secrets, fmt.Errorf("failed to GetCloudVendorRegistryCredentials, image: %s, message: %v", imageTag, err)
 			} else if len(cloudVendorSecrets) > 0 {
