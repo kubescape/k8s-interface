@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	container "cloud.google.com/go/container/apiv1"
+	"github.com/armosec/k8s-interface/k8sinterface"
 	"golang.org/x/oauth2/google"
 	containerpb "google.golang.org/genproto/googleapis/container/v1"
 )
@@ -16,6 +17,7 @@ type IGKESupport interface {
 	GetName(clusterDescribe *containerpb.Cluster) string
 	GetProject(cluster string) (string, error)
 	GetRegion(cluster string) (string, error)
+	GetCluster(cluster string) string
 }
 type GKESupport struct {
 }
@@ -62,6 +64,7 @@ func (gkeSupport *GKESupport) GetClusterDescribe(cluster string, region string, 
 		return nil, err
 	}
 	defer c.Close()
+
 	clusterName := fmt.Sprintf("projects/%s/locations/%s/clusters/%s", project, region, cluster)
 	req := &containerpb.GetClusterRequest{
 		Name: clusterName,
@@ -89,4 +92,22 @@ func (gkeSupport *GKESupport) GetAuthorizationKey() (string, error) {
 		return "", fmt.Errorf("failed to parse token: %v", err)
 	}
 	return t.AccessToken, nil
+}
+
+func (gkeSupport *GKESupport) GetCluster(cluster string) string {
+
+	parsedName := strings.Split(cluster, "_")
+	if len(parsedName) < 3 {
+		return ""
+	}
+	clusterName := parsedName[3]
+	if clusterName != "" {
+		return clusterName
+	}
+	cluster = k8sinterface.GetClusterContext()
+	parsedName = strings.Split(cluster, "_")
+	if len(parsedName) < 3 {
+		return ""
+	}
+	return parsedName[3]
 }

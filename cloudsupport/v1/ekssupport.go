@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 
 	//"github.com/aws/aws-sdk-go-v2/aws/session"
+	"github.com/armosec/k8s-interface/k8sinterface"
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/eks"
 )
@@ -17,6 +18,7 @@ type IEKSSupport interface {
 	GetClusterDescribe(currContext string, region string) (*eks.DescribeClusterOutput, error)
 	GetName(*eks.DescribeClusterOutput) string
 	GetRegion(cluster string) (string, error)
+	GetCluster(cluster string) string
 }
 
 type EKSSupport struct {
@@ -63,4 +65,18 @@ func (eksSupport *EKSSupport) GetRegion(cluster string) (string, error) {
 	}
 	region = splittedClusterContext[1]
 	return region, nil
+}
+
+func (eksSupport *EKSSupport) GetCluster(cluster string) string {
+	if cluster != "" {
+		splittedCluster := strings.Split(cluster, ".")
+		if len(splittedCluster) > 1 {
+			return splittedCluster[0]
+		}
+	}
+	splittedCluster := strings.Split(k8sinterface.GetClusterContext(), ".")
+	if len(splittedCluster) > 1 {
+		return splittedCluster[0]
+	}
+	return ""
 }

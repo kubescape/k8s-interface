@@ -2,8 +2,10 @@ package v1
 
 import (
 	"encoding/json"
+	"strings"
 
 	"github.com/armosec/k8s-interface/cloudsupport/mockobjects"
+	"github.com/armosec/k8s-interface/k8sinterface"
 	"github.com/aws/aws-sdk-go-v2/service/eks"
 )
 
@@ -28,4 +30,18 @@ func (eksSupportM *EKSSupportMock) GetName(describe *eks.DescribeClusterOutput) 
 
 func (eksSupportM *EKSSupportMock) GetRegion(cluster string) (string, error) {
 	return "", nil
+}
+
+func (eksSupport *EKSSupportMock) GetCluster(cluster string) string {
+	if cluster != "" {
+		splittedCluster := strings.Split(cluster, ".")
+		if len(splittedCluster) > 1 {
+			return splittedCluster[0]
+		}
+	}
+	splittedCluster := strings.Split(k8sinterface.GetClusterContext(), ".")
+	if len(splittedCluster) > 1 {
+		return splittedCluster[0]
+	}
+	return ""
 }

@@ -42,7 +42,6 @@ func GetCloudProvider(currContext string) string {
 	if present {
 		return val
 	}
-
 	if strings.Contains(currContext, strings.ToLower(v1.EKS)) {
 		return v1.EKS
 	} else if strings.Contains(currContext, strings.ToLower(cloudsupportv1.GKE)) {
@@ -55,7 +54,6 @@ func GetCloudProvider(currContext string) string {
 
 func GetDescriptiveInfoFromCloudProvider(cluster string, cloudProvider string) (workloadinterface.IMetadata, error) {
 	var clusterInfo *cloudsupportv1.CloudProviderDescribe
-	var err error
 
 	switch cloudProvider {
 	case v1.EKS:
@@ -65,6 +63,9 @@ func GetDescriptiveInfoFromCloudProvider(cluster string, cloudProvider string) (
 			return nil, err
 		}
 		clusterInfo, err = cloudsupportv1.GetClusterDescribeEKS(cloudsupportv1.NewEKSSupport(), cluster, region)
+		if err != nil {
+			return nil, err
+		}
 	case cloudsupportv1.GKE:
 		gkeSupport := cloudsupportv1.NewGKESupport()
 		project, err := gkeSupport.GetProject(cluster)
@@ -76,6 +77,9 @@ func GetDescriptiveInfoFromCloudProvider(cluster string, cloudProvider string) (
 			return nil, err
 		}
 		clusterInfo, err = cloudsupportv1.GetClusterDescribeGKE(gkeSupport, cluster, region, project)
+		if err != nil {
+			return nil, err
+		}
 	case cloudsupportv1.AKS:
 		subscriptionID, err := cloudsupportv1.NewAKSSupport().GetSubscriptionID()
 		if err != nil {
@@ -86,10 +90,9 @@ func GetDescriptiveInfoFromCloudProvider(cluster string, cloudProvider string) (
 			return nil, err
 		}
 		clusterInfo, err = cloudsupportv1.GetClusterDescribeAKS(cloudsupportv1.NewAKSSupport(), cluster, subscriptionID, resourceGroup)
-	}
-
-	if err != nil {
-		return nil, err
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return clusterInfo, nil
