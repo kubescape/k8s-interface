@@ -1,6 +1,7 @@
 package v1
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/armosec/k8s-interface/cloudsupport/apis"
@@ -30,6 +31,21 @@ func TestGetClusterDescribeEKS(t *testing.T) {
 	//assert.Equal(t, 1, len(des.GetData()))
 }
 
+func TestGetClusterDescribeAKS(t *testing.T) {
+	g := NewAKSSupportMock()
+	clusterDescribe, err := g.GetClusterDescribe("e053c6a9-157e-49c0-818b-461019cb7fef", "armo-testing", "armo-dev")
+	assert.NoError(t, err)
+	subscriptionId, err := g.GetSubscriptionID()
+	assert.NoError(t, err)
+	resourceGroup, err := g.GetResourceGroup()
+	assert.NoError(t, err)
+	des, err := GetClusterDescribeAKS(g, g.GetName(*clusterDescribe), subscriptionId, resourceGroup)
+	assert.NoError(t, err)
+	fmt.Println(des)
+	assert.Equal(t, apis.CloudProviderDescribeKind, des.GetKind())
+	assert.Equal(t, k8sinterface.JoinGroupVersion(apis.ApiVersionAKS, Version), des.GetApiVersion())
+
+}
 func TestNewDescriptiveInfoFromCloudProvider(t *testing.T) {
 	g := NewEKSSupportMock()
 	des, err := GetClusterDescribeEKS(g, "ca-terraform-eks-dev-stage", "")

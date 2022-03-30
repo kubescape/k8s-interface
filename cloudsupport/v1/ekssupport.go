@@ -3,6 +3,8 @@ package v1
 import (
 	"context"
 	"fmt"
+	"os"
+	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 
@@ -14,6 +16,7 @@ import (
 type IEKSSupport interface {
 	GetClusterDescribe(currContext string, region string) (*eks.DescribeClusterOutput, error)
 	GetName(*eks.DescribeClusterOutput) string
+	GetRegion(cluster string) (string, error)
 }
 
 type EKSSupport struct {
@@ -47,4 +50,17 @@ func (eksSupport *EKSSupport) GetClusterDescribe(cluster string, region string) 
 // getName get cluster name from describe
 func (eksSupport *EKSSupport) GetName(describe *eks.DescribeClusterOutput) string {
 	return *describe.Cluster.Name
+}
+
+func (eksSupport *EKSSupport) GetRegion(cluster string) (string, error) {
+	region, present := os.LookupEnv(KS_CLOUD_REGION_ENV_VAR)
+	if present {
+		return region, nil
+	}
+	splittedClusterContext := strings.Split(cluster, ".")
+	if len(splittedClusterContext) < 2 {
+		return "", fmt.Errorf("failed to get region")
+	}
+	region = splittedClusterContext[1]
+	return region, nil
 }

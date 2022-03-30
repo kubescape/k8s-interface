@@ -4,6 +4,7 @@ import "strings"
 
 const (
 	ApiVersionEKS             = "eks.amazonaws.com"
+	ApiVersionAKS             = "management.azure.com"
 	ApiVersionGKE             = "container.googleapis.com"
 	CloudProviderDescribeKind = "ClusterDescribe"
 )

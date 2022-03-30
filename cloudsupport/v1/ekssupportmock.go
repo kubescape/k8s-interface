@@ -25,3 +25,7 @@ func (eksSupportM *EKSSupportMock) GetClusterDescribe(currContext string, region
 func (eksSupportM *EKSSupportMock) GetName(describe *eks.DescribeClusterOutput) string {
 	return *describe.Cluster.Name
 }
+
+func (eksSupportM *EKSSupportMock) GetRegion(cluster string) (string, error) {
+	return "", nil
+}

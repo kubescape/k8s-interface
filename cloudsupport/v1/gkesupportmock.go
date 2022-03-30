@@ -24,3 +24,11 @@ func (gkeSupportM *GKESupportMock) GetClusterDescribe(cluster string, region str
 func (gkeSupportM *GKESupportMock) GetName(clusterDescribe *containerpb.Cluster) string {
 	return clusterDescribe.Name
 }
+
+func (gkeSupportM *GKESupportMock) GetProject(cluster string) (string, error) {
+	return "", nil
+}
+
+func (gkeSupportM *GKESupportMock) GetRegion(cluster string) (string, error) {
+	return "", nil
+}

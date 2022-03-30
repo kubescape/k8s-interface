@@ -1,50 +1,91 @@
 package cloudsupport
 
 import (
-	"fmt"
+	"os"
 	"strings"
 
 	cloudsupportv1 "github.com/armosec/k8s-interface/cloudsupport/v1"
+	v1 "github.com/armosec/k8s-interface/cloudsupport/v1"
+	"github.com/armosec/k8s-interface/k8sinterface"
 	"github.com/armosec/k8s-interface/workloadinterface"
 )
 
-const TypeCloudProviderDescription workloadinterface.ObjectType = "CloudProviderDescribe" // DEPRECATED
-
 const (
-	CloudProviderDescriptionKind = "ClusterDescription" // DEPRECATED
+	TypeCloudProviderDescription workloadinterface.ObjectType = "CloudProviderDescribe" // DEPRECATED
+	CloudProviderDescriptionKind                              = "ClusterDescription"    // DEPRECATED
+	KS_CLOUD_PROVIDER_ENV_VAR                                 = "KS_CLOUD_PROVIDER"
+	KS_KUBE_CLUSTER_ENV_VAR                                   = "KS_KUBE_CLUSTER"
 )
 
 func IsRunningInCloudProvider(cluster string) bool {
 	if cluster == "" {
 		return false
 	}
-	if strings.Contains(cluster, strings.ToLower("eks")) || strings.Contains(cluster, strings.ToLower("gke")) || strings.Contains(cluster, strings.ToLower("aks")) {
+	if strings.Contains(cluster, strings.ToLower(cloudsupportv1.EKS)) || strings.Contains(cluster, strings.ToLower(cloudsupportv1.GKE)) || strings.Contains(cluster, strings.ToLower(cloudsupportv1.AKS)) {
 		return true
 	}
 	return false
 }
 
+func GetKubeContextName() string {
+	val, present := os.LookupEnv(KS_KUBE_CLUSTER_ENV_VAR)
+	if present {
+		return val
+	}
+
+	return k8sinterface.GetClusterContext()
+}
+
+// Try to lookup from env var and then from current context
 func GetCloudProvider(currContext string) string {
-	if strings.Contains(currContext, strings.ToLower("eks")) {
-		return "eks"
-	} else if strings.Contains(currContext, strings.ToLower("gke")) {
-		return "gke"
-	} else if strings.Contains(currContext, strings.ToLower("aks")) {
-		return "aks"
+	val, present := os.LookupEnv(KS_CLOUD_PROVIDER_ENV_VAR)
+	if present {
+		return val
+	}
+
+	if strings.Contains(currContext, strings.ToLower(v1.EKS)) {
+		return v1.EKS
+	} else if strings.Contains(currContext, strings.ToLower(cloudsupportv1.GKE)) {
+		return cloudsupportv1.GKE
+	} else if strings.Contains(currContext, strings.ToLower(cloudsupportv1.AKS)) {
+		return cloudsupportv1.AKS
 	}
 	return ""
 }
 
-func GetDescriptiveInfoFromCloudProvider(cluster string, cloudProvider string, region string, project string) (workloadinterface.IMetadata, error) {
+func GetDescriptiveInfoFromCloudProvider(cluster string, cloudProvider string) (workloadinterface.IMetadata, error) {
 	var clusterInfo *cloudsupportv1.CloudProviderDescribe
 	var err error
+
 	switch cloudProvider {
-	case "eks":
+	case v1.EKS:
+		eksSupport := cloudsupportv1.NewEKSSupport()
+		region, err := eksSupport.GetRegion(cluster)
+		if err != nil {
+			return nil, err
+		}
 		clusterInfo, err = cloudsupportv1.GetClusterDescribeEKS(cloudsupportv1.NewEKSSupport(), cluster, region)
-	case "gke":
-		clusterInfo, err = cloudsupportv1.GetClusterDescribeGKE(cloudsupportv1.NewGKESupport(), cluster, region, project)
-	case "aks":
-		return nil, fmt.Errorf("we currently do not support reading cloud provider description from aks")
+	case cloudsupportv1.GKE:
+		gkeSupport := cloudsupportv1.NewGKESupport()
+		project, err := gkeSupport.GetProject(cluster)
+		if err != nil {
+			return nil, err
+		}
+		region, err := gkeSupport.GetRegion(cluster)
+		if err != nil {
+			return nil, err
+		}
+		clusterInfo, err = cloudsupportv1.GetClusterDescribeGKE(gkeSupport, cluster, region, project)
+	case cloudsupportv1.AKS:
+		subscriptionID, err := cloudsupportv1.NewAKSSupport().GetSubscriptionID()
+		if err != nil {
+			return nil, err
+		}
+		resourceGroup, err := cloudsupportv1.NewAKSSupport().GetResourceGroup()
+		if err != nil {
+			return nil, err
+		}
+		clusterInfo, err = cloudsupportv1.GetClusterDescribeAKS(cloudsupportv1.NewAKSSupport(), cluster, subscriptionID, resourceGroup)
 	}
 
 	if err != nil {
