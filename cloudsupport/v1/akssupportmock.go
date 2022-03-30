@@ -26,7 +26,7 @@ func (AKSSupportM *AKSSupportMock) GetName(managedCluster containerservice.Manag
 }
 
 func (AKSSupportM *AKSSupportMock) GetSubscriptionID() (string, error) {
-	return "e053c6a9-157e-49c0-818b-461019cb7fef", nil
+	return "XXXXX", nil
 }
 
 func (AKSSupportM *AKSSupportMock) GetResourceGroup() (string, error) {
