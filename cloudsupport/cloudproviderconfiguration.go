@@ -5,7 +5,6 @@ import (
 	"strings"
 
 	cloudsupportv1 "github.com/armosec/k8s-interface/cloudsupport/v1"
-	v1 "github.com/armosec/k8s-interface/cloudsupport/v1"
 	"github.com/armosec/k8s-interface/k8sinterface"
 	"github.com/armosec/k8s-interface/workloadinterface"
 )
@@ -38,12 +37,12 @@ func GetKubeContextName() string {
 
 // Try to lookup from env var and then from current context
 func GetCloudProvider(currContext string) string {
-	val, present := os.LookupEnv(KS_CLOUD_PROVIDER_ENV_VAR)
-	if present {
+	val, ok := os.LookupEnv(KS_CLOUD_PROVIDER_ENV_VAR)
+	if ok {
 		return val
 	}
-	if strings.Contains(currContext, strings.ToLower(v1.EKS)) {
-		return v1.EKS
+	if strings.Contains(currContext, strings.ToLower(cloudsupportv1.EKS)) {
+		return cloudsupportv1.EKS
 	} else if strings.Contains(currContext, strings.ToLower(cloudsupportv1.GKE)) {
 		return cloudsupportv1.GKE
 	} else if strings.Contains(currContext, strings.ToLower(cloudsupportv1.AKS)) {
@@ -56,13 +55,13 @@ func GetDescriptiveInfoFromCloudProvider(cluster string, cloudProvider string) (
 	var clusterInfo *cloudsupportv1.CloudProviderDescribe
 
 	switch cloudProvider {
-	case v1.EKS:
+	case cloudsupportv1.EKS:
 		eksSupport := cloudsupportv1.NewEKSSupport()
 		region, err := eksSupport.GetRegion(cluster)
 		if err != nil {
 			return nil, err
 		}
-		clusterInfo, err = cloudsupportv1.GetClusterDescribeEKS(cloudsupportv1.NewEKSSupport(), cluster, region)
+		clusterInfo, err = cloudsupportv1.GetClusterDescribeEKS(eksSupport, cluster, region)
 		if err != nil {
 			return nil, err
 		}
@@ -81,15 +80,16 @@ func GetDescriptiveInfoFromCloudProvider(cluster string, cloudProvider string) (
 			return nil, err
 		}
 	case cloudsupportv1.AKS:
-		subscriptionID, err := cloudsupportv1.NewAKSSupport().GetSubscriptionID()
+		aksSupport := cloudsupportv1.NewAKSSupport()
+		subscriptionID, err := aksSupport.GetSubscriptionID()
 		if err != nil {
 			return nil, err
 		}
-		resourceGroup, err := cloudsupportv1.NewAKSSupport().GetResourceGroup()
+		resourceGroup, err := aksSupport.GetResourceGroup()
 		if err != nil {
 			return nil, err
 		}
-		clusterInfo, err = cloudsupportv1.GetClusterDescribeAKS(cloudsupportv1.NewAKSSupport(), cluster, subscriptionID, resourceGroup)
+		clusterInfo, err = cloudsupportv1.GetClusterDescribeAKS(aksSupport, cluster, subscriptionID, resourceGroup)
 		if err != nil {
 			return nil, err
 		}
