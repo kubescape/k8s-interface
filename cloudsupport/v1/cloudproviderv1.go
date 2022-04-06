@@ -56,7 +56,7 @@ func IsTypeDescriptiveInfoFromCloudProvider(object map[string]interface{}) bool 
 
 // Get descriptive info about cluster running in EKS.
 func GetClusterDescribeEKS(eksSupport IEKSSupport, cluster string, region string) (*CloudProviderDescribe, error) {
-	cluster = eksSupport.GetCluster(cluster)
+	cluster = eksSupport.GetContextName(cluster)
 	clusterDescribe, err := eksSupport.GetClusterDescribe(cluster, region)
 	if err != nil {
 		return nil, err
@@ -86,7 +86,7 @@ func GetClusterDescribeEKS(eksSupport IEKSSupport, cluster string, region string
 
 // Get descriptive info about cluster running in GKE.
 func GetClusterDescribeGKE(gkeSupport IGKESupport, clusterName string, region string, project string) (*CloudProviderDescribe, error) {
-	cluster := gkeSupport.GetCluster(clusterName)
+	cluster := gkeSupport.GetContextName(clusterName)
 	clusterDescribe, err := gkeSupport.GetClusterDescribe(cluster, region, project)
 	if err != nil {
 		return nil, err
@@ -131,7 +131,7 @@ func GetClusterDescribeAKS(aksSupport IAKSSupport, cluster string, subscriptionI
 	// set descriptor object
 	clusterInfo := &CloudProviderDescribe{}
 	clusterInfo.SetApiVersion(k8sinterface.JoinGroupVersion(apis.ApiVersionAKS, Version))
-	clusterInfo.SetName(aksSupport.GetName(clusterDescribe))
+	clusterInfo.SetName(aksSupport.GetContextName(clusterDescribe))
 	clusterInfo.SetProvider(AKS)
 	clusterInfo.SetKind(apis.CloudProviderDescribeKind)
 

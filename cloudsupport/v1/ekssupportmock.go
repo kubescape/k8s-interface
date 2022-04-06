@@ -32,7 +32,7 @@ func (eksSupportM *EKSSupportMock) GetRegion(cluster string) (string, error) {
 	return "", nil
 }
 
-func (eksSupport *EKSSupportMock) GetCluster(cluster string) string {
+func (eksSupport *EKSSupportMock) GetContextName(cluster string) string {
 	if cluster != "" {
 		splittedCluster := strings.Split(cluster, ".")
 		if len(splittedCluster) > 1 {

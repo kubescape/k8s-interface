@@ -17,7 +17,7 @@ type IGKESupport interface {
 	GetName(clusterDescribe *containerpb.Cluster) string
 	GetProject(cluster string) (string, error)
 	GetRegion(cluster string) (string, error)
-	GetCluster(cluster string) string
+	GetContextName(cluster string) string
 }
 type GKESupport struct {
 }
@@ -94,7 +94,7 @@ func (gkeSupport *GKESupport) GetAuthorizationKey() (string, error) {
 	return t.AccessToken, nil
 }
 
-func (gkeSupport *GKESupport) GetCluster(cluster string) string {
+func (gkeSupport *GKESupport) GetContextName(cluster string) string {
 
 	parsedName := strings.Split(cluster, "_")
 	if len(parsedName) < 3 {

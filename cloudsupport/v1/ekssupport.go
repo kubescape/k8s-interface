@@ -18,7 +18,7 @@ type IEKSSupport interface {
 	GetClusterDescribe(currContext string, region string) (*eks.DescribeClusterOutput, error)
 	GetName(*eks.DescribeClusterOutput) string
 	GetRegion(cluster string) (string, error)
-	GetCluster(cluster string) string
+	GetContextName(cluster string) string
 }
 
 type EKSSupport struct {
@@ -73,7 +73,7 @@ func (eksSupport *EKSSupport) GetRegion(cluster string) (string, error) {
 	return region, nil
 }
 
-func (eksSupport *EKSSupport) GetCluster(cluster string) string {
+func (eksSupport *EKSSupport) GetContextName(cluster string) string {
 	if cluster != "" {
 		splittedCluster := strings.Split(cluster, ".")
 		if len(splittedCluster) > 1 {

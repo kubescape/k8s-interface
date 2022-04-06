@@ -35,7 +35,7 @@ func (gkeSupportM *GKESupportMock) GetRegion(cluster string) (string, error) {
 	return "", nil
 }
 
-func (gkeSupportM *GKESupportMock) GetCluster(cluster string) string {
+func (gkeSupportM *GKESupportMock) GetContextName(cluster string) string {
 	parsedName := strings.Split(cluster, "_")
 	if len(parsedName) < 3 {
 		return ""

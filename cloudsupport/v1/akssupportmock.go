@@ -21,7 +21,7 @@ func (AKSSupportM *AKSSupportMock) GetClusterDescribe(subscriptionId string, clu
 	return c, err
 }
 
-func (AKSSupportM *AKSSupportMock) GetName(managedCluster *containerservice.ManagedCluster) string {
+func (AKSSupportM *AKSSupportMock) GetContextName(managedCluster *containerservice.ManagedCluster) string {
 	return "daniel"
 }
 
