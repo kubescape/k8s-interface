@@ -2,6 +2,7 @@ package v1
 
 import (
 	"encoding/json"
+	"fmt"
 	"strings"
 
 	"github.com/armosec/k8s-interface/cloudsupport/apis"
@@ -118,6 +119,9 @@ func GetClusterDescribeAKS(aksSupport IAKSSupport, cluster string, subscriptionI
 	if err != nil {
 		return nil, err
 	}
+	if clusterDescribe == nil {
+		return nil, fmt.Errorf("error getting cluster descriptive information")
+	}
 
 	resultInBytes, err := json.Marshal(clusterDescribe)
 	if err != nil {
@@ -127,7 +131,7 @@ func GetClusterDescribeAKS(aksSupport IAKSSupport, cluster string, subscriptionI
 	// set descriptor object
 	clusterInfo := &CloudProviderDescribe{}
 	clusterInfo.SetApiVersion(k8sinterface.JoinGroupVersion(apis.ApiVersionAKS, Version))
-	clusterInfo.SetName(aksSupport.GetName(*clusterDescribe))
+	clusterInfo.SetName(aksSupport.GetName(clusterDescribe))
 	clusterInfo.SetProvider(AKS)
 	clusterInfo.SetKind(apis.CloudProviderDescribeKind)
 

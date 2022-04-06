@@ -39,7 +39,7 @@ func (eksSupport *EKSSupportMock) GetCluster(cluster string) string {
 			return splittedCluster[0]
 		}
 	}
-	splittedCluster := strings.Split(k8sinterface.GetClusterContext(), ".")
+	splittedCluster := strings.Split(k8sinterface.GetContextName(), ".")
 	if len(splittedCluster) > 1 {
 		return splittedCluster[0]
 	}

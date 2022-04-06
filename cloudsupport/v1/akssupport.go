@@ -16,7 +16,7 @@ var (
 
 type IAKSSupport interface {
 	GetClusterDescribe(subscriptionId string, clusterName string, resourceGroup string) (*containerservice.ManagedCluster, error)
-	GetName(containerservice.ManagedCluster) string
+	GetName(*containerservice.ManagedCluster) string
 	GetSubscriptionID() (string, error)
 	GetResourceGroup() (string, error)
 }
@@ -49,9 +49,11 @@ func (AKSSupport *AKSSupport) GetClusterDescribe(subscriptionId string, clusterN
 
 }
 
-func (AKSSupport *AKSSupport) GetName(managedCluster containerservice.ManagedCluster) string {
-	if managedCluster.Name != nil {
-		return *managedCluster.Name
+func (AKSSupport *AKSSupport) GetName(managedCluster *containerservice.ManagedCluster) string {
+	if managedCluster != nil {
+		if managedCluster.Name != nil {
+			return *managedCluster.Name
+		}
 	}
 	return ""
 }

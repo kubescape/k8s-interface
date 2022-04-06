@@ -133,7 +133,7 @@ var AksDescriptor = `     {
         "enableRBAC": true,
         "identityProfile": {
             "kubeletidentity": {
-                "resourceId": "/subscriptions/e053c6a9-157e-49c0-818b-461019cb7fef/resourcegroups/MC_armo-dev_armo-testing_westeurope/providers/Microsoft.ManagedIdentity/userAssignedIdentities/armo-testing-agentpool",
+                "resourceId": "/subscriptions/XXXXX/resourcegroups/MC_armo-dev_armo-testing_westeurope/providers/Microsoft.ManagedIdentity/userAssignedIdentities/armo-testing-agentpool",
                 "clientId": "XXXXX",
                 "objectId": "XXXXX"
             }

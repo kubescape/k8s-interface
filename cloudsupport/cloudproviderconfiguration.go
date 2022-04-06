@@ -32,7 +32,7 @@ func GetKubeContextName() string {
 		return val
 	}
 
-	return k8sinterface.GetClusterContext()
+	return k8sinterface.GetContextName()
 }
 
 // Try to lookup from env var and then from current context

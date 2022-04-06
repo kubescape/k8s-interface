@@ -44,7 +44,7 @@ func (gkeSupportM *GKESupportMock) GetCluster(cluster string) string {
 	if clusterName != "" {
 		return clusterName
 	}
-	cluster = k8sinterface.GetClusterContext()
+	cluster = k8sinterface.GetContextName()
 	parsedName = strings.Split(cluster, "_")
 	if len(parsedName) < 3 {
 		return ""
