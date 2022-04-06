@@ -115,8 +115,7 @@ func IsConnectedToCluster() bool {
 	return connectedToCluster
 }
 
-// GetClusterName get
-func GetClusterName() string {
+func GetContextName() string {
 	if !connectedToCluster {
 		return ""
 	}

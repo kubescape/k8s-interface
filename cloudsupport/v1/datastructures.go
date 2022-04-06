@@ -28,3 +28,7 @@ type CloudProviderDescribe struct {
 	Metadata   CloudProviderMetadata  `json:"metadata"`
 	Data       map[string]interface{} `json:"data"`
 }
+
+const (
+	KS_CLOUD_REGION_ENV_VAR = "KS_CLOUD_REGION"
+)

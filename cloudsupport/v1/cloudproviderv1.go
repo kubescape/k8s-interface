@@ -2,6 +2,7 @@ package v1
 
 import (
 	"encoding/json"
+	"fmt"
 	"strings"
 
 	"github.com/armosec/k8s-interface/cloudsupport/apis"
@@ -9,8 +10,13 @@ import (
 	"github.com/armosec/k8s-interface/workloadinterface"
 )
 
-const TypeCloudProviderDescribe workloadinterface.ObjectType = "CloudProviderDescribe"
-const Version = "v1"
+const (
+	TypeCloudProviderDescribe workloadinterface.ObjectType = "CloudProviderDescribe"
+	Version                                                = "v1"
+	AKS                                                    = "aks"
+	GKE                                                    = "gke"
+	EKS                                                    = "eks"
+)
 
 // NewDescriptiveInfoFromCloudProvider construct a CloudProviderDescribe from map[string]interface{}. If the map does not match the object, will return nil
 func NewDescriptiveInfoFromCloudProvider(object map[string]interface{}) *CloudProviderDescribe {
@@ -50,7 +56,7 @@ func IsTypeDescriptiveInfoFromCloudProvider(object map[string]interface{}) bool 
 
 // Get descriptive info about cluster running in EKS.
 func GetClusterDescribeEKS(eksSupport IEKSSupport, cluster string, region string) (*CloudProviderDescribe, error) {
-
+	cluster = eksSupport.GetContextName(cluster)
 	clusterDescribe, err := eksSupport.GetClusterDescribe(cluster, region)
 	if err != nil {
 		return nil, err
@@ -65,7 +71,7 @@ func GetClusterDescribeEKS(eksSupport IEKSSupport, cluster string, region string
 	clusterInfo := &CloudProviderDescribe{}
 	clusterInfo.SetApiVersion(k8sinterface.JoinGroupVersion(apis.ApiVersionEKS, Version))
 	clusterInfo.SetName(eksSupport.GetName(clusterDescribe))
-	clusterInfo.SetProvider("eks")
+	clusterInfo.SetProvider(EKS)
 	clusterInfo.SetKind(apis.CloudProviderDescribeKind)
 
 	data := map[string]interface{}{}
@@ -79,8 +85,8 @@ func GetClusterDescribeEKS(eksSupport IEKSSupport, cluster string, region string
 }
 
 // Get descriptive info about cluster running in GKE.
-func GetClusterDescribeGKE(gkeSupport IGKESupport, cluster string, region string, project string) (*CloudProviderDescribe, error) {
-
+func GetClusterDescribeGKE(gkeSupport IGKESupport, clusterName string, region string, project string) (*CloudProviderDescribe, error) {
+	cluster := gkeSupport.GetContextName(clusterName)
 	clusterDescribe, err := gkeSupport.GetClusterDescribe(cluster, region, project)
 	if err != nil {
 		return nil, err
@@ -94,7 +100,39 @@ func GetClusterDescribeGKE(gkeSupport IGKESupport, cluster string, region string
 	clusterInfo := &CloudProviderDescribe{}
 	clusterInfo.SetApiVersion(k8sinterface.JoinGroupVersion(apis.ApiVersionGKE, Version))
 	clusterInfo.SetName(gkeSupport.GetName(clusterDescribe))
-	clusterInfo.SetProvider("gke")
+	clusterInfo.SetProvider(GKE)
+	clusterInfo.SetKind(apis.CloudProviderDescribeKind)
+
+	data := map[string]interface{}{}
+	err = json.Unmarshal(resultInBytes, &data)
+	if err != nil {
+		return nil, err
+	}
+	clusterInfo.SetData(data)
+
+	return clusterInfo, nil
+}
+
+// Get descriptive info about cluster running in AKS.
+func GetClusterDescribeAKS(aksSupport IAKSSupport, cluster string, subscriptionId string, resourceGroup string) (*CloudProviderDescribe, error) {
+	clusterDescribe, err := aksSupport.GetClusterDescribe(subscriptionId, cluster, resourceGroup)
+	if err != nil {
+		return nil, err
+	}
+	if clusterDescribe == nil {
+		return nil, fmt.Errorf("error getting cluster descriptive information")
+	}
+
+	resultInBytes, err := json.Marshal(clusterDescribe)
+	if err != nil {
+		return nil, err
+	}
+
+	// set descriptor object
+	clusterInfo := &CloudProviderDescribe{}
+	clusterInfo.SetApiVersion(k8sinterface.JoinGroupVersion(apis.ApiVersionAKS, Version))
+	clusterInfo.SetName(aksSupport.GetContextName(clusterDescribe))
+	clusterInfo.SetProvider(AKS)
 	clusterInfo.SetKind(apis.CloudProviderDescribeKind)
 
 	data := map[string]interface{}{}

@@ -3,10 +3,13 @@ package v1
 import (
 	"context"
 	"fmt"
+	"os"
+	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 
 	//"github.com/aws/aws-sdk-go-v2/aws/session"
+	"github.com/armosec/k8s-interface/k8sinterface"
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/eks"
 )
@@ -14,6 +17,8 @@ import (
 type IEKSSupport interface {
 	GetClusterDescribe(currContext string, region string) (*eks.DescribeClusterOutput, error)
 	GetName(*eks.DescribeClusterOutput) string
+	GetRegion(cluster string) (string, error)
+	GetContextName(cluster string) string
 }
 
 type EKSSupport struct {
@@ -47,4 +52,37 @@ func (eksSupport *EKSSupport) GetClusterDescribe(cluster string, region string) 
 // getName get cluster name from describe
 func (eksSupport *EKSSupport) GetName(describe *eks.DescribeClusterOutput) string {
 	return *describe.Cluster.Name
+}
+
+func (eksSupport *EKSSupport) GetRegion(cluster string) (string, error) {
+	region, present := os.LookupEnv(KS_CLOUD_REGION_ENV_VAR)
+	if present {
+		return region, nil
+	}
+	splittedClusterContext := strings.Split(cluster, ".")
+
+	if len(splittedClusterContext) < 2 {
+		splittedClusterContext := strings.Split(cluster, ":")
+		if len(splittedClusterContext) < 4 {
+			return "", fmt.Errorf("failed to get region")
+		}
+		region = splittedClusterContext[3]
+	} else {
+		region = splittedClusterContext[1]
+	}
+	return region, nil
+}
+
+func (eksSupport *EKSSupport) GetContextName(cluster string) string {
+	if cluster != "" {
+		splittedCluster := strings.Split(cluster, ".")
+		if len(splittedCluster) > 1 {
+			return splittedCluster[0]
+		}
+	}
+	splittedCluster := strings.Split(k8sinterface.GetContextName(), ".")
+	if len(splittedCluster) > 1 {
+		return splittedCluster[0]
+	}
+	return ""
 }

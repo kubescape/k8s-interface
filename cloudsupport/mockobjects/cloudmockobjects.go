@@ -64,6 +64,112 @@ var EksDescriptor = `{
 }
 `
 
+var AksDescriptor = `     {
+    "identity": {
+        "type": "SystemAssigned"
+    },
+    "location": "westeurope",
+    "properties": {
+        "addonProfiles": {
+            "azureKeyvaultSecretsProvider": {
+                "enabled": false
+            },
+            "azurepolicy": {
+                "enabled": false
+            },
+            "httpApplicationRouting": {
+                "enabled": false
+            }
+        },
+        "agentPoolProfiles": [{
+            "availabilityZones": ["1", "2", "3"],
+            "count": 1,
+            "enableAutoScaling": true,
+            "enableFIPS": false,
+            "enableNodePublicIP": false,
+            "kubeletDiskType": "OS",
+            "maxCount": 5,
+            "maxPods": 110,
+            "minCount": 1,
+            "mode": "System",
+            "name": "agentpool",
+            "orchestratorVersion": "1.21.9",
+            "osDiskSizeGB": 128,
+            "osDiskType": "Managed",
+            "osSKU": "Ubuntu",
+            "osType": "Linux",
+            "powerState": {
+                "code": "Running"
+            },
+            "tags": {
+                "Owner": "Daniel"
+            },
+            "type": "VirtualMachineScaleSets",
+            "vmSize": "Standard_B2s"
+        }],
+        "apiServerAccessProfile": {
+            "enablePrivateCluster": false
+        },
+        "autoScalerProfile": {
+            "balance-similar-node-groups": "false",
+            "expander": "random",
+            "max-empty-bulk-delete": "10",
+            "max-graceful-termination-sec": "600",
+            "max-node-provision-time": "15m",
+            "max-total-unready-percentage": "45",
+            "new-pod-scale-up-delay": "0s",
+            "ok-total-unready-count": "3",
+            "scan-interval": "10s",
+            "scale-down-delay-after-add": "10m",
+            "scale-down-delay-after-delete": "10s",
+            "scale-down-delay-after-failure": "3m",
+            "scale-down-unneeded-time": "10m",
+            "scale-down-unready-time": "20m",
+            "scale-down-utilization-threshold": "0.5",
+            "skip-nodes-with-local-storage": "false",
+            "skip-nodes-with-system-pods": "true"
+        },
+        "dnsPrefix": "armo-testing",
+        "enableRBAC": true,
+        "identityProfile": {
+            "kubeletidentity": {
+                "resourceId": "/subscriptions/XXXXX/resourcegroups/MC_armo-dev_armo-testing_westeurope/providers/Microsoft.ManagedIdentity/userAssignedIdentities/armo-testing-agentpool",
+                "clientId": "XXXXX",
+                "objectId": "XXXXX"
+            }
+        },
+        "kubernetesVersion": "1.21.9",
+        "networkProfile": {
+            "networkPlugin": "kubenet",
+            "podCidr": "10.244.0.0/16",
+            "serviceCidr": "10.0.0.0/16",
+            "dnsServiceIP": "10.0.0.10",
+            "dockerBridgeCidr": "172.17.0.1/16",
+            "outboundType": "loadBalancer",
+            "loadBalancerSku": "Standard",
+            "loadBalancerProfile": {
+                "managedOutboundIPs": {
+                    "count": 1
+                },
+                "effectiveOutboundIPs": [{
+                    "id": "XXXX"
+                }]
+            }
+        },
+        "nodeResourceGroup": "MC_armo-dev_armo-testing_westeurope",
+        "servicePrincipalProfile": {
+            "clientId": "msi"
+        }
+    },
+    "sku": {
+        "name": "Basic",
+        "tier": "Free"
+    },
+    "tags": {
+        "Owner": "XXXX"
+    }
+}`
+
 var GkeDescriptor = `    {
 	"name": "kubescape-demo-01",
 	"node_config": {

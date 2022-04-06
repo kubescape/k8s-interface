@@ -30,6 +30,22 @@ func TestGetClusterDescribeEKS(t *testing.T) {
 	//assert.Equal(t, 1, len(des.GetData()))
 }
 
+func TestGetClusterDescribeAKS(t *testing.T) {
+	g := NewAKSSupportMock()
+	clusterDescribe, err := GetClusterDescribeAKS(g, "XXXXXX", "armo-testing", "armo-dev")
+	assert.NoError(t, err)
+	assert.NoError(t, err)
+	assert.NoError(t, err)
+	d := CloudProviderDescribe{}
+	d.SetObject(clusterDescribe.GetObject())
+
+	assert.Equal(t, apis.CloudProviderDescribeKind, d.GetKind())
+	assert.Equal(t, "management.azure.com/v1/ClusterDescribe/daniel", d.GetID())
+	assert.Equal(t, k8sinterface.JoinGroupVersion(apis.ApiVersionAKS, Version), d.GetApiVersion())
+	assert.Equal(t, "daniel", d.GetName())
+	assert.Equal(t, AKS, d.GetProvider())
+
+}
 func TestNewDescriptiveInfoFromCloudProvider(t *testing.T) {
 	g := NewEKSSupportMock()
 	des, err := GetClusterDescribeEKS(g, "ca-terraform-eks-dev-stage", "")

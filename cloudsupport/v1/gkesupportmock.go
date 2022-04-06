@@ -2,8 +2,10 @@ package v1
 
 import (
 	"encoding/json"
+	"strings"
 
 	"github.com/armosec/k8s-interface/cloudsupport/mockobjects"
+	"github.com/armosec/k8s-interface/k8sinterface"
 	containerpb "google.golang.org/genproto/googleapis/container/v1"
 )
 
@@ -23,4 +25,29 @@ func (gkeSupportM *GKESupportMock) GetClusterDescribe(cluster string, region str
 
 func (gkeSupportM *GKESupportMock) GetName(clusterDescribe *containerpb.Cluster) string {
 	return clusterDescribe.Name
+}
+
+func (gkeSupportM *GKESupportMock) GetProject(cluster string) (string, error) {
+	return "", nil
+}
+
+func (gkeSupportM *GKESupportMock) GetRegion(cluster string) (string, error) {
+	return "", nil
+}
+
+func (gkeSupportM *GKESupportMock) GetContextName(cluster string) string {
+	parsedName := strings.Split(cluster, "_")
+	if len(parsedName) < 3 {
+		return ""
+	}
+	clusterName := parsedName[3]
+	if clusterName != "" {
+		return clusterName
+	}
+	cluster = k8sinterface.GetContextName()
+	parsedName = strings.Split(cluster, "_")
+	if len(parsedName) < 3 {
+		return ""
+	}
+	return parsedName[3]
 }
