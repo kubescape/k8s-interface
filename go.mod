@@ -6,8 +6,8 @@ require (
 	github.com/Azure/azure-sdk-for-go v63.0.0+incompatible
 	github.com/Azure/go-autorest/autorest/azure/auth v0.5.11
 	github.com/armosec/armoapi-go v0.0.2
-	github.com/armosec/utils-go v0.0.3
-	github.com/armosec/utils-k8s-go v0.0.1
+	github.com/armosec/utils-go v0.0.4
+	github.com/armosec/utils-k8s-go v0.0.6
 	github.com/aws/aws-sdk-go v1.41.1
 	github.com/aws/aws-sdk-go-v2 v1.12.0
 	github.com/aws/aws-sdk-go-v2/config v1.12.0

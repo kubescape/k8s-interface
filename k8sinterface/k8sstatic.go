@@ -3,7 +3,7 @@ package k8sinterface
 import (
 	"context"
 
-	cautils "github.com/armosec/utils-go/utils"
+	"github.com/armosec/utils-go/boolutils"
 	"github.com/armosec/utils-k8s-go/armometadata"
 
 	corev1 "k8s.io/api/core/v1"
@@ -33,9 +33,9 @@ func IsLabel(labels map[string]string, key string) *bool {
 	}
 	var k bool
 	if l, ok := labels[key]; ok {
-		if cautils.StringToBool(l) {
+		if boolutils.StringToBool(l) {
 			k = true
-		} else if !cautils.StringToBool(l) {
+		} else if !boolutils.StringToBool(l) {
 			k = false
 		}
 		return &k
@@ -46,10 +46,10 @@ func SetLabel(labels map[string]string, key string, val bool) {
 	if labels == nil {
 		return
 	}
-	labels[key] = cautils.BoolToString(val)
+	labels[key] = boolutils.BoolToString(val)
 }
 func (k8sAPI *KubernetesApi) ListAttachedPods(namespace string) ([]corev1.Pod, error) {
-	return k8sAPI.ListPods(namespace, map[string]string{armometadata.ArmoAttach: cautils.BoolToString(true)})
+	return k8sAPI.ListPods(namespace, map[string]string{armometadata.ArmoAttach: boolutils.BoolToString(true)})
 }
 
 func (k8sAPI *KubernetesApi) ListPods(namespace string, podLabels map[string]string) ([]corev1.Pod, error) {

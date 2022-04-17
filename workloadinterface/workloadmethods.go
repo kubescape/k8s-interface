@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/armosec/armoapi-go/apis"
-	"github.com/armosec/utils-go/utils"
+	"github.com/armosec/utils-go/boolutils"
 	"github.com/armosec/utils-k8s-go/armometadata"
 	wlidpkg "github.com/armosec/utils-k8s-go/wlid"
 	corev1 "k8s.io/api/core/v1"
@@ -254,7 +254,7 @@ func (w *Workload) SetKind(kind string) {
 }
 
 func (w *Workload) SetInject() {
-	w.SetPodLabel(armometadata.ArmoAttach, utils.BoolToString(true))
+	w.SetPodLabel(armometadata.ArmoAttach, boolutils.BoolToString(true))
 }
 
 func (w *Workload) SetJobID(jobTracking apis.JobTracking) {
@@ -264,19 +264,19 @@ func (w *Workload) SetJobID(jobTracking apis.JobTracking) {
 }
 
 func (w *Workload) SetIgnore() {
-	w.SetPodLabel(armometadata.ArmoAttach, utils.BoolToString(false))
+	w.SetPodLabel(armometadata.ArmoAttach, boolutils.BoolToString(false))
 }
 
 func (w *Workload) SetCompatible() {
-	w.SetPodAnnotation(armometadata.ArmoCompatibleAnnotation, utils.BoolToString(true))
+	w.SetPodAnnotation(armometadata.ArmoCompatibleAnnotation, boolutils.BoolToString(true))
 }
 
 func (w *Workload) SetIncompatible() {
-	w.SetPodAnnotation(armometadata.ArmoCompatibleAnnotation, utils.BoolToString(false))
+	w.SetPodAnnotation(armometadata.ArmoCompatibleAnnotation, boolutils.BoolToString(false))
 }
 
 func (w *Workload) SetReplaceheaders() {
-	w.SetPodAnnotation(armometadata.ArmoReplaceheaders, utils.BoolToString(true))
+	w.SetPodAnnotation(armometadata.ArmoReplaceheaders, boolutils.BoolToString(true))
 }
 
 func (w *Workload) SetWlid(wlid string) {
@@ -677,11 +677,11 @@ func (w *Workload) IsIgnore() bool {
 
 func (w *Workload) IsCompatible() bool {
 	if c, ok := w.GetPodAnnotation(armometadata.ArmoCompatibleAnnotation); ok {
-		return utils.StringToBool(c)
+		return boolutils.StringToBool(c)
 
 	}
 	if c, ok := w.GetAnnotation(armometadata.ArmoCompatibleAnnotation); ok {
-		return utils.StringToBool(c)
+		return boolutils.StringToBool(c)
 
 	}
 	return false
@@ -689,10 +689,10 @@ func (w *Workload) IsCompatible() bool {
 
 func (w *Workload) IsIncompatible() bool {
 	if c, ok := w.GetPodAnnotation(armometadata.ArmoCompatibleAnnotation); ok {
-		return !utils.StringToBool(c)
+		return !boolutils.StringToBool(c)
 	}
 	if c, ok := w.GetAnnotation(armometadata.ArmoCompatibleAnnotation); ok {
-		return !utils.StringToBool(c)
+		return !boolutils.StringToBool(c)
 	}
 	return false
 }
@@ -708,7 +708,7 @@ func (w *Workload) IsAttached() bool {
 
 func (w *Workload) IsReplaceheaders() bool {
 	if c, ok := w.GetPodAnnotation(armometadata.ArmoReplaceheaders); ok {
-		return utils.StringToBool(c)
+		return boolutils.StringToBool(c)
 	}
 	return false
 }
