@@ -36,12 +36,20 @@ func (eksSupport *EKSSupportMock) GetContextName(cluster string) string {
 	if cluster != "" {
 		splittedCluster := strings.Split(cluster, ".")
 		if len(splittedCluster) > 1 {
-			return splittedCluster[0]
+			return splittedCluster[len(splittedCluster)-1]
 		}
 	}
 	splittedCluster := strings.Split(k8sinterface.GetContextName(), ".")
 	if len(splittedCluster) > 1 {
-		return splittedCluster[0]
+		return splittedCluster[len(splittedCluster)-1]
+	}
+	splittedCluster = strings.Split(cluster, ":")
+	if len(splittedCluster) > 1 {
+		return splittedCluster[len(splittedCluster)-1]
+	}
+	splittedCluster = strings.Split(k8sinterface.GetContextName(), ":")
+	if len(splittedCluster) > 1 {
+		return splittedCluster[len(splittedCluster)-1]
 	}
 	return ""
 }
