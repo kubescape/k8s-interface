@@ -95,7 +95,7 @@ func (eksSupport *EKSSupport) GetContextName(cluster string) string {
 		clusterName := splittedCluster[len(splittedCluster)-1]
 		clusterNameFiltered := strings.Replace(clusterName, "cluster-", "", 1)
 		if clusterName != clusterNameFiltered {
-			return clusterName
+			return clusterNameFiltered
 		}
 	}
 
