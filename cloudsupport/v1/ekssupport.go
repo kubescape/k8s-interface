@@ -73,6 +73,9 @@ func (eksSupport *EKSSupport) GetRegion(cluster string) (string, error) {
 	return region, nil
 }
 
+// Context can be in one of 2 ways:
+// 1. arn:aws:eks:<region>:<id>:cluster/<cluster_name> --> Usually this will be in context
+// 2. arn:aws:eks:<region>:<id>:cluster-<cluster_name> --> Usually we will get 'cluster' param like this
 func (eksSupport *EKSSupport) GetContextName(cluster string) string {
 	if cluster != "" {
 		splittedCluster := strings.Split(cluster, ".")
@@ -80,9 +83,27 @@ func (eksSupport *EKSSupport) GetContextName(cluster string) string {
 			return splittedCluster[0]
 		}
 	}
+	// Try from context
 	splittedCluster := strings.Split(k8sinterface.GetContextName(), ".")
 	if len(splittedCluster) > 1 {
 		return splittedCluster[0]
+	}
+
+	splittedCluster = strings.Split(cluster, ":")
+	if len(splittedCluster) > 5 {
+		// arn:aws:eks:<region>:<id>:cluster-<cluster_name> -> <cluster_name>
+		clusterName := splittedCluster[len(splittedCluster)-1]
+		clusterNameFiltered := strings.Replace(clusterName, "cluster-", "", 1)
+		if clusterName != clusterNameFiltered {
+			return clusterName
+		}
+	}
+
+	// Try from context
+	splittedCluster = strings.Split(k8sinterface.GetContextName(), "/")
+	if len(splittedCluster) > 1 {
+		// arn:aws:eks:<region>:<id>:cluster/<cluster_name> -> <cluster_name>
+		return splittedCluster[len(splittedCluster)-1]
 	}
 	return ""
 }
