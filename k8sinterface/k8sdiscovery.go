@@ -3,6 +3,7 @@ package k8sinterface
 import (
 	"fmt"
 	"strings"
+	"sync"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/discovery"
@@ -16,10 +17,15 @@ const ValueNotFound = -1
 var resourceGroupMapping = map[string]string{}
 var resourceNamesapcedScope = []string{} // use this to determan if the resource is namespaced
 
+// RW locker to ensure we won't read/write concurrently the map/slice of resources
+var resourcesInfoLock = sync.RWMutex{}
+
 // DEPRECATED - use the 'ResourceNamesapcedScope' instead
 var ResourceClusterScope = []string{}
 
 func GetSingleResourceFromGroupMapping(resource string) (string, bool) {
+	resourcesInfoLock.RLock()
+	defer resourcesInfoLock.RUnlock()
 	if len(resourceGroupMapping) == 0 {
 		InitializeMapResources(nil)
 	}
@@ -27,18 +33,31 @@ func GetSingleResourceFromGroupMapping(resource string) (string, bool) {
 	return r, k
 }
 
+// GetResourceGroupMapping returns copy of ResourceGroupMapping map object
 func GetResourceGroupMapping() map[string]string {
+	resourcesInfoLock.RLock()
+	defer resourcesInfoLock.RUnlock()
 	if len(resourceGroupMapping) == 0 {
 		InitializeMapResources(nil)
 	}
-	return resourceGroupMapping
+	copyOfresourceMapping := make(map[string]string, len(resourceGroupMapping))
+	for k := range resourceGroupMapping {
+		copyOfresourceMapping[k] = resourceGroupMapping[k]
+	}
+	return copyOfresourceMapping
 }
 
 func GetResourceNamesapcedScope() []string {
+	resourcesInfoLock.RLock()
+	defer resourcesInfoLock.RUnlock()
+
 	if len(resourceNamesapcedScope) == 0 {
 		InitializeMapResources(nil)
 	}
-	return resourceNamesapcedScope
+	copyOfresourceSlice := make([]string, len(resourceNamesapcedScope))
+	copy(copyOfresourceSlice, resourceNamesapcedScope)
+	return copyOfresourceSlice
+
 }
 
 // InitializeMapResources get supported api-resource (similar to 'kubectl api-resources') and map to 'ResourceGroupMapping' and 'ResourceNamesapcedScope'. If this function is not called, many functions may not work
@@ -49,7 +68,8 @@ func InitializeMapResources(discoveryClient discovery.DiscoveryInterface) {
 	// 		setMapResources(resourceList)
 	// 	}
 	// }
-
+	resourcesInfoLock.RLock()
+	defer resourcesInfoLock.RUnlock()
 	// load from mock only if the map is empty
 	if len(resourceNamesapcedScope) == 0 {
 		InitializeMapResourcesMock()
@@ -79,9 +99,15 @@ func setMapResources(resourceList []*metav1.APIResourceList) {
 			if len(apiResource.Verbs) == 0 {
 				continue
 			}
-			if _, ok := resourceGroupMapping[apiResource.Name]; ok { // do not override resources in map
+
+			resourcesInfoLock.RLock()
+			_, ok := resourceGroupMapping[apiResource.Name]
+			resourcesInfoLock.RUnlock()
+			if ok { // do not override resources in map
 				continue
 			}
+
+			resourcesInfoLock.Lock()
 			resourceGroupMapping[apiResource.Name] = JoinGroupVersion(gv.Group, gv.Version)
 			if apiResource.Namespaced {
 				resourceNamesapcedScope = append(resourceNamesapcedScope, JoinResourceTriplets(gv.Group, gv.Version, apiResource.Name))
@@ -89,6 +115,7 @@ func setMapResources(resourceList []*metav1.APIResourceList) {
 				ResourceClusterScope = append(ResourceClusterScope, JoinResourceTriplets(gv.Group, gv.Version, apiResource.Name))
 
 			}
+			resourcesInfoLock.Unlock()
 		}
 	}
 }
