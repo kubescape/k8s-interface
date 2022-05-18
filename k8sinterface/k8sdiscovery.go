@@ -24,22 +24,24 @@ var resourcesInfoLock = sync.RWMutex{}
 var ResourceClusterScope = []string{}
 
 func GetSingleResourceFromGroupMapping(resource string) (string, bool) {
-	resourcesInfoLock.RLock()
-	defer resourcesInfoLock.RUnlock()
+
 	if len(resourceGroupMapping) == 0 {
 		InitializeMapResources(nil)
 	}
+	resourcesInfoLock.RLock()
+	defer resourcesInfoLock.RUnlock()
 	r, k := resourceGroupMapping[updateResourceKind(resource)]
 	return r, k
 }
 
 // GetResourceGroupMapping returns copy of ResourceGroupMapping map object
 func GetResourceGroupMapping() map[string]string {
-	resourcesInfoLock.RLock()
-	defer resourcesInfoLock.RUnlock()
+
 	if len(resourceGroupMapping) == 0 {
 		InitializeMapResources(nil)
 	}
+	resourcesInfoLock.RLock()
+	defer resourcesInfoLock.RUnlock()
 	copyOfresourceMapping := make(map[string]string, len(resourceGroupMapping))
 	for k := range resourceGroupMapping {
 		copyOfresourceMapping[k] = resourceGroupMapping[k]
@@ -48,12 +50,13 @@ func GetResourceGroupMapping() map[string]string {
 }
 
 func GetResourceNamesapcedScope() []string {
-	resourcesInfoLock.RLock()
-	defer resourcesInfoLock.RUnlock()
-
 	if len(resourceNamesapcedScope) == 0 {
 		InitializeMapResources(nil)
 	}
+
+	resourcesInfoLock.RLock()
+	defer resourcesInfoLock.RUnlock()
+
 	copyOfresourceSlice := make([]string, len(resourceNamesapcedScope))
 	copy(copyOfresourceSlice, resourceNamesapcedScope)
 	return copyOfresourceSlice
@@ -68,8 +71,7 @@ func InitializeMapResources(discoveryClient discovery.DiscoveryInterface) {
 	// 		setMapResources(resourceList)
 	// 	}
 	// }
-	resourcesInfoLock.RLock()
-	defer resourcesInfoLock.RUnlock()
+
 	// load from mock only if the map is empty
 	if len(resourceNamesapcedScope) == 0 {
 		InitializeMapResourcesMock()
