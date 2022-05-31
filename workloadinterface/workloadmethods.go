@@ -335,6 +335,13 @@ func (w *Workload) GetName() string {
 	return ""
 }
 
+func (w *Workload) GetWorkloadData() map[string]interface{} {
+	if v, ok := InspectWorkload(w.workload, "data"); ok {
+		return v.(map[string]interface{})
+	}
+	return nil
+}
+
 func (w *Workload) GetApiVersion() string {
 	if v, ok := InspectWorkload(w.workload, "apiVersion"); ok {
 		return v.(string)

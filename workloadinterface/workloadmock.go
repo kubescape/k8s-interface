@@ -315,6 +315,10 @@ func (wm *WorkloadMock) GetJobID() *apis.JobTracking {
 	return wm.workload.GetJobID()
 }
 
+func (wm *WorkloadMock) GetWorkloadData() map[string]interface{} {
+	return wm.workload.GetWorkloadData()
+}
+
 // ========================================= IS =========================================
 
 func (wm *WorkloadMock) IsInject() bool {

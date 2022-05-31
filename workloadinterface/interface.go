@@ -64,6 +64,7 @@ type IBasicWorkload interface {
 	GetResourceVersion() string
 	GetUID() string
 	GetPodSpec() (*corev1.PodSpec, error)
+	GetWorkloadData() map[string]interface{}
 	//GetSpiffe() string
 
 	// REMOVE
