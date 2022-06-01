@@ -64,7 +64,6 @@ type IBasicWorkload interface {
 	GetResourceVersion() string
 	GetUID() string
 	GetPodSpec() (*corev1.PodSpec, error)
-	GetWorkloadData() map[string]interface{}
 	//GetSpiffe() string
 
 	// REMOVE
@@ -86,6 +85,7 @@ type IWorkload interface {
 	GetWlid() string // Get ARMO workload ID -> wlid://cluster-<cluster-name>/namespace-<namespace>/<kind>-<name>
 	GetJobID() *apis.JobTracking
 	GenerateWlid(string) string
+	GetData() map[string]interface{}
 
 	// SET
 	SetWlid(string)

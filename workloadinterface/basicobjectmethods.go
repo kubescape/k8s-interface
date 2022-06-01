@@ -109,7 +109,7 @@ func (b *BaseObject) GetKind() string {
 	return ""
 }
 
-func (b *BaseObject) GetWorkloadData() map[string]interface{} {
+func (b *BaseObject) GetData() map[string]interface{} {
 	if v, ok := InspectWorkload(b.base, "data"); ok {
 		return v.(map[string]interface{})
 	}

@@ -315,8 +315,8 @@ func (wm *WorkloadMock) GetJobID() *apis.JobTracking {
 	return wm.workload.GetJobID()
 }
 
-func (wm *WorkloadMock) GetWorkloadData() map[string]interface{} {
-	return wm.workload.GetWorkloadData()
+func (wm *WorkloadMock) GetData() map[string]interface{} {
+	return wm.workload.GetData()
 }
 
 // ========================================= IS =========================================

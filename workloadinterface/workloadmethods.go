@@ -335,7 +335,7 @@ func (w *Workload) GetName() string {
 	return ""
 }
 
-func (w *Workload) GetWorkloadData() map[string]interface{} {
+func (w *Workload) GetData() map[string]interface{} {
 	if v, ok := InspectWorkload(w.workload, "data"); ok {
 		return v.(map[string]interface{})
 	}
