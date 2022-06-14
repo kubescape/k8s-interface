@@ -123,6 +123,10 @@ func (b *BaseObject) SetKind(kind string) {
 	b.base["kind"] = kind
 }
 
+func (b *BaseObject) SetApiVersion(apiVersion string) {
+	b.base["apiVersion"] = apiVersion
+}
+
 func (b *BaseObject) SetNamespace(namespace string) {
 	SetInMap(b.base, []string{"metadata"}, "namespace", namespace)
 }

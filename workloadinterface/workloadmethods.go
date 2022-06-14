@@ -249,6 +249,10 @@ func (w *Workload) SetObject(workload map[string]interface{}) {
 	w.workload = workload
 }
 
+func (w *Workload) SetApiVersion(apiVersion string) {
+	w.workload["apiVersion"] = apiVersion
+}
+
 func (w *Workload) SetKind(kind string) {
 	w.workload["kind"] = kind
 }

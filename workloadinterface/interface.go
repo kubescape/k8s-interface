@@ -17,7 +17,7 @@ type IMetadata interface {
 	SetKind(string)
 	SetWorkload(map[string]interface{}) // DEPRECATED
 	SetObject(map[string]interface{})
-	// TODO - AetApiVersion
+	SetApiVersion(string)
 
 	// Get
 	GetNamespace() string

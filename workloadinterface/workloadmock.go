@@ -111,6 +111,10 @@ func (wm *WorkloadMock) SetObject(workload map[string]interface{}) {
 	wm.workload.SetObject(workload)
 }
 
+func (wm *WorkloadMock) SetApiVersion(apiVersion string) {
+	wm.workload.SetApiVersion(apiVersion)
+}
+
 func (wm *WorkloadMock) SetKind(kind string) {
 	wm.workload.SetKind(kind)
 }
