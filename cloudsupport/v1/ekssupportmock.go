@@ -4,9 +4,9 @@ import (
 	"encoding/json"
 	"strings"
 
-	"github.com/armosec/k8s-interface/cloudsupport/mockobjects"
-	"github.com/armosec/k8s-interface/k8sinterface"
 	"github.com/aws/aws-sdk-go-v2/service/eks"
+	"github.com/kubescape/k8s-interface/cloudsupport/mockobjects"
+	"github.com/kubescape/k8s-interface/k8sinterface"
 )
 
 func NewEKSSupportMock() *EKSSupportMock {

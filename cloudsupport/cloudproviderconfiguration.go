@@ -4,9 +4,9 @@ import (
 	"os"
 	"strings"
 
-	cloudsupportv1 "github.com/armosec/k8s-interface/cloudsupport/v1"
-	"github.com/armosec/k8s-interface/k8sinterface"
-	"github.com/armosec/k8s-interface/workloadinterface"
+	cloudsupportv1 "github.com/kubescape/k8s-interface/cloudsupport/v1"
+	"github.com/kubescape/k8s-interface/k8sinterface"
+	"github.com/kubescape/k8s-interface/workloadinterface"
 )
 
 const (

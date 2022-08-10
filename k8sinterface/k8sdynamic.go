@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/armosec/k8s-interface/workloadinterface"
 	wlidpkg "github.com/armosec/utils-k8s-go/wlid"
+	"github.com/kubescape/k8s-interface/workloadinterface"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime/schema"

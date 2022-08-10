@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"strings"
 
-	"github.com/armosec/k8s-interface/cloudsupport/mockobjects"
-	"github.com/armosec/k8s-interface/k8sinterface"
+	"github.com/kubescape/k8s-interface/cloudsupport/mockobjects"
+	"github.com/kubescape/k8s-interface/k8sinterface"
 	containerpb "google.golang.org/genproto/googleapis/container/v1"
 )
 

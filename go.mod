@@ -1,4 +1,4 @@
-module github.com/armosec/k8s-interface
+module github.com/kubescape/k8s-interface
 
 go 1.18
 

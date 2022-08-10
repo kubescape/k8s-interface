@@ -9,9 +9,9 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 
 	//"github.com/aws/aws-sdk-go-v2/aws/session"
-	"github.com/armosec/k8s-interface/k8sinterface"
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/eks"
+	"github.com/kubescape/k8s-interface/k8sinterface"
 )
 
 type IEKSSupport interface {

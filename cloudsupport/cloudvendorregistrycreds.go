@@ -11,11 +11,11 @@ import (
 	"strings"
 	"time"
 
-	cloudsupportv1 "github.com/armosec/k8s-interface/cloudsupport/v1"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/ecr"
 	"github.com/docker/docker/api/types"
+	cloudsupportv1 "github.com/kubescape/k8s-interface/cloudsupport/v1"
 )
 
 // For GCR there are some permissions one need to assign in order to allow ARMO to pull images:

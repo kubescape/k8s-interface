@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	container "cloud.google.com/go/container/apiv1"
-	"github.com/armosec/k8s-interface/k8sinterface"
+	"github.com/kubescape/k8s-interface/k8sinterface"
 	"golang.org/x/oauth2/google"
 	containerpb "google.golang.org/genproto/googleapis/container/v1"
 )

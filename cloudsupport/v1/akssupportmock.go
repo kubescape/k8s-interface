@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 
 	"github.com/Azure/azure-sdk-for-go/services/containerservice/mgmt/2019-04-30/containerservice"
-	"github.com/armosec/k8s-interface/cloudsupport/mockobjects"
+	"github.com/kubescape/k8s-interface/cloudsupport/mockobjects"
 )
 
 func NewAKSSupportMock() *AKSSupportMock {

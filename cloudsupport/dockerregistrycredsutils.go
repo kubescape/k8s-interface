@@ -4,9 +4,9 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/armosec/k8s-interface/k8sinterface"
 	"github.com/armosec/utils-k8s-go/secrethandling"
 	"github.com/docker/docker/api/types"
+	"github.com/kubescape/k8s-interface/k8sinterface"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )

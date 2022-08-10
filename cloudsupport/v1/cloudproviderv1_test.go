@@ -3,8 +3,8 @@ package v1
 import (
 	"testing"
 
-	"github.com/armosec/k8s-interface/cloudsupport/apis"
-	"github.com/armosec/k8s-interface/k8sinterface"
+	"github.com/kubescape/k8s-interface/cloudsupport/apis"
+	"github.com/kubescape/k8s-interface/k8sinterface"
 	"github.com/stretchr/testify/assert"
 )
 
