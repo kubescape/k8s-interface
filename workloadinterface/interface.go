@@ -83,37 +83,13 @@ type IWorkload interface {
 	Json() string     // DEPRECATED, use ToString
 
 	// GET
-	GetWlid() string // Get ARMO workload ID -> wlid://cluster-<cluster-name>/namespace-<namespace>/<kind>-<name>
 	GetJobID() *apis.JobTracking
 	GenerateWlid(string) string
 
 	// SET
-	SetWlid(string)
-	SetInject()
-	SetIgnore()
-	SetUpdateTime()
 	SetJobID(apis.JobTracking)
-	SetCompatible()
-	SetIncompatible()
-	SetReplaceheaders()
-
-	// EXIST
-	IsIgnore() bool
-	IsInject() bool
-	IsAttached() bool
-	IsCompatible() bool
-	IsIncompatible() bool
-	IsReplaceheaders() bool
 
 	// REMOVE
-	RemoveWlid()
 	RemoveSecretData()
-	RemoveInject()
-	RemoveIgnore()
-	RemoveUpdateTime()
 	RemoveJobID()
-	RemoveCompatible()
-	RemoveArmoMetadata()
-	RemoveArmoLabels()
-	RemoveArmoAnnotations()
 }

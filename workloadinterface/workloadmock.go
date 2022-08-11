@@ -39,36 +39,12 @@ func (wm *WorkloadMock) ToUnstructured() (*unstructured.Unstructured, error) {
 
 // ======================================= DELETE ========================================
 
-func (wm *WorkloadMock) RemoveInject() {
-	wm.workload.RemoveInject()
-}
-
-func (wm *WorkloadMock) RemoveIgnore() {
-	wm.workload.RemoveIgnore()
-}
-
-func (wm *WorkloadMock) RemoveWlid() {
-	wm.workload.RemoveWlid()
-}
-
-func (wm *WorkloadMock) RemoveCompatible() {
-	wm.workload.RemoveCompatible()
-}
 func (wm *WorkloadMock) RemoveJobID() {
 	wm.workload.RemoveJobID()
-}
-func (wm *WorkloadMock) RemoveArmoMetadata() {
-	wm.workload.RemoveArmoMetadata()
 }
 
 func (wm *WorkloadMock) RemoveArmoAnnotations() {
 	wm.workload.RemoveJobID()
-}
-func (wm *WorkloadMock) RemoveArmoLabels() {
-	wm.workload.RemoveArmoLabels()
-}
-func (wm *WorkloadMock) RemoveUpdateTime() {
-	wm.workload.RemoveUpdateTime()
 }
 func (wm *WorkloadMock) RemoveSecretData() {
 	wm.workload.RemoveSecretData()
@@ -118,37 +94,8 @@ func (wm *WorkloadMock) SetApiVersion(apiVersion string) {
 func (wm *WorkloadMock) SetKind(kind string) {
 	wm.workload.SetKind(kind)
 }
-
-func (wm *WorkloadMock) SetInject() {
-	wm.workload.SetInject()
-}
-
 func (wm *WorkloadMock) SetJobID(jobTracking apis.JobTracking) {
 	wm.workload.SetJobID(jobTracking)
-}
-
-func (wm *WorkloadMock) SetIgnore() {
-	wm.workload.SetIgnore()
-}
-
-func (wm *WorkloadMock) SetCompatible() {
-	wm.workload.SetCompatible()
-}
-
-func (wm *WorkloadMock) SetIncompatible() {
-	wm.workload.SetIncompatible()
-}
-
-func (wm *WorkloadMock) SetReplaceheaders() {
-	wm.workload.SetReplaceheaders()
-}
-
-func (wm *WorkloadMock) SetWlid(wlid string) {
-	wm.workload.SetWlid(wlid)
-}
-
-func (wm *WorkloadMock) SetUpdateTime() {
-	wm.workload.SetUpdateTime()
 }
 
 func (wm *WorkloadMock) SetNamespace(namespace string) {
@@ -321,29 +268,4 @@ func (wm *WorkloadMock) GetJobID() *apis.JobTracking {
 
 func (wm *WorkloadMock) GetData() map[string]interface{} {
 	return wm.workload.GetData()
-}
-
-// ========================================= IS =========================================
-
-func (wm *WorkloadMock) IsInject() bool {
-	return wm.workload.IsInject()
-}
-
-func (wm *WorkloadMock) IsIgnore() bool {
-	return wm.workload.IsIgnore()
-}
-
-func (wm *WorkloadMock) IsCompatible() bool {
-	return wm.workload.IsCompatible()
-}
-
-func (wm *WorkloadMock) IsIncompatible() bool {
-	return wm.workload.IsIncompatible()
-}
-func (wm *WorkloadMock) IsAttached() bool {
-	return wm.workload.IsAttached()
-}
-
-func (wm *WorkloadMock) IsReplaceheaders() bool {
-	return wm.workload.IsReplaceheaders()
 }

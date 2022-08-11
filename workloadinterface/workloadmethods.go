@@ -5,10 +5,8 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/armosec/armoapi-go/apis"
-	"github.com/armosec/utils-go/boolutils"
 	"github.com/armosec/utils-k8s-go/armometadata"
 	wlidpkg "github.com/armosec/utils-k8s-go/wlid"
 	corev1 "k8s.io/api/core/v1"
@@ -86,35 +84,6 @@ func (w *Workload) ToUnstructured() (*unstructured.Unstructured, error) {
 
 // ======================================= DELETE ========================================
 
-func (w *Workload) RemoveInject() {
-	w.RemovePodLabel(armometadata.CAInject)      // DEPRECATED
-	w.RemovePodLabel(armometadata.CAAttachLabel) // DEPRECATED
-	w.RemovePodLabel(armometadata.ArmoAttach)
-
-	w.RemoveLabel(armometadata.CAInject)      // DEPRECATED
-	w.RemoveLabel(armometadata.CAAttachLabel) // DEPRECATED
-	w.RemoveLabel(armometadata.ArmoAttach)
-}
-
-func (w *Workload) RemoveIgnore() {
-	w.RemovePodLabel(armometadata.CAIgnore) // DEPRECATED
-	w.RemovePodLabel(armometadata.ArmoAttach)
-
-	w.RemoveLabel(armometadata.CAIgnore) // DEPRECATED
-	w.RemoveLabel(armometadata.ArmoAttach)
-}
-
-func (w *Workload) RemoveWlid() {
-	w.RemovePodAnnotation(armometadata.CAWlid) // DEPRECATED
-	w.RemovePodAnnotation(armometadata.ArmoWlid)
-
-	w.RemoveAnnotation(armometadata.CAWlid) // DEPRECATED
-	w.RemoveAnnotation(armometadata.ArmoWlid)
-}
-
-func (w *Workload) RemoveCompatible() {
-	w.RemovePodAnnotation(armometadata.ArmoCompatibleAnnotation)
-}
 func (w *Workload) RemoveJobID() {
 	w.RemovePodAnnotation(armometadata.ArmoJobIDPath)
 	w.RemovePodAnnotation(armometadata.ArmoJobParentPath)
@@ -124,69 +93,7 @@ func (w *Workload) RemoveJobID() {
 	w.RemoveAnnotation(armometadata.ArmoJobParentPath)
 	w.RemoveAnnotation(armometadata.ArmoJobActionPath)
 }
-func (w *Workload) RemoveArmoMetadata() {
-	w.RemoveArmoLabels()
-	w.RemoveArmoAnnotations()
-}
 
-func (w *Workload) RemoveArmoAnnotations() {
-	l := w.GetAnnotations()
-	if len(l) > 0 {
-		for k := range l {
-			if strings.HasPrefix(k, armometadata.ArmoPrefix) {
-				w.RemoveAnnotation(k)
-			}
-			if strings.HasPrefix(k, armometadata.CAPrefix) { // DEPRECATED
-				w.RemoveAnnotation(k)
-			}
-		}
-	}
-	lp := w.GetPodAnnotations()
-	if len(lp) > 0 {
-		for k := range lp {
-			if strings.HasPrefix(k, armometadata.ArmoPrefix) {
-				w.RemovePodAnnotation(k)
-			}
-			if strings.HasPrefix(k, armometadata.CAPrefix) { // DEPRECATED
-				w.RemovePodAnnotation(k)
-			}
-		}
-	}
-}
-func (w *Workload) RemoveArmoLabels() {
-	l := w.GetLabels()
-	if len(l) > 0 {
-		for k := range l {
-			if strings.HasPrefix(k, armometadata.ArmoPrefix) {
-				w.RemoveLabel(k)
-			}
-			if strings.HasPrefix(k, armometadata.CAPrefix) { // DEPRECATED
-				w.RemoveLabel(k)
-			}
-		}
-	}
-	lp := w.GetPodLabels()
-	if len(lp) > 0 {
-		for k := range lp {
-			if strings.HasPrefix(k, armometadata.ArmoPrefix) {
-				w.RemovePodLabel(k)
-			}
-			if strings.HasPrefix(k, armometadata.CAPrefix) { // DEPRECATED
-				w.RemovePodLabel(k)
-			}
-		}
-	}
-}
-func (w *Workload) RemoveUpdateTime() {
-
-	// remove from pod
-	w.RemovePodAnnotation(armometadata.CAUpdate) // DEPRECATED
-	w.RemovePodAnnotation(armometadata.ArmoUpdate)
-
-	// remove from workload
-	w.RemoveAnnotation(armometadata.CAUpdate) // DEPRECATED
-	w.RemoveAnnotation(armometadata.ArmoUpdate)
-}
 func (w *Workload) RemoveSecretData() {
 	w.RemoveAnnotation("kubectl.kubernetes.io/last-applied-configuration")
 	delete(w.workload, "data")
@@ -257,38 +164,10 @@ func (w *Workload) SetKind(kind string) {
 	w.workload["kind"] = kind
 }
 
-func (w *Workload) SetInject() {
-	w.SetPodLabel(armometadata.ArmoAttach, boolutils.BoolToString(true))
-}
-
 func (w *Workload) SetJobID(jobTracking apis.JobTracking) {
 	w.SetPodAnnotation(armometadata.ArmoJobIDPath, jobTracking.JobID)
 	w.SetPodAnnotation(armometadata.ArmoJobParentPath, jobTracking.ParentID)
 	w.SetPodAnnotation(armometadata.ArmoJobActionPath, fmt.Sprintf("%d", jobTracking.LastActionNumber))
-}
-
-func (w *Workload) SetIgnore() {
-	w.SetPodLabel(armometadata.ArmoAttach, boolutils.BoolToString(false))
-}
-
-func (w *Workload) SetCompatible() {
-	w.SetPodAnnotation(armometadata.ArmoCompatibleAnnotation, boolutils.BoolToString(true))
-}
-
-func (w *Workload) SetIncompatible() {
-	w.SetPodAnnotation(armometadata.ArmoCompatibleAnnotation, boolutils.BoolToString(false))
-}
-
-func (w *Workload) SetReplaceheaders() {
-	w.SetPodAnnotation(armometadata.ArmoReplaceheaders, boolutils.BoolToString(true))
-}
-
-func (w *Workload) SetWlid(wlid string) {
-	w.SetPodAnnotation(armometadata.ArmoWlid, wlid)
-}
-
-func (w *Workload) SetUpdateTime() {
-	w.SetPodAnnotation(armometadata.ArmoUpdate, string(time.Now().UTC().Format("02-01-2006 15:04:05")))
 }
 
 func (w *Workload) SetNamespace(namespace string) {
@@ -661,65 +540,4 @@ func (w *Workload) GetJobID() *apis.JobTracking {
 		jobTracking.LastActionNumber = 1
 	}
 	return &jobTracking
-}
-
-// func (w *Workload) GetJobID() string {
-// 	if status, ok := w.GetAnnotation(armometadata.ArmoJobID); ok {
-// 		return status
-// 	}
-// 	return ""
-// }
-
-// ========================================= IS =========================================
-
-func (w *Workload) IsInject() bool {
-	return w.IsAttached()
-}
-
-func (w *Workload) IsIgnore() bool {
-	if attach := armometadata.IsAttached(w.GetPodLabels()); attach != nil {
-		return !(*attach)
-	}
-	if attach := armometadata.IsAttached(w.GetLabels()); attach != nil {
-		return !(*attach)
-	}
-	return false
-}
-
-func (w *Workload) IsCompatible() bool {
-	if c, ok := w.GetPodAnnotation(armometadata.ArmoCompatibleAnnotation); ok {
-		return boolutils.StringToBool(c)
-
-	}
-	if c, ok := w.GetAnnotation(armometadata.ArmoCompatibleAnnotation); ok {
-		return boolutils.StringToBool(c)
-
-	}
-	return false
-}
-
-func (w *Workload) IsIncompatible() bool {
-	if c, ok := w.GetPodAnnotation(armometadata.ArmoCompatibleAnnotation); ok {
-		return !boolutils.StringToBool(c)
-	}
-	if c, ok := w.GetAnnotation(armometadata.ArmoCompatibleAnnotation); ok {
-		return !boolutils.StringToBool(c)
-	}
-	return false
-}
-func (w *Workload) IsAttached() bool {
-	if attach := armometadata.IsAttached(w.GetPodLabels()); attach != nil {
-		return *attach
-	}
-	if attach := armometadata.IsAttached(w.GetLabels()); attach != nil {
-		return *attach
-	}
-	return false
-}
-
-func (w *Workload) IsReplaceheaders() bool {
-	if c, ok := w.GetPodAnnotation(armometadata.ArmoReplaceheaders); ok {
-		return boolutils.StringToBool(c)
-	}
-	return false
 }

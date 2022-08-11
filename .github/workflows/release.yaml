@@ -2,6 +2,9 @@ name: Release-Tag
 on:
   push:
     branches: [ master ] 
+    paths-ignore:
+      # Do not run the pipeline if only Markdown files changed
+      - '**.md'
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -19,13 +22,6 @@ jobs:
     - name: Test
       run: go test -v ./...
 
-    - name: Create a release
-      id: create_release
-      uses: actions/create-release@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    - uses: rickstaa/action-create-tag@v1
       with:
-        tag_name: v0.0.${{ github.run_number }}
-        release_name: Release v0.0.${{ github.run_number }}
-        draft: false
-        prerelease: false
+        tag: "v0.0.${{ github.run_number }}"

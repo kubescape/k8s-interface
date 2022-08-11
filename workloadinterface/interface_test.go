@@ -13,7 +13,7 @@ func TestIWorkload(t *testing.T) {
 
 }
 func TestWorkloadWithIMetadata(t *testing.T) {
-	var a IMetadata
+	var a IWorkload
 	a = NewWorkloadObj(nil)
 	fmt.Printf("%v", a.GetName())
 }
