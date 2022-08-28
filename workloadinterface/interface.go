@@ -93,3 +93,19 @@ type IWorkload interface {
 	RemoveSecretData()
 	RemoveJobID()
 }
+
+type IListWorkloads interface {
+	// Set
+	SetKind(string)
+	SetObject(map[string]interface{})
+	SetApiVersion(string)
+
+	// Get
+	GetKind() string
+	GetApiVersion() string
+	GetObject() map[string]interface{}
+	GetItems() []IMetadata
+
+	GetObjectType() ObjectType // Get struct type
+
+}
