@@ -269,3 +269,19 @@ func (wm *WorkloadMock) GetJobID() *apis.JobTracking {
 func (wm *WorkloadMock) GetData() map[string]interface{} {
 	return wm.workload.GetData()
 }
+
+func (wm *WorkloadMock) GetSecretsToContainer() (map[string][]string, error) {
+	return wm.workload.GetSecretsToContainer()
+}
+
+func (wm *WorkloadMock) GetSecrets() ([]string, error) {
+	return wm.workload.GetSecrets()
+}
+
+func (wm *WorkloadMock) GetConfigMaps() ([]string, error) {
+	return wm.workload.GetConfigMaps()
+}
+
+func (wm *WorkloadMock) GetConfigMapsToContainer() (map[string][]string, error) {
+	return wm.workload.GetConfigMapsToContainer()
+}

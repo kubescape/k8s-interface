@@ -12,6 +12,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/utils/strings/slices"
 )
 
 const TypeWorkloadObject ObjectType = "workload"
@@ -540,4 +541,78 @@ func (w *Workload) GetJobID() *apis.JobTracking {
 		jobTracking.LastActionNumber = 1
 	}
 	return &jobTracking
+}
+
+func (w *Workload) GetSecretsToContainer() (map[string][]string, error) {
+	secretsToContainer := make(map[string][]string)
+	workloadSecrets, err := w.GetSecrets()
+	if err != nil {
+		return nil, err
+	}
+	containers, err := w.GetContainers()
+	if err != nil {
+		return nil, err
+	}
+
+	for _, container := range containers {
+		for _, volumeMount := range container.VolumeMounts {
+			if slices.Contains(workloadSecrets, volumeMount.Name) {
+				secretsToContainer[container.Name] = append(secretsToContainer[volumeMount.Name], container.Name)
+			}
+		}
+
+	}
+	return secretsToContainer, nil
+}
+
+func (w *Workload) GetConfigMapsToContainer() (map[string][]string, error) {
+	configMapsToContainer := make(map[string][]string)
+	workloadConfigMaps, err := w.GetConfigMaps()
+	if err != nil {
+		return nil, err
+	}
+	containers, err := w.GetContainers()
+	if err != nil {
+		return nil, err
+	}
+
+	for _, container := range containers {
+		for _, volumeMount := range container.VolumeMounts {
+			if slices.Contains(workloadConfigMaps, volumeMount.Name) {
+				configMapsToContainer[container.Name] = append(configMapsToContainer[volumeMount.Name], container.Name)
+			}
+		}
+
+	}
+	return configMapsToContainer, nil
+}
+
+func (w *Workload) GetSecrets() ([]string, error) {
+	volumes, err := w.GetVolumes()
+	if err != nil {
+		return nil, err
+	}
+	secrets := []string{}
+	for _, volume := range volumes {
+		if volume.Secret != nil {
+			secrets = append(secrets, volume.Name)
+		}
+	}
+
+	return secrets, nil
+}
+
+func (w *Workload) GetConfigMaps() ([]string, error) {
+	volumes, err := w.GetVolumes()
+	if err != nil {
+		return nil, err
+	}
+	configMaps := []string{}
+	for _, volume := range volumes {
+		if volume.ConfigMap != nil {
+			configMaps = append(configMaps, volume.Name)
+		}
+	}
+
+	return configMaps, nil
 }
