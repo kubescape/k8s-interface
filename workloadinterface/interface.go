@@ -65,6 +65,8 @@ type IBasicWorkload interface {
 	GetUID() string
 	GetPodSpec() (*corev1.PodSpec, error)
 	GetData() map[string]interface{}
+	GetSecretsOfContainer() (map[string][]string, error)
+	GetConfigMapsOfContainer() (map[string][]string, error)
 	//GetSpiffe() string
 
 	// REMOVE
