@@ -270,18 +270,10 @@ func (wm *WorkloadMock) GetData() map[string]interface{} {
 	return wm.workload.GetData()
 }
 
-func (wm *WorkloadMock) GetSecretsToContainer() (map[string][]string, error) {
-	return wm.workload.GetSecretsToContainer()
+func (wm *WorkloadMock) GetSecretsOfContainer() (map[string][]string, error) {
+	return wm.workload.GetSecretsOfContainer()
 }
 
-func (wm *WorkloadMock) GetSecrets() ([]string, error) {
-	return wm.workload.GetSecrets()
-}
-
-func (wm *WorkloadMock) GetConfigMaps() ([]string, error) {
-	return wm.workload.GetConfigMaps()
-}
-
-func (wm *WorkloadMock) GetConfigMapsToContainer() (map[string][]string, error) {
-	return wm.workload.GetConfigMapsToContainer()
+func (wm *WorkloadMock) GetConfigMapsOfContainer() (map[string][]string, error) {
+	return wm.workload.GetConfigMapsOfContainer()
 }
