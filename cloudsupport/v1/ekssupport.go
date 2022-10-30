@@ -9,6 +9,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 
+	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	//"github.com/aws/aws-sdk-go-v2/aws/session"
@@ -22,29 +23,27 @@ type IEKSSupport interface {
 	GetName(*eks.DescribeClusterOutput) string
 	GetRegion(cluster string) (string, error)
 	GetContextName(cluster string) string
-	GetAwsCfgMap(kapi *k8sinterface.KubernetesApi, namespace string) error
 }
 
 type EKSSupport struct {
 }
 
-// ListmapRoles will store mapped roles found inside the aws-auth
-var ListmapRoles []*MappedRoles
-
-// ListmapUsers will store mapped users found inside the aws-auth
-var ListmapUsers []*MappedUsers
-
 const (
 	awsauthconfigmap = "aws-auth"
 )
 
-type MappedRoles struct {
+type awsAuth struct {
+	MapRoles []*mappedRoles `json:"mapRoles"`
+	MapUsers []*mappedUsers `json:"mapUsers"`
+}
+
+type mappedRoles struct {
 	RoleArn  string   `json:"rolearn"`
 	Username string   `json:"username"`
 	Groups   []string `json:"groups,omitempty"`
 }
 
-type MappedUsers struct {
+type mappedUsers struct {
 	UserArn  string   `json:"userarn"`
 	Username string   `json:"username"`
 	Groups   []string `json:"groups,omitempty"`
@@ -137,23 +136,25 @@ func (eksSupport *EKSSupport) GetContextName(cluster string) string {
 	return ""
 }
 
-// Getcfgmap returns the authdata containing mappings of iam-roles/groups or iam-users/groups
-func (EKSSupport *EKSSupport) GetAwsCfgMap(kapi *k8sinterface.KubernetesApi, namespace string) error {
+// GetEKSCfgMap returns the ConfigMap containing mappings of iam-roles/groups or iam-users/groups
+func (EKSSupport *EKSSupport) GetEKSCfgMap(kapi *k8sinterface.KubernetesApi, namespace string) (*v1.ConfigMap, error) {
 
-	resp, err := kapi.KubernetesClient.CoreV1().ConfigMaps(namespace).Get(context.TODO(), awsauthconfigmap, metav1.GetOptions{})
+	var authData awsAuth
+
+	eksCfgMap, err := kapi.KubernetesClient.CoreV1().ConfigMaps(namespace).Get(context.TODO(), awsauthconfigmap, metav1.GetOptions{})
 
 	if err != nil {
-		return fmt.Errorf("aws-auth config map not found")
+		return nil, err
 	}
 
-	if err := json.Unmarshal([]byte(resp.Data["mapRoles"]), &ListmapRoles); err != nil {
-		return err
+	if err := json.Unmarshal([]byte(eksCfgMap.Data["mapRoles"]), &authData.MapRoles); err != nil {
+		return nil, err
 	}
 
-	if err := json.Unmarshal([]byte(resp.Data["mapUsers"]), &ListmapUsers); err != nil {
-		return err
+	if err := json.Unmarshal([]byte(eksCfgMap.Data["mapUsers"]), &authData.MapUsers); err != nil {
+		return nil, err
 	}
 
-	return nil
+	return eksCfgMap, nil
 
 }
