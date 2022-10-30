@@ -541,3 +541,64 @@ func (w *Workload) GetJobID() *apis.JobTracking {
 	}
 	return &jobTracking
 }
+
+// Returns map of container name to container's secrets
+func (w *Workload) GetSecretsOfContainer() (map[string][]string, error) {
+	mapMountToSecretName := make(map[string]string)
+	volumes, err := w.GetVolumes()
+	if err != nil {
+		return nil, err
+	}
+	for _, volume := range volumes {
+		if volume.Secret != nil {
+			mapMountToSecretName[volume.Name] = volume.Secret.SecretName
+		}
+	}
+
+	containers, err := w.GetContainers()
+	if err != nil {
+		return nil, err
+	}
+
+	secretsOfContainer := make(map[string][]string)
+	for _, container := range containers {
+		secretsOfContainer[container.Name] = []string{}
+		for _, volumeMount := range container.VolumeMounts {
+			if secretName, ok := mapMountToSecretName[volumeMount.Name]; ok {
+				secretsOfContainer[container.Name] = append(secretsOfContainer[container.Name], secretName)
+			}
+		}
+
+	}
+	return secretsOfContainer, nil
+}
+
+// Returns map of container name to container's configmaps
+func (w *Workload) GetConfigMapsOfContainer() (map[string][]string, error) {
+	mapMountToConfigMapName := make(map[string]string)
+	volumes, err := w.GetVolumes()
+	if err != nil {
+		return nil, err
+	}
+	for _, volume := range volumes {
+		if volume.ConfigMap != nil {
+			mapMountToConfigMapName[volume.Name] = volume.ConfigMap.Name
+		}
+	}
+	containers, err := w.GetContainers()
+	if err != nil {
+		return nil, err
+	}
+
+	configMapsOfContainer := make(map[string][]string)
+	for _, container := range containers {
+		configMapsOfContainer[container.Name] = []string{}
+		for _, volumeMount := range container.VolumeMounts {
+			if configMapName, ok := mapMountToConfigMapName[volumeMount.Name]; ok {
+				configMapsOfContainer[container.Name] = append(configMapsOfContainer[container.Name], configMapName)
+			}
+		}
+
+	}
+	return configMapsOfContainer, nil
+}
