@@ -67,6 +67,8 @@ type IBasicWorkload interface {
 	GetData() map[string]interface{}
 	GetSecretsOfContainer() (map[string][]string, error)
 	GetConfigMapsOfContainer() (map[string][]string, error)
+	GetSecrets() ([]string, error)
+	GetConfigMaps() ([]string, error)
 	//GetSpiffe() string
 
 	// REMOVE

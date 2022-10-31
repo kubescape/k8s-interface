@@ -1,0 +1,184 @@
+{
+    "apiVersion": "v1",
+    "kind": "Pod",
+    "metadata": {
+        "annotations": {
+            "kubectl.kubernetes.io/last-applied-configuration": "{\"apiVersion\":\"v1\",\"kind\":\"Pod\",\"metadata\":{\"annotations\":{},\"name\":\"dapi-test-pod\",\"namespace\":\"default\"},\"spec\":{\"containers\":[{\"command\":[\"/bin/echo\",\"$(SPECIAL_LEVEL_KEY) $(SPECIAL_TYPE_KEY)\"],\"env\":[{\"name\":\"SPECIAL_LEVEL_KEY\",\"valueFrom\":{\"configMapKeyRef\":{\"key\":\"SPECIAL_LEVEL\",\"name\":\"special-config\"}}},{\"name\":\"SPECIAL_TYPE_KEY\",\"valueFrom\":{\"configMapKeyRef\":{\"key\":\"SPECIAL_TYPE\",\"name\":\"special-config\"}}}],\"image\":\"registry.k8s.io/busybox\",\"name\":\"test-container\"}],\"restartPolicy\":\"Never\"}}\n"
+        },
+        "creationTimestamp": "2022-10-31T12:21:35Z",
+        "name": "dapi-test-pod",
+        "namespace": "default",
+        "resourceVersion": "216845",
+        "uid": "5b90eb3e-d294-4f01-ba4d-b0edf9b19610"
+    },
+    "spec": {
+        "containers": [
+            {
+                "command": [
+                    "/bin/echo",
+                    "$(SPECIAL_LEVEL_KEY) $(SPECIAL_TYPE_KEY)"
+                ],
+                "env": [
+                    {
+                        "name": "SPECIAL_LEVEL_KEY",
+                        "valueFrom": {
+                            "configMapKeyRef": {
+                                "key": "SPECIAL_LEVEL",
+                                "name": "special-config"
+                            }
+                        }
+                    },
+                    {
+                        "name": "SPECIAL_TYPE_KEY",
+                        "valueFrom": {
+                            "configMapKeyRef": {
+                                "key": "SPECIAL_TYPE",
+                                "name": "special-config"
+                            }
+                        }
+                    }
+                ],
+                "image": "registry.k8s.io/busybox",
+                "imagePullPolicy": "Always",
+                "name": "test-container",
+                "resources": {},
+                "terminationMessagePath": "/dev/termination-log",
+                "terminationMessagePolicy": "File",
+                "volumeMounts": [
+                    {
+                        "mountPath": "/var/run/secrets/kubernetes.io/serviceaccount",
+                        "name": "kube-api-access-2t6wl",
+                        "readOnly": true
+                    }
+                ]
+            }
+        ],
+        "dnsPolicy": "ClusterFirst",
+        "enableServiceLinks": true,
+        "nodeName": "danielg-minikube",
+        "preemptionPolicy": "PreemptLowerPriority",
+        "priority": 0,
+        "restartPolicy": "Never",
+        "schedulerName": "default-scheduler",
+        "securityContext": {},
+        "serviceAccount": "default",
+        "serviceAccountName": "default",
+        "terminationGracePeriodSeconds": 30,
+        "tolerations": [
+            {
+                "effect": "NoExecute",
+                "key": "node.kubernetes.io/not-ready",
+                "operator": "Exists",
+                "tolerationSeconds": 300
+            },
+            {
+                "effect": "NoExecute",
+                "key": "node.kubernetes.io/unreachable",
+                "operator": "Exists",
+                "tolerationSeconds": 300
+            }
+        ],
+        "volumes": [
+            {
+                "name": "kube-api-access-2t6wl",
+                "projected": {
+                    "defaultMode": 420,
+                    "sources": [
+                        {
+                            "serviceAccountToken": {
+                                "expirationSeconds": 3607,
+                                "path": "token"
+                            }
+                        },
+                        {
+                            "configMap": {
+                                "items": [
+                                    {
+                                        "key": "ca.crt",
+                                        "path": "ca.crt"
+                                    }
+                                ],
+                                "name": "kube-root-ca.crt"
+                            }
+                        },
+                        {
+                            "downwardAPI": {
+                                "items": [
+                                    {
+                                        "fieldRef": {
+                                            "apiVersion": "v1",
+                                            "fieldPath": "metadata.namespace"
+                                        },
+                                        "path": "namespace"
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                }
+            }
+        ]
+    },
+    "status": {
+        "conditions": [
+            {
+                "lastProbeTime": null,
+                "lastTransitionTime": "2022-10-31T12:21:35Z",
+                "reason": "PodCompleted",
+                "status": "True",
+                "type": "Initialized"
+            },
+            {
+                "lastProbeTime": null,
+                "lastTransitionTime": "2022-10-31T12:21:35Z",
+                "reason": "PodCompleted",
+                "status": "False",
+                "type": "Ready"
+            },
+            {
+                "lastProbeTime": null,
+                "lastTransitionTime": "2022-10-31T12:21:35Z",
+                "reason": "PodCompleted",
+                "status": "False",
+                "type": "ContainersReady"
+            },
+            {
+                "lastProbeTime": null,
+                "lastTransitionTime": "2022-10-31T12:21:35Z",
+                "status": "True",
+                "type": "PodScheduled"
+            }
+        ],
+        "containerStatuses": [
+            {
+                "containerID": "docker://4ae04986517386f328a52cd224e97157e93a473bbe41122f414c18de5afe972d",
+                "image": "registry.k8s.io/busybox:latest",
+                "imageID": "docker-pullable://registry.k8s.io/busybox@sha256:d8d3bc2c183ed2f9f10e7258f84971202325ee6011ba137112e01e30f206de67",
+                "lastState": {},
+                "name": "test-container",
+                "ready": false,
+                "restartCount": 0,
+                "started": false,
+                "state": {
+                    "terminated": {
+                        "containerID": "docker://4ae04986517386f328a52cd224e97157e93a473bbe41122f414c18de5afe972d",
+                        "exitCode": 0,
+                        "finishedAt": "2022-10-31T12:21:37Z",
+                        "reason": "Completed",
+                        "startedAt": "2022-10-31T12:21:37Z"
+                    }
+                }
+            }
+        ],
+        "hostIP": "192.168.49.2",
+        "phase": "Succeeded",
+        "podIP": "172.17.0.17",
+        "podIPs": [
+            {
+                "ip": "172.17.0.17"
+            }
+        ],
+        "qosClass": "BestEffort",
+        "startTime": "2022-10-31T12:21:35Z"
+    }
+}

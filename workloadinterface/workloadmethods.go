@@ -12,6 +12,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/utils/strings/slices"
 )
 
 const TypeWorkloadObject ObjectType = "workload"
@@ -565,7 +566,25 @@ func (w *Workload) GetSecretsOfContainer() (map[string][]string, error) {
 		secretsOfContainer[container.Name] = []string{}
 		for _, volumeMount := range container.VolumeMounts {
 			if secretName, ok := mapMountToSecretName[volumeMount.Name]; ok {
-				secretsOfContainer[container.Name] = append(secretsOfContainer[container.Name], secretName)
+				if !slices.Contains(secretsOfContainer[container.Name], secretName) {
+					secretsOfContainer[container.Name] = append(secretsOfContainer[container.Name], secretName)
+				}
+			}
+		}
+
+		for _, envFrom := range container.EnvFrom {
+			if envFrom.SecretRef != nil {
+				if !slices.Contains(secretsOfContainer[container.Name], envFrom.SecretRef.Name) {
+					secretsOfContainer[container.Name] = append(secretsOfContainer[container.Name], envFrom.SecretRef.Name)
+				}
+			}
+		}
+
+		for _, env := range container.Env {
+			if env.ValueFrom != nil && env.ValueFrom.SecretKeyRef != nil {
+				if !slices.Contains(secretsOfContainer[container.Name], env.ValueFrom.SecretKeyRef.Name) {
+					secretsOfContainer[container.Name] = append(secretsOfContainer[container.Name], env.ValueFrom.SecretKeyRef.Name)
+				}
 			}
 		}
 
@@ -595,10 +614,60 @@ func (w *Workload) GetConfigMapsOfContainer() (map[string][]string, error) {
 		configMapsOfContainer[container.Name] = []string{}
 		for _, volumeMount := range container.VolumeMounts {
 			if configMapName, ok := mapMountToConfigMapName[volumeMount.Name]; ok {
-				configMapsOfContainer[container.Name] = append(configMapsOfContainer[container.Name], configMapName)
+				if !slices.Contains(configMapsOfContainer[container.Name], configMapName) {
+					configMapsOfContainer[container.Name] = append(configMapsOfContainer[container.Name], configMapName)
+				}
+			}
+		}
+
+		for _, envFrom := range container.EnvFrom {
+			if envFrom.ConfigMapRef != nil {
+				if !slices.Contains(configMapsOfContainer[container.Name], envFrom.ConfigMapRef.Name) {
+					configMapsOfContainer[container.Name] = append(configMapsOfContainer[container.Name], envFrom.ConfigMapRef.Name)
+				}
+			}
+		}
+
+		for _, env := range container.Env {
+			if env.ValueFrom != nil && env.ValueFrom.ConfigMapKeyRef != nil {
+				if !slices.Contains(configMapsOfContainer[container.Name], env.ValueFrom.ConfigMapKeyRef.Name) {
+					configMapsOfContainer[container.Name] = append(configMapsOfContainer[container.Name], env.ValueFrom.ConfigMapKeyRef.Name)
+				}
 			}
 		}
 
 	}
 	return configMapsOfContainer, nil
+}
+
+func (w *Workload) GetSecrets() ([]string, error) {
+	secretsOfContainer, err := w.GetSecretsOfContainer()
+	if err != nil {
+		return nil, err
+	}
+	secrets := []string{}
+	for _, scrts := range secretsOfContainer {
+		for _, scrt := range scrts {
+			if !slices.Contains(secrets, scrt) {
+				secrets = append(secrets, scrt)
+			}
+		}
+	}
+	return secrets, nil
+}
+
+func (w *Workload) GetConfigMaps() ([]string, error) {
+	cfgMapsOfContainer, err := w.GetConfigMapsOfContainer()
+	if err != nil {
+		return nil, err
+	}
+	configMaps := []string{}
+	for _, cfgMaps := range cfgMapsOfContainer {
+		for _, cfgMap := range cfgMaps {
+			if !slices.Contains(configMaps, cfgMap) {
+				configMaps = append(configMaps, cfgMap)
+			}
+		}
+	}
+	return configMaps, nil
 }
