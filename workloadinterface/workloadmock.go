@@ -277,3 +277,11 @@ func (wm *WorkloadMock) GetSecretsOfContainer() (map[string][]string, error) {
 func (wm *WorkloadMock) GetConfigMapsOfContainer() (map[string][]string, error) {
 	return wm.workload.GetConfigMapsOfContainer()
 }
+
+func (wm *WorkloadMock) GetSecrets() ([]string, error) {
+	return wm.workload.GetSecrets()
+}
+
+func (wm *WorkloadMock) GetConfigMaps() ([]string, error) {
+	return wm.workload.GetConfigMaps()
+}
