@@ -2,11 +2,15 @@ package v1
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"os"
 	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
+
+	v1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	//"github.com/aws/aws-sdk-go-v2/aws/session"
 	"github.com/aws/aws-sdk-go-v2/config"
@@ -24,12 +28,33 @@ type IEKSSupport interface {
 type EKSSupport struct {
 }
 
+const (
+	awsauthconfigmap = "aws-auth"
+)
+
+type awsAuth struct {
+	MapRoles []*mappedRoles `json:"mapRoles"`
+	MapUsers []*mappedUsers `json:"mapUsers"`
+}
+
+type mappedRoles struct {
+	RoleArn  string   `json:"rolearn"`
+	Username string   `json:"username"`
+	Groups   []string `json:"groups,omitempty"`
+}
+
+type mappedUsers struct {
+	UserArn  string   `json:"userarn"`
+	Username string   `json:"username"`
+	Groups   []string `json:"groups,omitempty"`
+}
+
+// NewEKSSupport returns EKSSupport type
 func NewEKSSupport() *EKSSupport {
 	return &EKSSupport{}
 }
 
-// Get descriptive info about cluster running in EKS.
-
+// GetClusterDescribe returns the descriptive info about the cluster running in EKS.
 func (eksSupport *EKSSupport) GetClusterDescribe(cluster string, region string) (*eks.DescribeClusterOutput, error) {
 	// Configure cluster name and region for request
 	awsConfig, err := config.LoadDefaultConfig(context.TODO())
@@ -49,11 +74,14 @@ func (eksSupport *EKSSupport) GetClusterDescribe(cluster string, region string) 
 	return result, nil
 }
 
-// getName get cluster name from describe
+// GetName returns the name of the eks cluster
 func (eksSupport *EKSSupport) GetName(describe *eks.DescribeClusterOutput) string {
+
+	//getName get cluster name from describe
 	return *describe.Cluster.Name
 }
 
+// GetRegion returns the region in which eks cluster is running.
 func (eksSupport *EKSSupport) GetRegion(cluster string) (string, error) {
 	region, present := os.LookupEnv(KS_CLOUD_REGION_ENV_VAR)
 	if present {
@@ -106,4 +134,37 @@ func (eksSupport *EKSSupport) GetContextName(cluster string) string {
 		return splittedCluster[len(splittedCluster)-1]
 	}
 	return ""
+}
+
+// GetEKSCfgMap returns the ConfigMap containing mappings of iam-roles/groups or iam-users/groups
+func (EKSSupport *EKSSupport) GetEKSCfgMap(kapi *k8sinterface.KubernetesApi, namespace string) (*v1.ConfigMap, error) {
+
+	var authData awsAuth
+
+	eksCfgMap, err := kapi.KubernetesClient.CoreV1().ConfigMaps(namespace).Get(context.TODO(), awsauthconfigmap, metav1.GetOptions{})
+
+	if err != nil {
+		return nil, err
+	}
+
+	if mapRoles, ok := eksCfgMap.Data["mapRoles"]; ok {
+
+		if err := json.Unmarshal([]byte(mapRoles), &authData.MapRoles); err != nil {
+			return nil, err
+		}
+	} else {
+		return nil, fmt.Errorf("'mapRoles' is missing from the EKS config object")
+	}
+
+	if mapUsers, ok := eksCfgMap.Data["mapUsers"]; ok {
+
+		if err := json.Unmarshal([]byte(mapUsers), &authData.MapUsers); err != nil {
+			return nil, err
+		}
+	} else {
+		return nil, fmt.Errorf("'mapUsers' is missing from the EKS config object")
+	}
+
+	return eksCfgMap, nil
+
 }
