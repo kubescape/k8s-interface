@@ -147,12 +147,22 @@ func (EKSSupport *EKSSupport) GetEKSCfgMap(kapi *k8sinterface.KubernetesApi, nam
 		return nil, err
 	}
 
-	if err := json.Unmarshal([]byte(eksCfgMap.Data["mapRoles"]), &authData.MapRoles); err != nil {
-		return nil, err
+	if mapRoles, ok := eksCfgMap.Data["mapRoles"]; ok {
+
+		if err := json.Unmarshal([]byte(mapRoles), &authData.MapRoles); err != nil {
+			return nil, err
+		}
+	} else {
+		return nil, fmt.Errorf("'mapRoles' is missing from the EKS config object")
 	}
 
-	if err := json.Unmarshal([]byte(eksCfgMap.Data["mapUsers"]), &authData.MapUsers); err != nil {
-		return nil, err
+	if mapUsers, ok := eksCfgMap.Data["mapUsers"]; ok {
+
+		if err := json.Unmarshal([]byte(mapUsers), &authData.MapUsers); err != nil {
+			return nil, err
+		}
+	} else {
+		return nil, fmt.Errorf("'mapUsers' is missing from the EKS config object")
 	}
 
 	return eksCfgMap, nil
