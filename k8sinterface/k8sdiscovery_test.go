@@ -26,7 +26,7 @@ func TestResourceGroupToString(t *testing.T) {
 		t.Errorf("deployments: %v", deployments)
 	}
 	cronjobs := ResourceGroupToString("*", "*", "cronjobs")
-	if len(cronjobs) == 0 || cronjobs[0] != "batch/v1beta1/cronjobs" {
+	if len(cronjobs) == 0 || cronjobs[0] != "batch/v1/cronjobs" {
 		t.Errorf("cronjobs: %v", cronjobs)
 	}
 }
@@ -91,7 +91,7 @@ func TestInitializeMapResourcesMock(t *testing.T) {
 		"statefulsets":                    "apps/v1",
 		"controllerrevisions":             "apps/v1",
 		"jobs":                            "batch/v1",
-		"cronjobs":                        "batch/v1beta1",
+		"cronjobs":                        "batch/v1",
 		"horizontalpodautoscalers":        "autoscaling/v1",
 		"podsecuritypolicies":             "policy/v1beta1",
 		"poddisruptionbudgets":            "policy/v1beta1",
