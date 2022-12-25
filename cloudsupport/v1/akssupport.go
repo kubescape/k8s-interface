@@ -104,7 +104,7 @@ func (AKSSupport *AKSSupport) ListAllRolesForScope(subscriptionId string, scope 
 	for pager.More() {
 		nextResult, err := pager.NextPage(ctx)
 		if err != nil {
-			log.Fatalf("failed to advance page: %v", err)
+			return roleList, fmt.Errorf("failed to advance page: %v", err)
 		}
 
 		roleList = append(roleList, nextResult.Value...)
