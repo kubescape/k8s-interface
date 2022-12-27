@@ -5,7 +5,8 @@ AZURE_SUBSCRIPTION_ID
 AZURE_RESOURCE_GROUP
 
 <br></br>
-
+To specify the identity to use to pull images from ACR:
+AZURE_PULL_CLIENT_ID=UUID
 ### EKS
 KS_CLOUD_REGION  
 <br></br>

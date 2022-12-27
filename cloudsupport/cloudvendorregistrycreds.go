@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"os"
 	"strings"
 	"time"
 
@@ -92,6 +93,9 @@ func getAzureAADAccessToken() (string, error) {
 	msi_parameters := url.Values{}
 	msi_parameters.Add("resource", "https://management.azure.com/")
 	msi_parameters.Add("api-version", "2018-02-01")
+	if azureClientID := os.Getenv("AZURE_PULL_CLIENT_ID"); azureClientID != "" {
+		msi_parameters.Add("client_id", azureClientID)
+	}
 	msi_endpoint.RawQuery = msi_parameters.Encode()
 	req, err := http.NewRequest("GET", msi_endpoint.String(), nil)
 	if err != nil {
