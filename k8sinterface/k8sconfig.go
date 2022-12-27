@@ -131,10 +131,6 @@ func GetConfig() *clientcmdapi.Config {
 		return nil
 	}
 
-	if clusterContextName != "" {
-		return nil
-	}
-
 	kubeConfig := clientcmd.NewNonInteractiveDeferredLoadingClientConfig(clientcmd.NewDefaultClientConfigLoadingRules(), &clientcmd.ConfigOverrides{CurrentContext: clusterContextName})
 	config, err := kubeConfig.RawConfig()
 	if err != nil {
