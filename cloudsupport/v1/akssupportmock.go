@@ -3,7 +3,8 @@ package v1
 import (
 	"encoding/json"
 
-	"github.com/Azure/azure-sdk-for-go/services/containerservice/mgmt/2019-04-30/containerservice"
+	armauthorization "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/authorization/armauthorization/v2"
+	armcontainerservice "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/containerservice/armcontainerservice/v2"
 	"github.com/kubescape/k8s-interface/cloudsupport/mockobjects"
 )
 
@@ -15,13 +16,16 @@ type AKSSupportMock struct {
 }
 
 // Get descriptive info about cluster running in AKS.
-func (AKSSupportM *AKSSupportMock) GetClusterDescribe(subscriptionId string, clusterName string, resourceGroup string) (*containerservice.ManagedCluster, error) {
-	c := &containerservice.ManagedCluster{}
+func (AKSSupportM *AKSSupportMock) GetClusterDescribe(subscriptionId string, clusterName string, resourceGroup string) (*armcontainerservice.ManagedCluster, error) {
+	c := &armcontainerservice.ManagedCluster{}
 	err := json.Unmarshal([]byte(mockobjects.AksDescriptor), c)
 	return c, err
 }
 
-func (AKSSupportM *AKSSupportMock) GetContextName(managedCluster *containerservice.ManagedCluster) string {
+func (AKSSupportM *AKSSupportMock) ListAllRolesForScope(subscriptionId string, scope string) ([]*armauthorization.RoleAssignment, error) {
+	return nil, nil
+}
+func (AKSSupportM *AKSSupportMock) GetContextName(managedCluster *armcontainerservice.ManagedCluster) string {
 	return "daniel"
 }
 

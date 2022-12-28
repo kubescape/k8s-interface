@@ -12,10 +12,13 @@ import (
 
 const (
 	TypeCloudProviderDescribe workloadinterface.ObjectType = "CloudProviderDescribe"
-	Version                                                = "v1"
-	AKS                                                    = "aks"
-	GKE                                                    = "gke"
-	EKS                                                    = "eks"
+)
+
+const (
+	Version = "v1"
+	AKS     = "aks"
+	GKE     = "gke"
+	EKS     = "eks"
 )
 
 // NewDescriptiveInfoFromCloudProvider construct a CloudProviderDescribe from map[string]interface{}. If the map does not match the object, will return nil
