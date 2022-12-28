@@ -11,7 +11,6 @@ import (
 	"k8s.io/client-go/kubernetes"
 	restclient "k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
-	"k8s.io/client-go/tools/clientcmd/api"
 	clientcmdapi "k8s.io/client-go/tools/clientcmd/api"
 
 	// DO NOT REMOVE - load cloud providers auth
@@ -98,13 +97,18 @@ func GetK8sConfig() *restclient.Config {
 }
 
 // DEPRECATED
-func GetCurrentContext() *api.Context {
-	kubeConfig := clientcmd.NewNonInteractiveDeferredLoadingClientConfig(clientcmd.NewDefaultClientConfigLoadingRules(), &clientcmd.ConfigOverrides{CurrentContext: clusterContextName})
-	config, err := kubeConfig.RawConfig()
-	if err != nil {
-		return nil
+func GetCurrentContext() *clientcmdapi.Context {
+	if kubeConfig := GetConfig(); kubeConfig != nil {
+		kubeConfig.CurrentContext = clusterContextName
+		if clusterContextName != "" {
+			if c, ok := kubeConfig.Contexts[clusterContextName]; ok {
+				return c
+			}
+		}
+		// if context name is not set, return the current context
+		return kubeConfig.Contexts[kubeConfig.CurrentContext]
 	}
-	return config.Contexts[config.CurrentContext]
+	return nil
 }
 
 func IsConnectedToCluster() bool {
@@ -117,6 +121,10 @@ func IsConnectedToCluster() bool {
 }
 
 func GetContextName() string {
+	if clusterContextName != "" {
+		return clusterContextName
+	}
+
 	if config := GetConfig(); config != nil {
 		return config.CurrentContext
 	}
