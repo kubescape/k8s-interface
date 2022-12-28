@@ -12,6 +12,7 @@ import (
 	restclient "k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/client-go/tools/clientcmd/api"
+	clientcmdapi "k8s.io/client-go/tools/clientcmd/api"
 
 	// DO NOT REMOVE - load cloud providers auth
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
@@ -116,23 +117,29 @@ func IsConnectedToCluster() bool {
 }
 
 func GetContextName() string {
-	if !connectedToCluster {
-		return ""
+	if config := GetConfig(); config != nil {
+		return config.CurrentContext
 	}
 
-	if clusterContextName != "" {
-		return clusterContextName
+	return ""
+}
+
+// get config from ~/.kube/config
+func GetConfig() *clientcmdapi.Config {
+
+	if !connectedToCluster {
+		return nil
 	}
 
 	kubeConfig := clientcmd.NewNonInteractiveDeferredLoadingClientConfig(clientcmd.NewDefaultClientConfigLoadingRules(), &clientcmd.ConfigOverrides{CurrentContext: clusterContextName})
 	config, err := kubeConfig.RawConfig()
 	if err != nil {
-		return ""
+		return nil
 	}
-	// TODO - Handle if empty
-	return config.CurrentContext
+	return &config
 }
 
+// GetDefaultNamespace returns the default namespace for the current context
 func GetDefaultNamespace() string {
 	defaultNamespace := "default"
 	clientCfg, err := clientcmd.NewDefaultClientConfigLoadingRules().Load()
