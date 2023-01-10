@@ -65,17 +65,22 @@ func GetResourceNamesapcedScope() []string {
 
 // InitializeMapResources get supported api-resource (similar to 'kubectl api-resources') and map to 'ResourceGroupMapping' and 'ResourceNamesapcedScope'. If this function is not called, many functions may not work
 func InitializeMapResources(discoveryClient discovery.DiscoveryInterface) {
-	// if discoveryClient != nil {
-	// 	resourceList, _ := discoveryClient.ServerPreferredResources()
-	// 	if len(resourceList) != 0 {
-	// 		setMapResources(resourceList)
-	// 	}
-	// }
 
-	// load from mock only if the map is empty
-	if len(resourceNamesapcedScope) == 0 {
-		InitializeMapResourcesMock()
+	// load discovery data only if the map is empty
+	if len(resourceNamesapcedScope) != 0 {
+		return
 	}
+
+	if discoveryClient != nil {
+		resourceList, _ := discoveryClient.ServerPreferredResources()
+		if len(resourceList) != 0 {
+			setMapResources(resourceList)
+			return
+		}
+	}
+
+	// Fallback - load from mock
+	InitializeMapResourcesMock()
 
 }
 func setMapResources(resourceList []*metav1.APIResourceList) {
