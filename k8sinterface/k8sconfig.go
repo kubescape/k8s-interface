@@ -99,7 +99,6 @@ func GetK8sConfig() *restclient.Config {
 // DEPRECATED
 func GetCurrentContext() *clientcmdapi.Context {
 	if kubeConfig := GetConfig(); kubeConfig != nil {
-		kubeConfig.CurrentContext = clusterContextName
 		if clusterContextName != "" {
 			if c, ok := kubeConfig.Contexts[clusterContextName]; ok {
 				return c
