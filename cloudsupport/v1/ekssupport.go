@@ -14,6 +14,7 @@ import (
 
 	//"github.com/aws/aws-sdk-go-v2/aws/session"
 	"github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/service/ecr"
 	"github.com/aws/aws-sdk-go-v2/service/eks"
 	"github.com/kubescape/k8s-interface/k8sinterface"
 )
@@ -23,6 +24,7 @@ type IEKSSupport interface {
 	GetName(*eks.DescribeClusterOutput) string
 	GetRegion(cluster string) (string, error)
 	GetContextName(cluster string) string
+	GetDescribeRepositories(region string) (*ecr.DescribeRepositoriesOutput, error)
 }
 
 type EKSSupport struct {
@@ -167,4 +169,23 @@ func (EKSSupport *EKSSupport) GetEKSCfgMap(kapi *k8sinterface.KubernetesApi, nam
 
 	return eksCfgMap, nil
 
+}
+
+// TODO - make more requests until NextToken is null in DescribeRepositoriesOutput
+// GetDescribeRepositories returns the descriptive info about the repositories in EKS.
+func (eksSupport *EKSSupport) GetDescribeRepositories(region string) (*ecr.DescribeRepositoriesOutput, error) {
+	// Configure region for request
+	awsConfig, err := config.LoadDefaultConfig(context.TODO())
+	if err != nil {
+		return nil, fmt.Errorf("error: fail to load AWS SDK default %v", err)
+	}
+	awsConfig.Region = region
+	svc := ecr.NewFromConfig(awsConfig)
+	input := &ecr.DescribeRepositoriesInput{}
+
+	result, err := svc.DescribeRepositories(context.TODO(), input)
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
 }

@@ -30,6 +30,17 @@ func TestGetClusterDescribeEKS(t *testing.T) {
 	//assert.Equal(t, 1, len(des.GetData()))
 }
 
+func TestGetDescribeRepositoriesEKS(t *testing.T) {
+	g := NewEKSSupportMock()
+	des, err := GetDescribeRepositoriesEKS(g, "ca-terraform-eks-dev-stage", "")
+	assert.NoError(t, err)
+	assert.Equal(t, apis.CloudProviderDescribeRepositoriesKind, des.GetKind())
+	assert.Equal(t, "eks.amazonaws.com/v1/DescribeRepositories/ca-terraform-eks-dev-stage", des.GetID())
+	assert.Equal(t, k8sinterface.JoinGroupVersion(apis.ApiVersionEKS, Version), des.GetApiVersion())
+	assert.Equal(t, "ca-terraform-eks-dev-stage", des.GetName())
+	//assert.Equal(t, 1, len(des.GetData()))
+}
+
 func TestGetClusterDescribeAKS(t *testing.T) {
 	g := NewAKSSupportMock()
 	clusterDescribe, err := GetClusterDescribeAKS(g, "XXXXXX", "armo-testing", "armo-dev")

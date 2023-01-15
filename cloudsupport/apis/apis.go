@@ -3,10 +3,11 @@ package apis
 import "strings"
 
 const (
-	ApiVersionEKS             = "eks.amazonaws.com"
-	ApiVersionAKS             = "management.azure.com"
-	ApiVersionGKE             = "container.googleapis.com"
-	CloudProviderDescribeKind = "ClusterDescribe"
+	ApiVersionEKS                         = "eks.amazonaws.com"
+	ApiVersionAKS                         = "management.azure.com"
+	ApiVersionGKE                         = "container.googleapis.com"
+	CloudProviderDescribeKind             = "ClusterDescribe"
+	CloudProviderDescribeRepositoriesKind = "DescribeRepositories"
 )
 
 // IsTypeDescriptiveInfoFromCloudProvider return true if the object apiVersion kind match the CloudProviderDescribeKind struct

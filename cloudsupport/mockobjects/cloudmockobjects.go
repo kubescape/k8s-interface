@@ -311,3 +311,46 @@ var GkeDescriptor = `    {
 	"current_node_count": 3,
 	"location": "us-central1-r"
 }`
+
+var EksDescribeRepositories = `{
+    "apiVersion": "eks.amazonaws.com/v1",
+    "kind": "DescribeRepositories",
+    "metadata": {
+        "name": "ca-terraform-eks-dev-stage",
+        "provider": "eks"
+    },
+    "data": {
+        "NextToken": null,
+        "Repositories": [
+            {
+                "CreatedAt": "2023-01-11T13:07:39Z",
+                "EncryptionConfiguration": {
+                    "EncryptionType": "XXXXXX",
+                    "KmsKey": null
+                },
+                "ImageScanningConfiguration": {
+                    "ScanOnPush": true
+                },
+                "ImageTagMutability": "MUTABLE",
+                "RegistryId": "XXXXXXXXXXXX",
+                "RepositoryArn": "arn:aws:ecr:eu-west-2:XXXXXXXXXXXX:repository/my-repo",
+                "RepositoryName": "my-repo",
+                "RepositoryUri": "XXXXXXXXXXXX.dkr.ecr.eu-west-2.amazonaws.com/my-repo"
+            },
+            {
+                "CreatedAt": "2023-01-11T13:07:39Z",
+                "EncryptionConfiguration": {
+                    "EncryptionType": "XXXXXX",
+                    "KmsKey": null
+                },
+                "ImageTagMutability": "MUTABLE",
+                "RegistryId": "XXXXXXXXXXXX",
+                "RepositoryArn": "arn:aws:ecr:eu-west-2:XXXXXXXXXXXX:repository/my-repo",
+                "RepositoryName": "my-repo-no-scanning",
+                "RepositoryUri": "XXXXXXXXXXXX.dkr.ecr.eu-west-2.amazonaws.com/my-repo"
+            }
+        ],
+        "ResultMetadata": {}
+    }
+}
+    `
