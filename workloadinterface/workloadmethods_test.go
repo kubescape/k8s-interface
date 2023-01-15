@@ -1,6 +1,7 @@
 package workloadinterface
 
 import (
+	"sort"
 	"testing"
 
 	_ "embed"
@@ -396,6 +397,8 @@ func TestGetSecrets(t *testing.T) {
 			}
 			secrets, err := workload.GetSecrets()
 			assert.Equal(t, err, tc.responseError)
+			sort.Strings(tc.want)
+			sort.Strings(secrets)
 			assert.Equal(t, tc.want, secrets)
 		})
 	}
