@@ -29,3 +29,23 @@ func IsTypeDescriptiveInfoFromCloudProvider(object map[string]interface{}) bool 
 	}
 	return false
 }
+
+// IsTypeDescribeRepositories return true if the object apiVersion kind match the CloudProviderDescribeRepositoriesKind struct
+func IsTypeDescribeRepositories(object map[string]interface{}) bool {
+	if object == nil {
+		return false
+	}
+	if apiVersion, ok := object["apiVersion"]; ok {
+		if p, k := apiVersion.(string); k {
+			if group := strings.Split(p, "/"); group[0] == ApiVersionGKE || group[0] == ApiVersionEKS || group[0] == ApiVersionAKS {
+				if kind, ok := object["kind"]; ok {
+					// "Describe" is deprecated
+					if k, kk := kind.(string); kk && k == CloudProviderDescribeRepositoriesKind {
+						return true
+					}
+				}
+			}
+		}
+	}
+	return false
+}

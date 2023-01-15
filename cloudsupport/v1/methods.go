@@ -160,7 +160,7 @@ func (description *CloudProviderDescribeRepositories) SetWorkload(object map[str
 }
 
 func (description *CloudProviderDescribeRepositories) SetObject(object map[string]interface{}) {
-	if !apis.IsTypeDescriptiveInfoFromCloudProvider(object) {
+	if !apis.IsTypeDescribeRepositories(object) {
 		return
 	}
 	if b := workloadinterface.MapToBytes(object); len(b) > 0 {
