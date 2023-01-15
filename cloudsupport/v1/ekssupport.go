@@ -171,7 +171,6 @@ func (EKSSupport *EKSSupport) GetEKSCfgMap(kapi *k8sinterface.KubernetesApi, nam
 
 }
 
-// TODO - make more requests until NextToken is null in DescribeRepositoriesOutput
 // GetDescribeRepositories returns the descriptive info about the repositories in EKS.
 func (eksSupport *EKSSupport) GetDescribeRepositories(region string) (*ecr.DescribeRepositoriesOutput, error) {
 	// Configure region for request
@@ -181,7 +180,9 @@ func (eksSupport *EKSSupport) GetDescribeRepositories(region string) (*ecr.Descr
 	}
 	awsConfig.Region = region
 	svc := ecr.NewFromConfig(awsConfig)
-	input := &ecr.DescribeRepositoriesInput{}
+	input := &ecr.DescribeRepositoriesInput{
+		MaxResults: aws.Int32(100),
+	}
 
 	result, err := svc.DescribeRepositories(context.TODO(), input)
 	if err != nil {
