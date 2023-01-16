@@ -1,6 +1,7 @@
 package cloudsupport
 
 import (
+	"fmt"
 	"os"
 	"strings"
 
@@ -116,10 +117,10 @@ func GetDescribeRepositoriesFromCloudProvider(cluster string, cloudProvider stri
 		}
 	case cloudsupportv1.GKE:
 		//TODO - implement GKE support
-		break
+		return nil, fmt.Errorf("GKE is not supported yet")
 	case cloudsupportv1.AKS:
 		//TODO - implement AKS support
-		break
+		return nil, fmt.Errorf("AKS is not supported yet")
 	}
 
 	return clusterInfo, nil
