@@ -452,6 +452,8 @@ func TestGetConfigMaps(t *testing.T) {
 			}
 			configMaps, err := workload.GetConfigMaps()
 			assert.Equal(t, err, tc.responseError)
+			sort.Strings(tc.want)
+			sort.Strings(configMaps)
 			assert.Equal(t, tc.want, configMaps)
 		})
 	}
