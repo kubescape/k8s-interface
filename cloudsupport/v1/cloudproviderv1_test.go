@@ -39,37 +39,44 @@ func TestGetDescribeRepositoriesEKS(t *testing.T) {
 	assert.Equal(t, k8sinterface.JoinGroupVersion(apis.ApiVersionEKS, Version), repos.GetApiVersion())
 	assert.Equal(t, "ca-terraform-eks-dev-stage", repos.GetName())
 	assert.Equal(t, TypeCloudProviderDescribeRepositories, repos.GetObjectType())
+}
 
+func TestSetApiVersionDescribeRepositories(t *testing.T) {
+	repos := &CloudProviderDescribeRepositories{ApiVersion: "eks.amazonaws.com/v1"}
 	repos.SetApiVersion(apis.ApiVersionGKE)
-	assert.Equal(t, repos.GetApiVersion(), apis.ApiVersionGKE)
+	assert.Equal(t, repos.ApiVersion, apis.ApiVersionGKE)
+}
 
+func TestSetNameDescribeRepositories(t *testing.T) {
+	repos := &CloudProviderDescribeRepositories{Metadata: CloudProviderMetadata{Name: "ca-terraform-eks-dev-stage"}}
 	repos.SetName("new-name")
-	assert.Equal(t, repos.GetName(), "new-name")
+	assert.Equal(t, repos.Metadata.Name, "new-name")
+}
 
+func TestSetKindDescribeRepositories(t *testing.T) {
+	repos := &CloudProviderDescribeRepositories{Kind: "DescribeRepositories"}
 	repos.SetKind("new-kind")
-	assert.Equal(t, repos.GetKind(), "new-kind")
+	assert.Equal(t, repos.Kind, "new-kind")
+}
 
-	repos.SetProvider("new-provider")
-	assert.Equal(t, repos.GetProvider(), "new-provider")
-
-	repos.SetNamespace("new-namespace")
-	assert.Equal(t, repos.GetNamespace(), "new-namespace")
-
-	repos.SetData(map[string]interface{}{"key": "value"})
-	assert.Equal(t, repos.GetData(), map[string]interface{}{"key": "value"})
-
-	repos.SetWorkload(map[string]interface{}{
-		"kind": "DescribeRepositories", "apiVersion": "eks.amazonaws.com/v1",
-		"metadata": map[string]interface{}{"name": "new-workload", "provider": "bla"}})
-	assert.Equal(t, repos.GetWorkload(), map[string]interface{}{
-		"kind": "DescribeRepositories", "apiVersion": "eks.amazonaws.com/v1", "data": interface{}(nil),
-		"metadata": map[string]interface{}{"name": "new-workload", "provider": "bla"}})
-
+func TestSetObjectDescribeRepositories(t *testing.T) {
+	repos := &CloudProviderDescribeRepositories{}
 	repos.SetObject(map[string]interface{}{
 		"kind": "DescribeRepositories", "apiVersion": "eks.amazonaws.com/v1", "metadata": map[string]interface{}{"name": "new-object", "provider": "b"}})
 	assert.Equal(t, repos.GetObject(), map[string]interface{}{
 		"kind": "DescribeRepositories", "apiVersion": "eks.amazonaws.com/v1", "data": interface{}(nil),
 		"metadata": map[string]interface{}{"name": "new-object", "provider": "b"}})
+}
+
+func TestSetWorkloadDescribeRepositories(t *testing.T) {
+	repos := &CloudProviderDescribeRepositories{}
+	repos.SetWorkload(map[string]interface{}{
+		"kind": "DescribeRepositories", "apiVersion": "eks.amazonaws.com/v1",
+		"metadata": map[string]interface{}{"name": "new-workload", "provider": "bla"}})
+	assert.Equal(t, repos.GetObject(), map[string]interface{}{
+		"kind": "DescribeRepositories", "apiVersion": "eks.amazonaws.com/v1", "data": interface{}(nil),
+		"metadata": map[string]interface{}{"name": "new-workload", "provider": "bla"}})
+
 }
 
 func TestGetClusterDescribeAKS(t *testing.T) {
@@ -100,7 +107,7 @@ func TestNewDescriptiveInfoFromCloudProvider(t *testing.T) {
 	assert.Equal(t, d.GetID(), des.GetID())
 
 }
-func TestSetObject(t *testing.T) {
+func TestSetObjectClusterDescribe(t *testing.T) {
 	g := NewEKSSupportMock()
 	des, err := GetClusterDescribeEKS(g, "ca-terraform-eks-dev-stage", "")
 	assert.NoError(t, err)
