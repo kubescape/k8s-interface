@@ -11,7 +11,8 @@ import (
 )
 
 const (
-	TypeCloudProviderDescribe workloadinterface.ObjectType = "CloudProviderDescribe"
+	TypeCloudProviderDescribe             workloadinterface.ObjectType = "CloudProviderDescribe"
+	TypeCloudProviderDescribeRepositories workloadinterface.ObjectType = "CloudProviderDescribeRepositories"
 )
 
 const (
@@ -55,6 +56,38 @@ func IsTypeDescriptiveInfoFromCloudProvider(object map[string]interface{}) bool 
 		}
 	}
 	return false
+}
+
+func GetDescribeRepositoriesEKS(eksSupport IEKSSupport, cluster string, region string) (*CloudProviderDescribeRepositories, error) {
+	cluster = eksSupport.GetContextName(cluster)
+	// get cluster describe just to get cluster name
+	clusterDescribe, err := eksSupport.GetClusterDescribe(cluster, region)
+	if err != nil {
+		return nil, err
+	}
+	describeRepositories, err := eksSupport.GetDescribeRepositories(region)
+	if err != nil {
+		return nil, err
+	}
+
+	resultInBytes, err := json.Marshal(describeRepositories)
+	if err != nil {
+		return nil, err
+	}
+	// set repositoriesInfo object
+	repositoriesInfo := &CloudProviderDescribeRepositories{}
+	repositoriesInfo.SetApiVersion(k8sinterface.JoinGroupVersion(apis.ApiVersionEKS, Version))
+	repositoriesInfo.SetName(eksSupport.GetName(clusterDescribe))
+	repositoriesInfo.SetProvider(EKS)
+	repositoriesInfo.SetKind(apis.CloudProviderDescribeRepositoriesKind)
+
+	data := map[string]interface{}{}
+	if err := json.Unmarshal(resultInBytes, &data); err != nil {
+		return nil, err
+	}
+	repositoriesInfo.SetData(data)
+
+	return repositoriesInfo, nil
 }
 
 // Get descriptive info about cluster running in EKS.

@@ -1,6 +1,7 @@
 package cloudsupport
 
 import (
+	"fmt"
 	"os"
 	"strings"
 
@@ -51,6 +52,7 @@ func GetCloudProvider(currContext string) string {
 	return ""
 }
 
+// GetDescriptiveInfoFromCloudProvider returns the cluster description from the cloud provider wrapped in IMetadata obj
 func GetDescriptiveInfoFromCloudProvider(cluster string, cloudProvider string) (workloadinterface.IMetadata, error) {
 	var clusterInfo *cloudsupportv1.CloudProviderDescribe
 
@@ -93,6 +95,32 @@ func GetDescriptiveInfoFromCloudProvider(cluster string, cloudProvider string) (
 		if err != nil {
 			return nil, err
 		}
+	}
+
+	return clusterInfo, nil
+}
+
+// GetDescribeRepositoriesFromCloudProvider returns image repository descriptions from the cloud provider wrapped in IMetadata obj
+func GetDescribeRepositoriesFromCloudProvider(cluster string, cloudProvider string) (workloadinterface.IMetadata, error) {
+	var clusterInfo *cloudsupportv1.CloudProviderDescribeRepositories
+
+	switch cloudProvider {
+	case cloudsupportv1.EKS:
+		eksSupport := cloudsupportv1.NewEKSSupport()
+		region, err := eksSupport.GetRegion(cluster)
+		if err != nil {
+			return nil, err
+		}
+		clusterInfo, err = cloudsupportv1.GetDescribeRepositoriesEKS(eksSupport, cluster, region)
+		if err != nil {
+			return nil, err
+		}
+	case cloudsupportv1.GKE:
+		//TODO - implement GKE support
+		return nil, fmt.Errorf("GKE is not supported yet")
+	case cloudsupportv1.AKS:
+		//TODO - implement AKS support
+		return nil, fmt.Errorf("AKS is not supported yet")
 	}
 
 	return clusterInfo, nil
