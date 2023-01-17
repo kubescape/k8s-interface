@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"strings"
 
+	"github.com/aws/aws-sdk-go-v2/service/ecr"
 	"github.com/aws/aws-sdk-go-v2/service/eks"
 	"github.com/kubescape/k8s-interface/cloudsupport/mockobjects"
 	"github.com/kubescape/k8s-interface/k8sinterface"
@@ -21,6 +22,13 @@ func (eksSupportM *EKSSupportMock) GetClusterDescribe(currContext string, region
 	describeClusterOutput := &eks.DescribeClusterOutput{}
 	err := json.Unmarshal([]byte(mockobjects.EksDescriptor), describeClusterOutput)
 	return describeClusterOutput, err
+}
+
+// GetDescribeRepositories
+func (eksSupportM *EKSSupportMock) GetDescribeRepositories(region string) (*ecr.DescribeRepositoriesOutput, error) {
+	describeRepositoriesOutput := &ecr.DescribeRepositoriesOutput{}
+	err := json.Unmarshal([]byte(mockobjects.EksDescribeRepositories), describeRepositoriesOutput)
+	return describeRepositoriesOutput, err
 }
 
 // getName get cluster name from describe
