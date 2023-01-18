@@ -16,6 +16,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/eks v1.21.4
 	github.com/docker/docker v20.10.17+incompatible
 	github.com/stretchr/testify v1.8.0
+	golang.org/x/exp v0.0.0-20230116083435-1de6713980de
 	golang.org/x/oauth2 v0.0.0-20220630143837-2104d58473e0
 	google.golang.org/genproto v0.0.0-20220708155623-50e5f4832e73
 	k8s.io/api v0.25.3
