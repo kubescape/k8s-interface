@@ -9,6 +9,8 @@ import (
 	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
 	armauthorization "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/authorization/armauthorization/v2"
 	armcontainerservice "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/containerservice/armcontainerservice/v2"
+	"github.com/kubescape/k8s-interface/k8sinterface"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 var (
@@ -22,6 +24,7 @@ type IAKSSupport interface {
 	GetSubscriptionID() (string, error)
 	GetResourceGroup() (string, error)
 	ListAllRolesForScope(subscriptionId string, scope string) ([]*armauthorization.RoleAssignment, error)
+	GetGroupIdsRoleBindings(kapi *k8sinterface.KubernetesApi, namespace string) ([]string, error)
 }
 type AKSSupport struct {
 }
@@ -110,5 +113,47 @@ func (AKSSupport *AKSSupport) ListAllRolesForScope(subscriptionId string, scope 
 	}
 
 	return roleList, nil
+
+}
+
+// Rolebindings contains the group-object-ids
+func (AKSSupport *AKSSupport) GetGroupIdsRoleBindings(kapi *k8sinterface.KubernetesApi, namespace string) ([]string, error) {
+
+	listgroupids := make([]string, 0)
+
+	if namespace == "" {
+
+		// throughout the cluster access
+		clusterrolebindings, err := kapi.KubernetesClient.RbacV1().ClusterRoleBindings().List(context.Background(), metav1.ListOptions{})
+
+		if err != nil {
+			return nil, fmt.Errorf("No clusterrolebindings are found inside the cluster")
+		}
+		for _, rolebinding := range clusterrolebindings.Items {
+			for _, subjects := range rolebinding.Subjects {
+				if subjects.Kind == "Group" {
+					listgroupids = append(listgroupids, subjects.Name)
+				}
+			}
+		}
+
+	}
+
+	// rolebindings inside a particular namespace
+	rolebindings, err := kapi.KubernetesClient.RbacV1().RoleBindings(namespace).List(context.Background(), metav1.ListOptions{})
+
+	if err != nil {
+		return nil, fmt.Errorf("No rolebindings are found in the %s namespace ", namespace)
+	}
+
+	for _, rolebinding := range rolebindings.Items {
+		for _, subjects := range rolebinding.Subjects {
+			if subjects.Kind == "Group" {
+				listgroupids = append(listgroupids, subjects.Name)
+			}
+		}
+	}
+
+	return listgroupids, nil
 
 }
