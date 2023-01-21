@@ -127,7 +127,7 @@ func (AKSSupport *AKSSupport) GetGroupIdsRoleBindings(kapi *k8sinterface.Kuberne
 		clusterrolebindings, err := kapi.KubernetesClient.RbacV1().ClusterRoleBindings().List(context.Background(), metav1.ListOptions{})
 
 		if err != nil {
-			return nil, fmt.Errorf("No clusterrolebindings are found inside the cluster")
+			return nil, fmt.Errorf("no clusterrolebindings are found inside the cluster")
 		}
 		for _, rolebinding := range clusterrolebindings.Items {
 			for _, subjects := range rolebinding.Subjects {
@@ -143,7 +143,7 @@ func (AKSSupport *AKSSupport) GetGroupIdsRoleBindings(kapi *k8sinterface.Kuberne
 	rolebindings, err := kapi.KubernetesClient.RbacV1().RoleBindings(namespace).List(context.Background(), metav1.ListOptions{})
 
 	if err != nil {
-		return nil, fmt.Errorf("No rolebindings are found in the %s namespace ", namespace)
+		return nil, fmt.Errorf("no rolebindings are found in the %s namespace ", namespace)
 	}
 
 	for _, rolebinding := range rolebindings.Items {

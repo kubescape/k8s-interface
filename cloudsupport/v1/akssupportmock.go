@@ -39,5 +39,5 @@ func (AKSSupportM *AKSSupportMock) GetResourceGroup() (string, error) {
 }
 
 func (AKSSupportM *AKSSupportMock) GetGroupIdsRoleBindings(kapi *k8sinterface.KubernetesApi, namespace string) ([]string, error) {
-	return ["e808215d-d159-49ba-8bb6-9661ba478842"], nil
+	return []string{"e808215d-d159-49ba-8bb6-9661ba478842", "unexpected comma, expecting type"}, nil
 }
