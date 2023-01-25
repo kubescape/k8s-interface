@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/iam"
 
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -25,6 +26,7 @@ type IEKSSupport interface {
 	GetRegion(cluster string) (string, error)
 	GetContextName(cluster string) string
 	GetDescribeRepositories(region string) (*ecr.DescribeRepositoriesOutput, error)
+	GetListRolePolicies(region string) (*ListRolePolicies, error)
 }
 
 type EKSSupport struct {
@@ -49,6 +51,10 @@ type mappedUsers struct {
 	UserArn  string   `json:"userarn"`
 	Username string   `json:"username"`
 	Groups   []string `json:"groups,omitempty"`
+}
+
+type ListRolePolicies struct {
+	RolesPolicies map[string]*iam.ListRolePoliciesOutput `json:"rolesPolicies"`
 }
 
 // NewEKSSupport returns EKSSupport type
@@ -189,4 +195,33 @@ func (eksSupport *EKSSupport) GetDescribeRepositories(region string) (*ecr.Descr
 		return nil, err
 	}
 	return result, nil
+}
+
+// GetListRolePolicies returns the list of roles in EKS.
+func (eksSupport *EKSSupport) GetListRolePolicies(region string) (*ListRolePolicies, error) {
+	// Configure region for request
+	awsConfig, err := config.LoadDefaultConfig(context.TODO())
+	if err != nil {
+		return nil, fmt.Errorf("error: fail to load AWS SDK default %v", err)
+	}
+	svc := iam.NewFromConfig(awsConfig)
+	input := &iam.ListRolesInput{}
+
+	//TODO - Add pagination
+	result, err := svc.ListRoles(context.TODO(), input)
+	if err != nil {
+		return nil, err
+	}
+	allRolesPolicies := map[string]*iam.ListRolePoliciesOutput{}
+	for _, role := range result.Roles {
+		inp := &iam.ListRolePoliciesInput{
+			RoleName: role.RoleName,
+		}
+		rolePolicies, err := svc.ListRolePolicies(context.TODO(), inp)
+		if err != nil {
+			return nil, err
+		}
+		allRolesPolicies[*role.RoleName] = rolePolicies
+	}
+	return &ListRolePolicies{RolesPolicies: allRolesPolicies}, nil
 }

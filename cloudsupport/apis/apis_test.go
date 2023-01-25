@@ -117,6 +117,15 @@ func TestIsType(t *testing.T) {
 			acceptableTypes: []string{CloudProviderDescribeRepositoriesKind},
 			want:            true,
 		},
+		{
+			name: "valid ListRolePolicies",
+			object: map[string]interface{}{
+				"apiVersion": "eks.amazonaws.com/v1",
+				"kind":       "ListRolePolicies",
+			},
+			acceptableTypes: []string{CloudProviderListRolePoliciesKind},
+			want:            true,
+		},
 	}
 
 	for _, tc := range tests {

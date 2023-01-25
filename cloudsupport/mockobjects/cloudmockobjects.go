@@ -354,3 +354,57 @@ var EksDescribeRepositories = `{
     }
 }
     `
+
+var EksListRolePolicies = `{
+    "apiVersion": "eks.amazonaws.com/v1",
+    "kind": "ListRoles",
+    "metadata": {
+        "name": "Yiscah-test-g2am5",
+        "provider": "eks"
+    },
+    "data": {
+        "rolesPolicies": {
+            "CAKinesisTrustPolicy-demo-guestbook-x-v1": {
+                "IsTruncated": false,
+                "Marker": null,
+                "PolicyNames": [
+                    "CAPermissions-Policy-For-CAFirehoseAccessS3-demo-guestbook-x-v1-demo-guestbook-x-v1"
+                ],
+                "ResultMetadata": {}
+            },
+            "OrganizationAccountAccessRole": {
+                "IsTruncated": false,
+                "Marker": null,
+                "PolicyNames": [
+                    "AdministratorAccess"
+                ],
+                "ResultMetadata": {}
+            },
+            "eksctl-my-cluster-cluster-ServiceRole-UIGAGBGO2JVQ": {
+                "IsTruncated": false,
+                "Marker": null,
+                "PolicyNames": [
+                    "eksctl-my-cluster-cluster-PolicyCloudWatchMetrics",
+                    "eksctl-my-cluster-cluster-PolicyELBPermissions"
+                ],
+                "ResultMetadata": {}
+            },
+            "eksctl-rnd-jenkins-0-cluster-ServiceRole-AQ09M0GZ9CYH": {
+                "IsTruncated": false,
+                "Marker": null,
+                "PolicyNames": [
+                    "eksctl-rnd-jenkins-0-cluster-PolicyCloudWatchMetrics",
+                    "eksctl-rnd-jenkins-0-cluster-PolicyELBPermissions"
+                ],
+                "ResultMetadata": {}
+            },
+            "eksctl-rnd-jenkins-0-nodegroup-rn-NodeInstanceRole-14KBAH7AEH3CS": {
+                "IsTruncated": false,
+                "Marker": null,
+                "PolicyNames": [],
+                "ResultMetadata": {}
+            }
+        }
+    }
+}
+        `

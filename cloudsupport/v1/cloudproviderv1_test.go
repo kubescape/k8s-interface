@@ -30,6 +30,13 @@ func TestGetClusterDescribeEKS(t *testing.T) {
 	//assert.Equal(t, 1, len(des.GetData()))
 }
 
+// ==================== ListRolePolicies ====================
+func TestGetListRolePoliciesEKS(t *testing.T) {
+	//TODO: Add more tests
+}
+
+// ==================== DescribeRepositories ====================
+
 func TestGetDescribeRepositoriesEKS(t *testing.T) {
 	g := NewEKSSupportMock()
 	repos, err := GetDescribeRepositoriesEKS(g, "ca-terraform-eks-dev-stage", "")
@@ -78,6 +85,8 @@ func TestSetWorkloadDescribeRepositories(t *testing.T) {
 		"metadata": map[string]interface{}{"name": "new-workload", "provider": "bla"}})
 
 }
+
+// ==================== DescribeCluster ====================
 
 func TestGetClusterDescribeAKS(t *testing.T) {
 	g := NewAKSSupportMock()

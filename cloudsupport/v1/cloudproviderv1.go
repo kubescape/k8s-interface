@@ -13,13 +13,15 @@ import (
 const (
 	TypeCloudProviderDescribe             workloadinterface.ObjectType = "CloudProviderDescribe"
 	TypeCloudProviderDescribeRepositories workloadinterface.ObjectType = "CloudProviderDescribeRepositories"
+	TypeCloudProviderListRolePolicies     workloadinterface.ObjectType = "CloudProviderListRolePolicies"
 )
 
 const (
-	Version = "v1"
-	AKS     = "aks"
-	GKE     = "gke"
-	EKS     = "eks"
+	Version         = "v1"
+	AKS             = "aks"
+	GKE             = "gke"
+	EKS             = "eks"
+	NotSupportedMsg = "Not supported"
 )
 
 // NewDescriptiveInfoFromCloudProvider construct a CloudProviderDescribe from map[string]interface{}. If the map does not match the object, will return nil
@@ -58,6 +60,42 @@ func IsTypeDescriptiveInfoFromCloudProvider(object map[string]interface{}) bool 
 	return false
 }
 
+// ================================ ListRolePolicies ================================
+
+func GetListRolePoliciesEKS(eksSupport IEKSSupport, cluster string, region string) (*CloudProviderListRolePolicies, error) {
+	cluster = eksSupport.GetContextName(cluster)
+	// get cluster describe just to get cluster name
+	clusterDescribe, err := eksSupport.GetClusterDescribe(cluster, region)
+	if err != nil {
+		return nil, err
+	}
+	listRolePolicies, err := eksSupport.GetListRolePolicies(region)
+	if err != nil {
+		return nil, err
+	}
+
+	resultInBytes, err := json.Marshal(listRolePolicies)
+	if err != nil {
+		return nil, err
+	}
+	// set listRolePoliciesInfo object
+	listRolePoliciesInfo := &CloudProviderListRolePolicies{}
+	listRolePoliciesInfo.SetApiVersion(k8sinterface.JoinGroupVersion(apis.ApiVersionEKS, Version))
+	listRolePoliciesInfo.SetName(eksSupport.GetName(clusterDescribe))
+	listRolePoliciesInfo.SetProvider(EKS)
+	listRolePoliciesInfo.SetKind(apis.CloudProviderListRolePoliciesKind)
+
+	data := map[string]interface{}{}
+	if err := json.Unmarshal(resultInBytes, &data); err != nil {
+		return nil, err
+	}
+	listRolePoliciesInfo.SetData(data)
+
+	return listRolePoliciesInfo, nil
+}
+
+// ================================ DescribeRepositories ================================
+
 func GetDescribeRepositoriesEKS(eksSupport IEKSSupport, cluster string, region string) (*CloudProviderDescribeRepositories, error) {
 	cluster = eksSupport.GetContextName(cluster)
 	// get cluster describe just to get cluster name
@@ -89,6 +127,8 @@ func GetDescribeRepositoriesEKS(eksSupport IEKSSupport, cluster string, region s
 
 	return repositoriesInfo, nil
 }
+
+// ============================== ClusterDescribe ==============================
 
 // Get descriptive info about cluster running in EKS.
 func GetClusterDescribeEKS(eksSupport IEKSSupport, cluster string, region string) (*CloudProviderDescribe, error) {

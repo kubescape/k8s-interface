@@ -12,6 +12,7 @@ const (
 	ApiVersionGKE                         = "container.googleapis.com"
 	CloudProviderDescribeKind             = "ClusterDescribe"
 	CloudProviderDescribeRepositoriesKind = "DescribeRepositories"
+	CloudProviderListRolePoliciesKind     = "ListRolePolicies"
 )
 
 // IsTypeDescriptiveInfoFromCloudProvider return true if the object apiVersion kind match the CloudProviderDescribeKind struct
@@ -23,6 +24,11 @@ func IsTypeDescriptiveInfoFromCloudProvider(object map[string]interface{}) bool 
 // IsTypeDescribeRepositories return true if the object apiVersion kind match the CloudProviderDescribeRepositoriesKind struct
 func IsTypeDescribeRepositories(object map[string]interface{}) bool {
 	return IsCloudProviderType(object, []string{CloudProviderDescribeRepositoriesKind})
+}
+
+// IsTypeListRolePolicies return true if the object apiVersion kind match the CloudProviderListRolePoliciesKind struct
+func IsTypeListRolePolicies(object map[string]interface{}) bool {
+	return IsCloudProviderType(object, []string{CloudProviderListRolePoliciesKind})
 }
 
 func IsCloudProviderType(object map[string]interface{}, acceptableTypes []string) bool {
