@@ -27,6 +27,8 @@ type IEKSSupport interface {
 	GetContextName(cluster string) string
 	GetDescribeRepositories(region string) (*ecr.DescribeRepositoriesOutput, error)
 	GetListRolePolicies(region string) (*ListRolePolicies, error)
+	GetListUserPolicies(region string) (*ListUserPolicies, error)
+	GetListGroupPolicies(region string) (*ListGroupPolicies, error)
 }
 
 type EKSSupport struct {
@@ -55,6 +57,13 @@ type mappedUsers struct {
 
 type ListRolePolicies struct {
 	RolesPolicies map[string]*iam.ListRolePoliciesOutput `json:"rolesPolicies"`
+}
+
+type ListUserPolicies struct {
+	UsersPolicies map[string]*iam.ListUserPoliciesOutput `json:"usersPolicies"`
+}
+type ListGroupPolicies struct {
+	GroupsPolicies map[string]*iam.ListGroupPoliciesOutput `json:"groupsPolicies"`
 }
 
 // NewEKSSupport returns EKSSupport type
@@ -224,4 +233,62 @@ func (eksSupport *EKSSupport) GetListRolePolicies(region string) (*ListRolePolic
 		allRolesPolicies[*role.RoleName] = rolePolicies
 	}
 	return &ListRolePolicies{RolesPolicies: allRolesPolicies}, nil
+}
+
+// GetListUserPolicies returns the list of Users in EKS.
+func (eksSupport *EKSSupport) GetListUserPolicies(region string) (*ListUserPolicies, error) {
+	// Configure region for request
+	awsConfig, err := config.LoadDefaultConfig(context.TODO())
+	if err != nil {
+		return nil, fmt.Errorf("error: fail to load AWS SDK default %v", err)
+	}
+	svc := iam.NewFromConfig(awsConfig)
+	input := &iam.ListUsersInput{}
+
+	//TODO - Add pagination
+	result, err := svc.ListUsers(context.TODO(), input)
+	if err != nil {
+		return nil, err
+	}
+	allUsersPolicies := map[string]*iam.ListUserPoliciesOutput{}
+	for _, user := range result.Users {
+		inp := &iam.ListUserPoliciesInput{
+			UserName: user.UserName,
+		}
+		userPolicies, err := svc.ListUserPolicies(context.TODO(), inp)
+		if err != nil {
+			return nil, err
+		}
+		allUsersPolicies[*user.UserName] = userPolicies
+	}
+	return &ListUserPolicies{UsersPolicies: allUsersPolicies}, nil
+}
+
+// GetListGroupPolicies returns the list of roles in EKS.
+func (eksSupport *EKSSupport) GetListGroupPolicies(region string) (*ListGroupPolicies, error) {
+	// Configure region for request
+	awsConfig, err := config.LoadDefaultConfig(context.TODO())
+	if err != nil {
+		return nil, fmt.Errorf("error: fail to load AWS SDK default %v", err)
+	}
+	svc := iam.NewFromConfig(awsConfig)
+	input := &iam.ListGroupsInput{}
+
+	//TODO - Add pagination
+	result, err := svc.ListGroups(context.TODO(), input)
+	if err != nil {
+		return nil, err
+	}
+	allGroupsPolicies := map[string]*iam.ListGroupPoliciesOutput{}
+	for _, group := range result.Groups {
+		inp := &iam.ListGroupPoliciesInput{
+			GroupName: group.GroupName,
+		}
+		groupPolicies, err := svc.ListGroupPolicies(context.TODO(), inp)
+		if err != nil {
+			return nil, err
+		}
+		allGroupsPolicies[*group.GroupName] = groupPolicies
+	}
+	return &ListGroupPolicies{GroupsPolicies: allGroupsPolicies}, nil
 }

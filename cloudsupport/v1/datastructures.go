@@ -56,3 +56,29 @@ type CloudProviderListRolePolicies struct {
 	Metadata   CloudProviderMetadata  `json:"metadata"`
 	Data       map[string]interface{} `json:"data"`
 }
+
+/*
+CloudProviderListUserPolicies:
+=========================
+
+CloudProviderListUserPolicies has a list of the UserPolicies in the cloud provider (EKS)
+*/
+type CloudProviderListUserPolicies struct {
+	ApiVersion string                 `json:"apiVersion"`
+	Kind       string                 `json:"kind"`
+	Metadata   CloudProviderMetadata  `json:"metadata"`
+	Data       map[string]interface{} `json:"data"`
+}
+
+/*
+CloudProviderListGroupPolicies:
+=========================
+
+CloudProviderListGroupPolicies has a list of the GroupPolicies in the cloud provider (EKS)
+*/
+type CloudProviderListGroupPolicies struct {
+	ApiVersion string                 `json:"apiVersion"`
+	Kind       string                 `json:"kind"`
+	Metadata   CloudProviderMetadata  `json:"metadata"`
+	Data       map[string]interface{} `json:"data"`
+}

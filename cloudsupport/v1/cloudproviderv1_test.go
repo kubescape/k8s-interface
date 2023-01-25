@@ -1,6 +1,8 @@
 package v1
 
 import (
+	"encoding/json"
+	"fmt"
 	"testing"
 
 	"github.com/kubescape/k8s-interface/cloudsupport/apis"
@@ -28,6 +30,34 @@ func TestGetClusterDescribeEKS(t *testing.T) {
 	assert.Equal(t, k8sinterface.JoinGroupVersion(apis.ApiVersionEKS, Version), des.GetApiVersion())
 	assert.Equal(t, "ca-terraform-eks-dev-stage", des.GetName())
 	//assert.Equal(t, 1, len(des.GetData()))
+}
+
+// ==================== ListGroupPolicies ====================
+func TestGetListGroupPoliciesEKS(t *testing.T) {
+	//TODO: Add more tests
+	cluster := "arn:aws:eks:eu-west-2:015253967648:cluster/Yiscah-test-g2am5"
+	eksSupport := NewEKSSupport()
+	region, err := eksSupport.GetRegion(cluster)
+	assert.NoError(t, err)
+	listGroupPolicies, err := GetListGroupPoliciesEKS(eksSupport, cluster, region)
+	assert.NoError(t, err)
+	res2B, err := json.Marshal(listGroupPolicies)
+	fmt.Printf("result:\n%s\n", string(res2B))
+	assert.NoError(t, err)
+}
+
+// ==================== ListUserPolicies ====================
+func TestGetListUserPoliciesEKS(t *testing.T) {
+	//TODO: Add more tests
+	cluster := "arn:aws:eks:eu-west-2:015253967648:cluster/Yiscah-test-g2am5"
+	eksSupport := NewEKSSupport()
+	region, err := eksSupport.GetRegion(cluster)
+	assert.NoError(t, err)
+	listUserPolicies, err := GetListUserPoliciesEKS(eksSupport, cluster, region)
+	assert.NoError(t, err)
+	res2B, err := json.Marshal(listUserPolicies)
+	fmt.Printf("result:\n%s\n", string(res2B))
+	assert.NoError(t, err)
 }
 
 // ==================== ListRolePolicies ====================

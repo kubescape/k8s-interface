@@ -14,6 +14,8 @@ const (
 	TypeCloudProviderDescribe             workloadinterface.ObjectType = "CloudProviderDescribe"
 	TypeCloudProviderDescribeRepositories workloadinterface.ObjectType = "CloudProviderDescribeRepositories"
 	TypeCloudProviderListRolePolicies     workloadinterface.ObjectType = "CloudProviderListRolePolicies"
+	TypeCloudProviderListUserPolicies     workloadinterface.ObjectType = "CloudProviderListUserPolicies"
+	TypeCloudProviderListGroupPolicies    workloadinterface.ObjectType = "CloudProviderListGroupPolicies"
 )
 
 const (
@@ -58,6 +60,74 @@ func IsTypeDescriptiveInfoFromCloudProvider(object map[string]interface{}) bool 
 		}
 	}
 	return false
+}
+
+// ================================ ListGroupPolicies ================================
+
+func GetListGroupPoliciesEKS(eksSupport IEKSSupport, cluster string, region string) (*CloudProviderListGroupPolicies, error) {
+	cluster = eksSupport.GetContextName(cluster)
+	// get cluster describe just to get cluster name
+	clusterDescribe, err := eksSupport.GetClusterDescribe(cluster, region)
+	if err != nil {
+		return nil, err
+	}
+	listGroupPolicies, err := eksSupport.GetListGroupPolicies(region)
+	if err != nil {
+		return nil, err
+	}
+
+	resultInBytes, err := json.Marshal(listGroupPolicies)
+	if err != nil {
+		return nil, err
+	}
+	// set listGroupPoliciesInfo object
+	listGroupPoliciesInfo := &CloudProviderListGroupPolicies{}
+	listGroupPoliciesInfo.SetApiVersion(k8sinterface.JoinGroupVersion(apis.ApiVersionEKS, Version))
+	listGroupPoliciesInfo.SetName(eksSupport.GetName(clusterDescribe))
+	listGroupPoliciesInfo.SetProvider(EKS)
+	listGroupPoliciesInfo.SetKind(apis.CloudProviderListGroupPoliciesKind)
+
+	data := map[string]interface{}{}
+	if err := json.Unmarshal(resultInBytes, &data); err != nil {
+		return nil, err
+	}
+	listGroupPoliciesInfo.SetData(data)
+
+	return listGroupPoliciesInfo, nil
+}
+
+// ================================ ListUserPolicies ================================
+
+func GetListUserPoliciesEKS(eksSupport IEKSSupport, cluster string, region string) (*CloudProviderListUserPolicies, error) {
+	cluster = eksSupport.GetContextName(cluster)
+	// get cluster describe just to get cluster name
+	clusterDescribe, err := eksSupport.GetClusterDescribe(cluster, region)
+	if err != nil {
+		return nil, err
+	}
+	listUserPolicies, err := eksSupport.GetListUserPolicies(region)
+	if err != nil {
+		return nil, err
+	}
+
+	resultInBytes, err := json.Marshal(listUserPolicies)
+	if err != nil {
+		return nil, err
+	}
+	// set listUserPoliciesInfo object
+	listUserPoliciesInfo := &CloudProviderListUserPolicies{}
+	listUserPoliciesInfo.SetApiVersion(k8sinterface.JoinGroupVersion(apis.ApiVersionEKS, Version))
+	listUserPoliciesInfo.SetName(eksSupport.GetName(clusterDescribe))
+	listUserPoliciesInfo.SetProvider(EKS)
+	listUserPoliciesInfo.SetKind(apis.CloudProviderListUserPoliciesKind)
+
+	data := map[string]interface{}{}
+	if err := json.Unmarshal(resultInBytes, &data); err != nil {
+		return nil, err
+	}
+	listUserPoliciesInfo.SetData(data)
+
+	return listUserPoliciesInfo, nil
 }
 
 // ================================ ListRolePolicies ================================

@@ -151,3 +151,55 @@ func GetListRolePoliciesFromCloudProvider(cluster string, cloudProvider string) 
 
 	return listRolePolicies, nil
 }
+
+// GetListUserPoliciesFromCloudProvider returns User policies from the cloud provider wrapped in IMetadata obj
+func GetListUserPoliciesFromCloudProvider(cluster string, cloudProvider string) (workloadinterface.IMetadata, error) {
+	var listUserPolicies *cloudsupportv1.CloudProviderListUserPolicies
+
+	switch cloudProvider {
+	case cloudsupportv1.EKS:
+		eksSupport := cloudsupportv1.NewEKSSupport()
+		region, err := eksSupport.GetRegion(cluster)
+		if err != nil {
+			return nil, err
+		}
+		listUserPolicies, err = cloudsupportv1.GetListUserPoliciesEKS(eksSupport, cluster, region)
+		if err != nil {
+			return nil, err
+		}
+	case cloudsupportv1.GKE:
+		//TODO - implement GKE support
+		return nil, fmt.Errorf(cloudsupportv1.NotSupportedMsg)
+	case cloudsupportv1.AKS:
+		//TODO - implement AKS support
+		return nil, fmt.Errorf(cloudsupportv1.NotSupportedMsg)
+	}
+
+	return listUserPolicies, nil
+}
+
+// GetListGroupPoliciesFromCloudProvider returns Group policies from the cloud provider wrapped in IMetadata obj
+func GetListGroupPoliciesFromCloudProvider(cluster string, cloudProvider string) (workloadinterface.IMetadata, error) {
+	var listGroupPolicies *cloudsupportv1.CloudProviderListGroupPolicies
+
+	switch cloudProvider {
+	case cloudsupportv1.EKS:
+		eksSupport := cloudsupportv1.NewEKSSupport()
+		region, err := eksSupport.GetRegion(cluster)
+		if err != nil {
+			return nil, err
+		}
+		listGroupPolicies, err = cloudsupportv1.GetListGroupPoliciesEKS(eksSupport, cluster, region)
+		if err != nil {
+			return nil, err
+		}
+	case cloudsupportv1.GKE:
+		//TODO - implement GKE support
+		return nil, fmt.Errorf(cloudsupportv1.NotSupportedMsg)
+	case cloudsupportv1.AKS:
+		//TODO - implement AKS support
+		return nil, fmt.Errorf(cloudsupportv1.NotSupportedMsg)
+	}
+
+	return listGroupPolicies, nil
+}

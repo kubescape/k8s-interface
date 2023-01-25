@@ -408,3 +408,9 @@ var EksListRolePolicies = `{
     }
 }
         `
+
+var EksListUserPolicies = `
+        `
+
+var EksListGroupPolicies = `
+        `

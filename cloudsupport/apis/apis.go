@@ -13,6 +13,8 @@ const (
 	CloudProviderDescribeKind             = "ClusterDescribe"
 	CloudProviderDescribeRepositoriesKind = "DescribeRepositories"
 	CloudProviderListRolePoliciesKind     = "ListRolePolicies"
+	CloudProviderListUserPoliciesKind     = "ListUserPolicies"
+	CloudProviderListGroupPoliciesKind    = "ListGroupPolicies"
 )
 
 // IsTypeDescriptiveInfoFromCloudProvider return true if the object apiVersion kind match the CloudProviderDescribeKind struct
@@ -29,6 +31,16 @@ func IsTypeDescribeRepositories(object map[string]interface{}) bool {
 // IsTypeListRolePolicies return true if the object apiVersion kind match the CloudProviderListRolePoliciesKind struct
 func IsTypeListRolePolicies(object map[string]interface{}) bool {
 	return IsCloudProviderType(object, []string{CloudProviderListRolePoliciesKind})
+}
+
+// IsTypeListUserPolicies return true if the object apiVersion kind match the CloudProviderListUserPoliciesKind struct
+func IsTypeListUserPolicies(object map[string]interface{}) bool {
+	return IsCloudProviderType(object, []string{CloudProviderListUserPoliciesKind})
+}
+
+// IsTypeListGroupPolicies return true if the object apiVersion kind match the CloudProviderListGroupPoliciesKind struct
+func IsTypeListGroupPolicies(object map[string]interface{}) bool {
+	return IsCloudProviderType(object, []string{CloudProviderListGroupPoliciesKind})
 }
 
 func IsCloudProviderType(object map[string]interface{}, acceptableTypes []string) bool {
