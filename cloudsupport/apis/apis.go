@@ -7,14 +7,12 @@ import (
 )
 
 const (
-	ApiVersionEKS                         = "eks.amazonaws.com"
-	ApiVersionAKS                         = "management.azure.com"
-	ApiVersionGKE                         = "container.googleapis.com"
-	CloudProviderDescribeKind             = "ClusterDescribe"
-	CloudProviderDescribeRepositoriesKind = "DescribeRepositories"
-	CloudProviderListRolePoliciesKind     = "ListRolePolicies"
-	CloudProviderListUserPoliciesKind     = "ListUserPolicies"
-	CloudProviderListGroupPoliciesKind    = "ListGroupPolicies"
+	ApiVersionEKS                            = "eks.amazonaws.com"
+	ApiVersionAKS                            = "management.azure.com"
+	ApiVersionGKE                            = "container.googleapis.com"
+	CloudProviderDescribeKind                = "ClusterDescribe"
+	CloudProviderDescribeRepositoriesKind    = "DescribeRepositories"
+	CloudProviderListEntitiesForPoliciesKind = "ListEntitiesForPolicies"
 )
 
 // IsTypeDescriptiveInfoFromCloudProvider return true if the object apiVersion kind match the CloudProviderDescribeKind struct
@@ -28,19 +26,9 @@ func IsTypeDescribeRepositories(object map[string]interface{}) bool {
 	return IsCloudProviderType(object, []string{CloudProviderDescribeRepositoriesKind})
 }
 
-// IsTypeListRolePolicies return true if the object apiVersion kind match the CloudProviderListRolePoliciesKind struct
-func IsTypeListRolePolicies(object map[string]interface{}) bool {
-	return IsCloudProviderType(object, []string{CloudProviderListRolePoliciesKind})
-}
-
-// IsTypeListUserPolicies return true if the object apiVersion kind match the CloudProviderListUserPoliciesKind struct
-func IsTypeListUserPolicies(object map[string]interface{}) bool {
-	return IsCloudProviderType(object, []string{CloudProviderListUserPoliciesKind})
-}
-
-// IsTypeListGroupPolicies return true if the object apiVersion kind match the CloudProviderListGroupPoliciesKind struct
-func IsTypeListGroupPolicies(object map[string]interface{}) bool {
-	return IsCloudProviderType(object, []string{CloudProviderListGroupPoliciesKind})
+// IsTypeListEntitiesForPolicies return true if the object apiVersion kind match the CloudProviderListEntitiesForPoliciesKind struct
+func IsTypeListEntitiesForPolicies(object map[string]interface{}) bool {
+	return IsCloudProviderType(object, []string{CloudProviderListEntitiesForPoliciesKind})
 }
 
 func IsCloudProviderType(object map[string]interface{}, acceptableTypes []string) bool {

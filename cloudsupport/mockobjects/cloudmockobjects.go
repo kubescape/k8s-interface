@@ -355,62 +355,52 @@ var EksDescribeRepositories = `{
 }
     `
 
-var EksListRolePolicies = `{
+var EksListEntitiesForPolicies = `
+{
     "apiVersion": "eks.amazonaws.com/v1",
-    "kind": "ListRoles",
+    "kind": "ListEntitiesForPolicies",
     "metadata": {
-        "name": "Yiscah-test-g2am5",
+        "name": "ca-terraform-eks-dev-stage",
         "provider": "eks"
     },
     "data": {
         "rolesPolicies": {
-            "CAKinesisTrustPolicy-demo-guestbook-x-v1": {
+            "arn:aws:iam::XXXXXXXXXXXX:policy/FullAccess": {
                 "IsTruncated": false,
                 "Marker": null,
-                "PolicyNames": [
-                    "CAPermissions-Policy-For-CAFirehoseAccessS3-demo-guestbook-x-v1-demo-guestbook-x-v1"
+                "PolicyGroups": [
+                    {
+                        "GroupId": "XXXXXXXXXXXX",
+                        "GroupName": "Developers"
+                    }
+                ],
+                "PolicyRoles": [],
+                "PolicyUsers": [
+                    {
+                        "UserId": "XXXXXXXXXXXX",
+                        "UserName": "my-user"
+                    }
                 ],
                 "ResultMetadata": {}
             },
-            "OrganizationAccountAccessRole": {
+            "arn:aws:iam::XXXXXXXXXXXX:policy/DevStage": {
                 "IsTruncated": false,
                 "Marker": null,
-                "PolicyNames": [
-                    "AdministratorAccess"
+                "PolicyGroups": [],
+                "PolicyRoles": [
+                    {
+                        "RoleId": "XXXXXXXXXXXX",
+                        "RoleName": "eks-dev"
+                    },
+                    {
+                        "RoleId": "XXXXXXXXXXXX",
+                        "RoleName": "eks-dev-test"
+                    }
                 ],
-                "ResultMetadata": {}
-            },
-            "eksctl-my-cluster-cluster-ServiceRole-UIGAGBGO2JVQ": {
-                "IsTruncated": false,
-                "Marker": null,
-                "PolicyNames": [
-                    "eksctl-my-cluster-cluster-PolicyCloudWatchMetrics",
-                    "eksctl-my-cluster-cluster-PolicyELBPermissions"
-                ],
-                "ResultMetadata": {}
-            },
-            "eksctl-rnd-jenkins-0-cluster-ServiceRole-AQ09M0GZ9CYH": {
-                "IsTruncated": false,
-                "Marker": null,
-                "PolicyNames": [
-                    "eksctl-rnd-jenkins-0-cluster-PolicyCloudWatchMetrics",
-                    "eksctl-rnd-jenkins-0-cluster-PolicyELBPermissions"
-                ],
-                "ResultMetadata": {}
-            },
-            "eksctl-rnd-jenkins-0-nodegroup-rn-NodeInstanceRole-14KBAH7AEH3CS": {
-                "IsTruncated": false,
-                "Marker": null,
-                "PolicyNames": [],
+                "PolicyUsers": [],
                 "ResultMetadata": {}
             }
         }
     }
 }
-        `
-
-var EksListUserPolicies = `
-        `
-
-var EksListGroupPolicies = `
         `

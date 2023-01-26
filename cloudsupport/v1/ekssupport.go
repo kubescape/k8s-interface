@@ -26,9 +26,7 @@ type IEKSSupport interface {
 	GetRegion(cluster string) (string, error)
 	GetContextName(cluster string) string
 	GetDescribeRepositories(region string) (*ecr.DescribeRepositoriesOutput, error)
-	GetListRolePolicies(region string) (*ListRolePolicies, error)
-	GetListUserPolicies(region string) (*ListUserPolicies, error)
-	GetListGroupPolicies(region string) (*ListGroupPolicies, error)
+	GetListEntitiesForPolicies(region string) (*ListEntitiesForPolicies, error)
 }
 
 type EKSSupport struct {
@@ -55,15 +53,8 @@ type mappedUsers struct {
 	Groups   []string `json:"groups,omitempty"`
 }
 
-type ListRolePolicies struct {
-	RolesPolicies map[string]*iam.ListRolePoliciesOutput `json:"rolesPolicies"`
-}
-
-type ListUserPolicies struct {
-	UsersPolicies map[string]*iam.ListUserPoliciesOutput `json:"usersPolicies"`
-}
-type ListGroupPolicies struct {
-	GroupsPolicies map[string]*iam.ListGroupPoliciesOutput `json:"groupsPolicies"`
+type ListEntitiesForPolicies struct {
+	EntitiesForPolicies map[string]*iam.ListEntitiesForPolicyOutput `json:"rolesPolicies"`
 }
 
 // NewEKSSupport returns EKSSupport type
@@ -206,89 +197,31 @@ func (eksSupport *EKSSupport) GetDescribeRepositories(region string) (*ecr.Descr
 	return result, nil
 }
 
-// GetListRolePolicies returns the list of roles in EKS.
-func (eksSupport *EKSSupport) GetListRolePolicies(region string) (*ListRolePolicies, error) {
+// GetListEntitiesForPolicies returns the list of roles in EKS.
+func (eksSupport *EKSSupport) GetListEntitiesForPolicies(region string) (*ListEntitiesForPolicies, error) {
 	// Configure region for request
 	awsConfig, err := config.LoadDefaultConfig(context.TODO())
 	if err != nil {
 		return nil, fmt.Errorf("error: fail to load AWS SDK default %v", err)
 	}
 	svc := iam.NewFromConfig(awsConfig)
-	input := &iam.ListRolesInput{}
+	input := &iam.ListPoliciesInput{}
 
 	//TODO - Add pagination
-	result, err := svc.ListRoles(context.TODO(), input)
+	result, err := svc.ListPolicies(context.TODO(), input)
 	if err != nil {
 		return nil, err
 	}
-	allRolesPolicies := map[string]*iam.ListRolePoliciesOutput{}
-	for _, role := range result.Roles {
-		inp := &iam.ListRolePoliciesInput{
-			RoleName: role.RoleName,
+	allEntitiesForPolicies := map[string]*iam.ListEntitiesForPolicyOutput{}
+	for _, policy := range result.Policies {
+		inp := &iam.ListEntitiesForPolicyInput{
+			PolicyArn: policy.Arn,
 		}
-		rolePolicies, err := svc.ListRolePolicies(context.TODO(), inp)
+		entitiesForPolicy, err := svc.ListEntitiesForPolicy(context.TODO(), inp)
 		if err != nil {
 			return nil, err
 		}
-		allRolesPolicies[*role.RoleName] = rolePolicies
+		allEntitiesForPolicies[*policy.Arn] = entitiesForPolicy
 	}
-	return &ListRolePolicies{RolesPolicies: allRolesPolicies}, nil
-}
-
-// GetListUserPolicies returns the list of Users in EKS.
-func (eksSupport *EKSSupport) GetListUserPolicies(region string) (*ListUserPolicies, error) {
-	// Configure region for request
-	awsConfig, err := config.LoadDefaultConfig(context.TODO())
-	if err != nil {
-		return nil, fmt.Errorf("error: fail to load AWS SDK default %v", err)
-	}
-	svc := iam.NewFromConfig(awsConfig)
-	input := &iam.ListUsersInput{}
-
-	//TODO - Add pagination
-	result, err := svc.ListUsers(context.TODO(), input)
-	if err != nil {
-		return nil, err
-	}
-	allUsersPolicies := map[string]*iam.ListUserPoliciesOutput{}
-	for _, user := range result.Users {
-		inp := &iam.ListUserPoliciesInput{
-			UserName: user.UserName,
-		}
-		userPolicies, err := svc.ListUserPolicies(context.TODO(), inp)
-		if err != nil {
-			return nil, err
-		}
-		allUsersPolicies[*user.UserName] = userPolicies
-	}
-	return &ListUserPolicies{UsersPolicies: allUsersPolicies}, nil
-}
-
-// GetListGroupPolicies returns the list of roles in EKS.
-func (eksSupport *EKSSupport) GetListGroupPolicies(region string) (*ListGroupPolicies, error) {
-	// Configure region for request
-	awsConfig, err := config.LoadDefaultConfig(context.TODO())
-	if err != nil {
-		return nil, fmt.Errorf("error: fail to load AWS SDK default %v", err)
-	}
-	svc := iam.NewFromConfig(awsConfig)
-	input := &iam.ListGroupsInput{}
-
-	//TODO - Add pagination
-	result, err := svc.ListGroups(context.TODO(), input)
-	if err != nil {
-		return nil, err
-	}
-	allGroupsPolicies := map[string]*iam.ListGroupPoliciesOutput{}
-	for _, group := range result.Groups {
-		inp := &iam.ListGroupPoliciesInput{
-			GroupName: group.GroupName,
-		}
-		groupPolicies, err := svc.ListGroupPolicies(context.TODO(), inp)
-		if err != nil {
-			return nil, err
-		}
-		allGroupsPolicies[*group.GroupName] = groupPolicies
-	}
-	return &ListGroupPolicies{GroupsPolicies: allGroupsPolicies}, nil
+	return &ListEntitiesForPolicies{EntitiesForPolicies: allEntitiesForPolicies}, nil
 }

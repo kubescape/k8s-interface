@@ -31,25 +31,11 @@ func (eksSupportM *EKSSupportMock) GetDescribeRepositories(region string) (*ecr.
 	return describeRepositoriesOutput, err
 }
 
-// GetListRolePolicies
-func (eksSupportM *EKSSupportMock) GetListRolePolicies(region string) (*ListRolePolicies, error) {
-	listRolePoliciesOutput := &ListRolePolicies{}
-	err := json.Unmarshal([]byte(mockobjects.EksListRolePolicies), listRolePoliciesOutput)
-	return listRolePoliciesOutput, err
-}
-
-// GetListUserPolicies
-func (eksSupportM *EKSSupportMock) GetListUserPolicies(region string) (*ListUserPolicies, error) {
-	listUserPoliciesOutput := &ListUserPolicies{}
-	err := json.Unmarshal([]byte(mockobjects.EksListUserPolicies), listUserPoliciesOutput)
-	return listUserPoliciesOutput, err
-}
-
-// GetListGroupPolicies
-func (eksSupportM *EKSSupportMock) GetListGroupPolicies(region string) (*ListGroupPolicies, error) {
-	listGroupPoliciesOutput := &ListGroupPolicies{}
-	err := json.Unmarshal([]byte(mockobjects.EksListGroupPolicies), listGroupPoliciesOutput)
-	return listGroupPoliciesOutput, err
+// GetListEntitiesForPolicies
+func (eksSupportM *EKSSupportMock) GetListEntitiesForPolicies(region string) (*ListEntitiesForPolicies, error) {
+	listEntitiesForPoliciesOutput := &ListEntitiesForPolicies{}
+	err := json.Unmarshal([]byte(mockobjects.EksListEntitiesForPolicies), listEntitiesForPoliciesOutput)
+	return listEntitiesForPoliciesOutput, err
 }
 
 // getName get cluster name from describe

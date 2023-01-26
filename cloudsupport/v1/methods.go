@@ -224,43 +224,43 @@ func (description *CloudProviderDescribeRepositories) GetID() string {
 }
 
 // ==========================================================================================================
-// ============================== CloudProviderListRolePolicies ==================================================
+// ============================== CloudProviderListEntitiesForPolicies ==================================================
 // ==========================================================================================================
 // Setters
-func (description *CloudProviderListRolePolicies) SetNamespace(namespace string) {
+func (description *CloudProviderListEntitiesForPolicies) SetNamespace(namespace string) {
 	description.SetProvider(namespace)
 }
 
-func (description *CloudProviderListRolePolicies) SetApiVersion(apiVersion string) {
+func (description *CloudProviderListEntitiesForPolicies) SetApiVersion(apiVersion string) {
 	description.ApiVersion = apiVersion
 }
 
-func (description *CloudProviderListRolePolicies) SetName(name string) {
+func (description *CloudProviderListEntitiesForPolicies) SetName(name string) {
 	description.Metadata.SetName(name)
 }
 
-func (description *CloudProviderListRolePolicies) SetProvider(provider string) {
+func (description *CloudProviderListEntitiesForPolicies) SetProvider(provider string) {
 	description.Metadata.SetProvider(provider)
 }
 
-func (description *CloudProviderListRolePolicies) SetKind(kind string) {
+func (description *CloudProviderListEntitiesForPolicies) SetKind(kind string) {
 	description.Kind = kind
 }
 
-func (description *CloudProviderListRolePolicies) SetData(data map[string]interface{}) {
+func (description *CloudProviderListEntitiesForPolicies) SetData(data map[string]interface{}) {
 	description.Data = data
 }
 
-func (description *CloudProviderListRolePolicies) SetWorkload(object map[string]interface{}) {
+func (description *CloudProviderListEntitiesForPolicies) SetWorkload(object map[string]interface{}) {
 	description.SetObject(object)
 }
 
-func (description *CloudProviderListRolePolicies) SetObject(object map[string]interface{}) {
-	if !apis.IsTypeDescribeRepositories(object) {
+func (description *CloudProviderListEntitiesForPolicies) SetObject(object map[string]interface{}) {
+	if !apis.IsTypeListEntitiesForPolicies(object) {
 		return
 	}
 	if b := workloadinterface.MapToBytes(object); len(b) > 0 {
-		d := &CloudProviderListRolePolicies{}
+		d := &CloudProviderListEntitiesForPolicies{}
 		if err := json.Unmarshal(b, d); err == nil {
 			description.SetApiVersion(d.GetApiVersion())
 			description.SetKind(d.GetKind())
@@ -272,40 +272,40 @@ func (description *CloudProviderListRolePolicies) SetObject(object map[string]in
 
 // Getters
 
-func (description *CloudProviderListRolePolicies) GetApiVersion() string {
+func (description *CloudProviderListEntitiesForPolicies) GetApiVersion() string {
 	return description.ApiVersion
 }
 
-func (description *CloudProviderListRolePolicies) GetObjectType() workloadinterface.ObjectType {
-	return TypeCloudProviderListRolePolicies
+func (description *CloudProviderListEntitiesForPolicies) GetObjectType() workloadinterface.ObjectType {
+	return TypeCloudProviderListEntitiesForPolicies
 }
-func (description *CloudProviderListRolePolicies) GetKind() string {
+func (description *CloudProviderListEntitiesForPolicies) GetKind() string {
 	return description.Kind
 }
 
-func (description *CloudProviderListRolePolicies) GetName() string {
+func (description *CloudProviderListEntitiesForPolicies) GetName() string {
 	return description.Metadata.GetName()
 }
 
 // provider -> eks/gke/etc.
-func (description *CloudProviderListRolePolicies) GetProvider() string {
+func (description *CloudProviderListEntitiesForPolicies) GetProvider() string {
 	return description.Metadata.GetProvider()
 }
 
 // Compatible with the IMetadata interface
-func (description *CloudProviderListRolePolicies) GetNamespace() string {
+func (description *CloudProviderListEntitiesForPolicies) GetNamespace() string {
 	return description.GetProvider()
 }
 
-func (description *CloudProviderListRolePolicies) GetWorkload() map[string]interface{} {
+func (description *CloudProviderListEntitiesForPolicies) GetWorkload() map[string]interface{} {
 	return description.GetObject()
 }
 
-func (description *CloudProviderListRolePolicies) GetData() map[string]interface{} {
+func (description *CloudProviderListEntitiesForPolicies) GetData() map[string]interface{} {
 	return description.Data
 }
 
-func (description *CloudProviderListRolePolicies) GetObject() map[string]interface{} {
+func (description *CloudProviderListEntitiesForPolicies) GetObject() map[string]interface{} {
 	m := map[string]interface{}{}
 	b, err := json.Marshal(*description)
 	if err != nil {
@@ -315,198 +315,6 @@ func (description *CloudProviderListRolePolicies) GetObject() map[string]interfa
 }
 
 // ApiVersion/Kind/Name
-func (description *CloudProviderListRolePolicies) GetID() string {
-	return fmt.Sprintf("%s/%s/%s", k8sinterface.JoinGroupVersion(k8sinterface.SplitApiVersion(description.GetApiVersion())), description.GetKind(), description.GetName())
-}
-
-// ==========================================================================================================
-// ============================== CloudProviderListUserPolicies ==================================================
-// ==========================================================================================================
-// Setters
-func (description *CloudProviderListUserPolicies) SetNamespace(namespace string) {
-	description.SetProvider(namespace)
-}
-
-func (description *CloudProviderListUserPolicies) SetApiVersion(apiVersion string) {
-	description.ApiVersion = apiVersion
-}
-
-func (description *CloudProviderListUserPolicies) SetName(name string) {
-	description.Metadata.SetName(name)
-}
-
-func (description *CloudProviderListUserPolicies) SetProvider(provider string) {
-	description.Metadata.SetProvider(provider)
-}
-
-func (description *CloudProviderListUserPolicies) SetKind(kind string) {
-	description.Kind = kind
-}
-
-func (description *CloudProviderListUserPolicies) SetData(data map[string]interface{}) {
-	description.Data = data
-}
-
-func (description *CloudProviderListUserPolicies) SetWorkload(object map[string]interface{}) {
-	description.SetObject(object)
-}
-
-func (description *CloudProviderListUserPolicies) SetObject(object map[string]interface{}) {
-	if !apis.IsTypeDescribeRepositories(object) {
-		return
-	}
-	if b := workloadinterface.MapToBytes(object); len(b) > 0 {
-		d := &CloudProviderListUserPolicies{}
-		if err := json.Unmarshal(b, d); err == nil {
-			description.SetApiVersion(d.GetApiVersion())
-			description.SetKind(d.GetKind())
-			description.SetData(d.GetData())
-			description.Metadata = d.Metadata
-		}
-	}
-}
-
-// Getters
-
-func (description *CloudProviderListUserPolicies) GetApiVersion() string {
-	return description.ApiVersion
-}
-
-func (description *CloudProviderListUserPolicies) GetObjectType() workloadinterface.ObjectType {
-	return TypeCloudProviderListUserPolicies
-}
-func (description *CloudProviderListUserPolicies) GetKind() string {
-	return description.Kind
-}
-
-func (description *CloudProviderListUserPolicies) GetName() string {
-	return description.Metadata.GetName()
-}
-
-// provider -> eks/gke/etc.
-func (description *CloudProviderListUserPolicies) GetProvider() string {
-	return description.Metadata.GetProvider()
-}
-
-// Compatible with the IMetadata interface
-func (description *CloudProviderListUserPolicies) GetNamespace() string {
-	return description.GetProvider()
-}
-
-func (description *CloudProviderListUserPolicies) GetWorkload() map[string]interface{} {
-	return description.GetObject()
-}
-
-func (description *CloudProviderListUserPolicies) GetData() map[string]interface{} {
-	return description.Data
-}
-
-func (description *CloudProviderListUserPolicies) GetObject() map[string]interface{} {
-	m := map[string]interface{}{}
-	b, err := json.Marshal(*description)
-	if err != nil {
-		return m
-	}
-	return workloadinterface.BytesToMap(b)
-}
-
-// ApiVersion/Kind/Name
-func (description *CloudProviderListUserPolicies) GetID() string {
-	return fmt.Sprintf("%s/%s/%s", k8sinterface.JoinGroupVersion(k8sinterface.SplitApiVersion(description.GetApiVersion())), description.GetKind(), description.GetName())
-}
-
-// ==========================================================================================================
-// ============================== CloudProviderListGroupPolicies ==================================================
-// ==========================================================================================================
-// Setters
-func (description *CloudProviderListGroupPolicies) SetNamespace(namespace string) {
-	description.SetProvider(namespace)
-}
-
-func (description *CloudProviderListGroupPolicies) SetApiVersion(apiVersion string) {
-	description.ApiVersion = apiVersion
-}
-
-func (description *CloudProviderListGroupPolicies) SetName(name string) {
-	description.Metadata.SetName(name)
-}
-
-func (description *CloudProviderListGroupPolicies) SetProvider(provider string) {
-	description.Metadata.SetProvider(provider)
-}
-
-func (description *CloudProviderListGroupPolicies) SetKind(kind string) {
-	description.Kind = kind
-}
-
-func (description *CloudProviderListGroupPolicies) SetData(data map[string]interface{}) {
-	description.Data = data
-}
-
-func (description *CloudProviderListGroupPolicies) SetWorkload(object map[string]interface{}) {
-	description.SetObject(object)
-}
-
-func (description *CloudProviderListGroupPolicies) SetObject(object map[string]interface{}) {
-	if !apis.IsTypeDescribeRepositories(object) {
-		return
-	}
-	if b := workloadinterface.MapToBytes(object); len(b) > 0 {
-		d := &CloudProviderListGroupPolicies{}
-		if err := json.Unmarshal(b, d); err == nil {
-			description.SetApiVersion(d.GetApiVersion())
-			description.SetKind(d.GetKind())
-			description.SetData(d.GetData())
-			description.Metadata = d.Metadata
-		}
-	}
-}
-
-// Getters
-
-func (description *CloudProviderListGroupPolicies) GetApiVersion() string {
-	return description.ApiVersion
-}
-
-func (description *CloudProviderListGroupPolicies) GetObjectType() workloadinterface.ObjectType {
-	return TypeCloudProviderListGroupPolicies
-}
-func (description *CloudProviderListGroupPolicies) GetKind() string {
-	return description.Kind
-}
-
-func (description *CloudProviderListGroupPolicies) GetName() string {
-	return description.Metadata.GetName()
-}
-
-// provider -> eks/gke/etc.
-func (description *CloudProviderListGroupPolicies) GetProvider() string {
-	return description.Metadata.GetProvider()
-}
-
-// Compatible with the IMetadata interface
-func (description *CloudProviderListGroupPolicies) GetNamespace() string {
-	return description.GetProvider()
-}
-
-func (description *CloudProviderListGroupPolicies) GetWorkload() map[string]interface{} {
-	return description.GetObject()
-}
-
-func (description *CloudProviderListGroupPolicies) GetData() map[string]interface{} {
-	return description.Data
-}
-
-func (description *CloudProviderListGroupPolicies) GetObject() map[string]interface{} {
-	m := map[string]interface{}{}
-	b, err := json.Marshal(*description)
-	if err != nil {
-		return m
-	}
-	return workloadinterface.BytesToMap(b)
-}
-
-// ApiVersion/Kind/Name
-func (description *CloudProviderListGroupPolicies) GetID() string {
+func (description *CloudProviderListEntitiesForPolicies) GetID() string {
 	return fmt.Sprintf("%s/%s/%s", k8sinterface.JoinGroupVersion(k8sinterface.SplitApiVersion(description.GetApiVersion())), description.GetKind(), description.GetName())
 }

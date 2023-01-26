@@ -1,8 +1,6 @@
 package v1
 
 import (
-	"encoding/json"
-	"fmt"
 	"testing"
 
 	"github.com/kubescape/k8s-interface/cloudsupport/apis"
@@ -32,37 +30,55 @@ func TestGetClusterDescribeEKS(t *testing.T) {
 	//assert.Equal(t, 1, len(des.GetData()))
 }
 
-// ==================== ListGroupPolicies ====================
-func TestGetListGroupPoliciesEKS(t *testing.T) {
+// ==================== ListEntitiesForPolicies ====================
+func TestGetListEntitiesForPoliciesEKS(t *testing.T) {
 	//TODO: Add more tests
-	cluster := "arn:aws:eks:eu-west-2:015253967648:cluster/Yiscah-test-g2am5"
-	eksSupport := NewEKSSupport()
-	region, err := eksSupport.GetRegion(cluster)
+	g := NewEKSSupportMock()
+	repos, err := GetListEntitiesForPoliciesEKS(g, "ca-terraform-eks-dev-stage", "")
 	assert.NoError(t, err)
-	listGroupPolicies, err := GetListGroupPoliciesEKS(eksSupport, cluster, region)
-	assert.NoError(t, err)
-	res2B, err := json.Marshal(listGroupPolicies)
-	fmt.Printf("result:\n%s\n", string(res2B))
-	assert.NoError(t, err)
+	assert.Equal(t, apis.CloudProviderListEntitiesForPoliciesKind, repos.GetKind())
+	assert.Equal(t, "eks.amazonaws.com/v1/ListEntitiesForPolicies/ca-terraform-eks-dev-stage", repos.GetID())
+	assert.Equal(t, k8sinterface.JoinGroupVersion(apis.ApiVersionEKS, Version), repos.GetApiVersion())
+	assert.Equal(t, "ca-terraform-eks-dev-stage", repos.GetName())
+	assert.Equal(t, TypeCloudProviderListEntitiesForPolicies, repos.GetObjectType())
 }
 
-// ==================== ListUserPolicies ====================
-func TestGetListUserPoliciesEKS(t *testing.T) {
-	//TODO: Add more tests
-	cluster := "arn:aws:eks:eu-west-2:015253967648:cluster/Yiscah-test-g2am5"
-	eksSupport := NewEKSSupport()
-	region, err := eksSupport.GetRegion(cluster)
-	assert.NoError(t, err)
-	listUserPolicies, err := GetListUserPoliciesEKS(eksSupport, cluster, region)
-	assert.NoError(t, err)
-	res2B, err := json.Marshal(listUserPolicies)
-	fmt.Printf("result:\n%s\n", string(res2B))
-	assert.NoError(t, err)
+func TestSetApiVersionListEntitiesForPolicies(t *testing.T) {
+	repos := &CloudProviderListEntitiesForPolicies{ApiVersion: "eks.amazonaws.com/v1"}
+	repos.SetApiVersion(apis.ApiVersionGKE)
+	assert.Equal(t, repos.ApiVersion, apis.ApiVersionGKE)
 }
 
-// ==================== ListRolePolicies ====================
-func TestGetListRolePoliciesEKS(t *testing.T) {
-	//TODO: Add more tests
+func TestSetNameListEntitiesForPolicies(t *testing.T) {
+	repos := &CloudProviderListEntitiesForPolicies{Metadata: CloudProviderMetadata{Name: "ca-terraform-eks-dev-stage"}}
+	repos.SetName("new-name")
+	assert.Equal(t, repos.Metadata.Name, "new-name")
+}
+
+func TestSetKindListEntitiesForPolicies(t *testing.T) {
+	repos := &CloudProviderListEntitiesForPolicies{Kind: "ListEntitiesForPolicies"}
+	repos.SetKind("new-kind")
+	assert.Equal(t, repos.Kind, "new-kind")
+}
+
+func TestSetObjectListEntitiesForPolicies(t *testing.T) {
+	repos := &CloudProviderListEntitiesForPolicies{}
+	repos.SetObject(map[string]interface{}{
+		"kind": "ListEntitiesForPolicies", "apiVersion": "eks.amazonaws.com/v1", "metadata": map[string]interface{}{"name": "new-object", "provider": "b"}})
+	assert.Equal(t, repos.GetObject(), map[string]interface{}{
+		"kind": "ListEntitiesForPolicies", "apiVersion": "eks.amazonaws.com/v1", "data": interface{}(nil),
+		"metadata": map[string]interface{}{"name": "new-object", "provider": "b"}})
+}
+
+func TestSetWorkloadListEntitiesForPolicies(t *testing.T) {
+	repos := &CloudProviderListEntitiesForPolicies{}
+	repos.SetWorkload(map[string]interface{}{
+		"kind": "ListEntitiesForPolicies", "apiVersion": "eks.amazonaws.com/v1",
+		"metadata": map[string]interface{}{"name": "new-workload", "provider": "bla"}})
+	assert.Equal(t, repos.GetObject(), map[string]interface{}{
+		"kind": "ListEntitiesForPolicies", "apiVersion": "eks.amazonaws.com/v1", "data": interface{}(nil),
+		"metadata": map[string]interface{}{"name": "new-workload", "provider": "bla"}})
+
 }
 
 // ==================== DescribeRepositories ====================
