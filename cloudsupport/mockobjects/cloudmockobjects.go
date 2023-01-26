@@ -354,3 +354,53 @@ var EksDescribeRepositories = `{
     }
 }
     `
+
+var EksListEntitiesForPolicies = `
+{
+    "apiVersion": "eks.amazonaws.com/v1",
+    "kind": "ListEntitiesForPolicies",
+    "metadata": {
+        "name": "ca-terraform-eks-dev-stage",
+        "provider": "eks"
+    },
+    "data": {
+        "rolesPolicies": {
+            "arn:aws:iam::XXXXXXXXXXXX:policy/FullAccess": {
+                "IsTruncated": false,
+                "Marker": null,
+                "PolicyGroups": [
+                    {
+                        "GroupId": "XXXXXXXXXXXX",
+                        "GroupName": "Developers"
+                    }
+                ],
+                "PolicyRoles": [],
+                "PolicyUsers": [
+                    {
+                        "UserId": "XXXXXXXXXXXX",
+                        "UserName": "my-user"
+                    }
+                ],
+                "ResultMetadata": {}
+            },
+            "arn:aws:iam::XXXXXXXXXXXX:policy/DevStage": {
+                "IsTruncated": false,
+                "Marker": null,
+                "PolicyGroups": [],
+                "PolicyRoles": [
+                    {
+                        "RoleId": "XXXXXXXXXXXX",
+                        "RoleName": "eks-dev"
+                    },
+                    {
+                        "RoleId": "XXXXXXXXXXXX",
+                        "RoleName": "eks-dev-test"
+                    }
+                ],
+                "PolicyUsers": [],
+                "ResultMetadata": {}
+            }
+        }
+    }
+}
+        `

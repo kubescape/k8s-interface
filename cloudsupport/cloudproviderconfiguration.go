@@ -117,11 +117,37 @@ func GetDescribeRepositoriesFromCloudProvider(cluster string, cloudProvider stri
 		}
 	case cloudsupportv1.GKE:
 		//TODO - implement GKE support
-		return nil, fmt.Errorf("GKE is not supported yet")
+		return nil, fmt.Errorf(cloudsupportv1.NotSupportedMsg)
 	case cloudsupportv1.AKS:
 		//TODO - implement AKS support
-		return nil, fmt.Errorf("AKS is not supported yet")
+		return nil, fmt.Errorf(cloudsupportv1.NotSupportedMsg)
 	}
 
 	return clusterInfo, nil
+}
+
+// GetListEntitiesForPoliciesFromCloudProvider returns EntitiesForpolicies from the cloud provider wrapped in IMetadata obj
+func GetListEntitiesForPoliciesFromCloudProvider(cluster string, cloudProvider string) (workloadinterface.IMetadata, error) {
+	var listEntitiesForPolicies *cloudsupportv1.CloudProviderListEntitiesForPolicies
+
+	switch cloudProvider {
+	case cloudsupportv1.EKS:
+		eksSupport := cloudsupportv1.NewEKSSupport()
+		region, err := eksSupport.GetRegion(cluster)
+		if err != nil {
+			return nil, err
+		}
+		listEntitiesForPolicies, err = cloudsupportv1.GetListEntitiesForPoliciesEKS(eksSupport, cluster, region)
+		if err != nil {
+			return nil, err
+		}
+	case cloudsupportv1.GKE:
+		//TODO - implement GKE support
+		return nil, fmt.Errorf(cloudsupportv1.NotSupportedMsg)
+	case cloudsupportv1.AKS:
+		//TODO - implement AKS support
+		return nil, fmt.Errorf(cloudsupportv1.NotSupportedMsg)
+	}
+
+	return listEntitiesForPolicies, nil
 }

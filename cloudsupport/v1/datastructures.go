@@ -43,3 +43,16 @@ type CloudProviderDescribeRepositories struct {
 	Metadata   CloudProviderMetadata  `json:"metadata"`
 	Data       map[string]interface{} `json:"data"`
 }
+
+/*
+CloudProviderListEntitiesForPolicies:
+=========================
+
+CloudProviderListEntitiesForPolicies has a list of the RolePolicies in the cloud provider (EKS)
+*/
+type CloudProviderListEntitiesForPolicies struct {
+	ApiVersion string                 `json:"apiVersion"`
+	Kind       string                 `json:"kind"`
+	Metadata   CloudProviderMetadata  `json:"metadata"`
+	Data       map[string]interface{} `json:"data"`
+}

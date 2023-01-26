@@ -222,3 +222,99 @@ func (description *CloudProviderDescribeRepositories) GetObject() map[string]int
 func (description *CloudProviderDescribeRepositories) GetID() string {
 	return fmt.Sprintf("%s/%s/%s", k8sinterface.JoinGroupVersion(k8sinterface.SplitApiVersion(description.GetApiVersion())), description.GetKind(), description.GetName())
 }
+
+// ==========================================================================================================
+// ============================== CloudProviderListEntitiesForPolicies ==================================================
+// ==========================================================================================================
+// Setters
+func (description *CloudProviderListEntitiesForPolicies) SetNamespace(namespace string) {
+	description.SetProvider(namespace)
+}
+
+func (description *CloudProviderListEntitiesForPolicies) SetApiVersion(apiVersion string) {
+	description.ApiVersion = apiVersion
+}
+
+func (description *CloudProviderListEntitiesForPolicies) SetName(name string) {
+	description.Metadata.SetName(name)
+}
+
+func (description *CloudProviderListEntitiesForPolicies) SetProvider(provider string) {
+	description.Metadata.SetProvider(provider)
+}
+
+func (description *CloudProviderListEntitiesForPolicies) SetKind(kind string) {
+	description.Kind = kind
+}
+
+func (description *CloudProviderListEntitiesForPolicies) SetData(data map[string]interface{}) {
+	description.Data = data
+}
+
+func (description *CloudProviderListEntitiesForPolicies) SetWorkload(object map[string]interface{}) {
+	description.SetObject(object)
+}
+
+func (description *CloudProviderListEntitiesForPolicies) SetObject(object map[string]interface{}) {
+	if !apis.IsTypeListEntitiesForPolicies(object) {
+		return
+	}
+	if b := workloadinterface.MapToBytes(object); len(b) > 0 {
+		d := &CloudProviderListEntitiesForPolicies{}
+		if err := json.Unmarshal(b, d); err == nil {
+			description.SetApiVersion(d.GetApiVersion())
+			description.SetKind(d.GetKind())
+			description.SetData(d.GetData())
+			description.Metadata = d.Metadata
+		}
+	}
+}
+
+// Getters
+
+func (description *CloudProviderListEntitiesForPolicies) GetApiVersion() string {
+	return description.ApiVersion
+}
+
+func (description *CloudProviderListEntitiesForPolicies) GetObjectType() workloadinterface.ObjectType {
+	return TypeCloudProviderListEntitiesForPolicies
+}
+func (description *CloudProviderListEntitiesForPolicies) GetKind() string {
+	return description.Kind
+}
+
+func (description *CloudProviderListEntitiesForPolicies) GetName() string {
+	return description.Metadata.GetName()
+}
+
+// provider -> eks/gke/etc.
+func (description *CloudProviderListEntitiesForPolicies) GetProvider() string {
+	return description.Metadata.GetProvider()
+}
+
+// Compatible with the IMetadata interface
+func (description *CloudProviderListEntitiesForPolicies) GetNamespace() string {
+	return description.GetProvider()
+}
+
+func (description *CloudProviderListEntitiesForPolicies) GetWorkload() map[string]interface{} {
+	return description.GetObject()
+}
+
+func (description *CloudProviderListEntitiesForPolicies) GetData() map[string]interface{} {
+	return description.Data
+}
+
+func (description *CloudProviderListEntitiesForPolicies) GetObject() map[string]interface{} {
+	m := map[string]interface{}{}
+	b, err := json.Marshal(*description)
+	if err != nil {
+		return m
+	}
+	return workloadinterface.BytesToMap(b)
+}
+
+// ApiVersion/Kind/Name
+func (description *CloudProviderListEntitiesForPolicies) GetID() string {
+	return fmt.Sprintf("%s/%s/%s", k8sinterface.JoinGroupVersion(k8sinterface.SplitApiVersion(description.GetApiVersion())), description.GetKind(), description.GetName())
+}
