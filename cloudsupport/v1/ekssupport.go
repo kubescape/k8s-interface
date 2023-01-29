@@ -100,7 +100,12 @@ func (eksSupport *EKSSupport) GetRegion(cluster string) (string, error) {
 	if len(splittedClusterContext) < 2 {
 		splittedClusterContext := strings.Split(cluster, ":")
 		if len(splittedClusterContext) < 4 {
-			return "", fmt.Errorf("failed to get region")
+			splittedClusterContext := strings.Split(cluster, "-")
+			if len(splittedClusterContext) < 4 {
+				return "", fmt.Errorf("failed to get region")
+			} else {
+				return strings.Join(splittedClusterContext[3:6], "-"), nil
+			}
 		}
 		region = splittedClusterContext[3]
 	} else {
