@@ -24,8 +24,11 @@ var resourcesInfoLock = sync.RWMutex{}
 var ResourceClusterScope = []string{}
 
 func GetSingleResourceFromGroupMapping(resource string) (string, bool) {
+	resourcesInfoLock.RLock()
+	rsrcGroupMappingLength := len(resourceGroupMapping)
+	resourcesInfoLock.RUnlock()
 
-	if len(resourceGroupMapping) == 0 {
+	if rsrcGroupMappingLength == 0 {
 		InitializeMapResources(nil)
 	}
 	resourcesInfoLock.RLock()
@@ -36,8 +39,11 @@ func GetSingleResourceFromGroupMapping(resource string) (string, bool) {
 
 // GetResourceGroupMapping returns copy of ResourceGroupMapping map object
 func GetResourceGroupMapping() map[string]string {
+	resourcesInfoLock.RLock()
+	rsrcGroupMappingLength := len(resourceGroupMapping)
+	resourcesInfoLock.RUnlock()
 
-	if len(resourceGroupMapping) == 0 {
+	if rsrcGroupMappingLength == 0 {
 		InitializeMapResources(nil)
 	}
 	resourcesInfoLock.RLock()
@@ -50,7 +56,12 @@ func GetResourceGroupMapping() map[string]string {
 }
 
 func GetResourceNamesapcedScope() []string {
-	if len(resourceNamesapcedScope) == 0 {
+
+	resourcesInfoLock.RLock()
+	resNsScopeLen := len(resourceNamesapcedScope)
+	resourcesInfoLock.RUnlock()
+
+	if resNsScopeLen == 0 {
 		InitializeMapResources(nil)
 	}
 
@@ -67,7 +78,10 @@ func GetResourceNamesapcedScope() []string {
 func InitializeMapResources(discoveryClient discovery.DiscoveryInterface) {
 
 	// load discovery data only if the map is empty
-	if len(resourceNamesapcedScope) != 0 {
+	resourcesInfoLock.RLock()
+	resNsScopeLen := len(resourceNamesapcedScope)
+	resourcesInfoLock.RUnlock()
+	if resNsScopeLen != 0 {
 		return
 	}
 
