@@ -12,7 +12,6 @@ func InitializeMapResourcesMock() {
 		return
 	}
 	setMapResources(rl)
-
 }
 
 func GetResourceListMock() ([]*metav1.APIResourceList, error) {
