@@ -285,3 +285,7 @@ func (wm *WorkloadMock) GetSecrets() ([]string, error) {
 func (wm *WorkloadMock) GetConfigMaps() ([]string, error) {
 	return wm.workload.GetConfigMaps()
 }
+
+func (wm *WorkloadMock) GetPodStatus() (*corev1.PodStatus, error) {
+	return wm.workload.GetPodStatus()
+}
