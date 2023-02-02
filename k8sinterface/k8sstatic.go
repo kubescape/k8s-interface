@@ -32,7 +32,7 @@ func SetLabel(labels map[string]string, key string, val bool) {
 	labels[key] = boolutils.BoolToString(val)
 }
 
-func (k8sAPI *KubernetesApi) ListPods(namespace string, podLabels map[string]string) ([]corev1.Pod, error) {
+func (k8sAPI *KubernetesApi) ListPods(namespace string, podLabels map[string]string) (*corev1.PodList, error) {
 	listOptions := metav1.ListOptions{}
 	if len(podLabels) > 0 {
 		set := labels.Set(podLabels)
@@ -40,7 +40,7 @@ func (k8sAPI *KubernetesApi) ListPods(namespace string, podLabels map[string]str
 	}
 	pods, err := k8sAPI.KubernetesClient.CoreV1().Pods(namespace).List(context.Background(), listOptions)
 	if err != nil {
-		return []corev1.Pod{}, err
+		return nil, err
 	}
-	return pods.Items, nil
+	return pods, nil
 }

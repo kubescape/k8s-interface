@@ -671,3 +671,18 @@ func (w *Workload) GetConfigMaps() ([]string, error) {
 	}
 	return configMaps, nil
 }
+
+func (w *Workload) GetPodStatus() (*corev1.PodStatus, error) {
+	status := corev1.PodStatus{}
+	if v, ok := InspectWorkload(w.workload, "status"); ok && v != nil {
+		vBytes, err := json.Marshal(v)
+		if err != nil {
+			return nil, err
+		}
+		err = json.Unmarshal(vBytes, &status)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return &status, nil
+}

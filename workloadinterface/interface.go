@@ -69,6 +69,7 @@ type IBasicWorkload interface {
 	GetConfigMapsOfContainer() (map[string][]string, error)
 	GetSecrets() ([]string, error)
 	GetConfigMaps() ([]string, error)
+	GetPodStatus() (*corev1.PodStatus, error)
 	//GetSpiffe() string
 
 	// REMOVE
