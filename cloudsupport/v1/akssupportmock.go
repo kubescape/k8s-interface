@@ -6,6 +6,7 @@ import (
 	armauthorization "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/authorization/armauthorization/v2"
 	armcontainerservice "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/containerservice/armcontainerservice/v2"
 	"github.com/kubescape/k8s-interface/cloudsupport/mockobjects"
+	"github.com/kubescape/k8s-interface/k8sinterface"
 )
 
 func NewAKSSupportMock() *AKSSupportMock {
@@ -35,4 +36,8 @@ func (AKSSupportM *AKSSupportMock) GetSubscriptionID() (string, error) {
 
 func (AKSSupportM *AKSSupportMock) GetResourceGroup() (string, error) {
 	return "armo-dev", nil
+}
+
+func (AKSSupportM *AKSSupportMock) GetGroupIdsRoleBindings(kapi *k8sinterface.KubernetesApi, namespace string) ([]string, error) {
+	return []string{"e808215d-d159-49ba-8bb6-9661ba478842", "unexpected comma, expecting type"}, nil
 }
