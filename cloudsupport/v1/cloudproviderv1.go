@@ -14,6 +14,7 @@ const (
 	TypeCloudProviderDescribe                workloadinterface.ObjectType = "CloudProviderDescribe"
 	TypeCloudProviderDescribeRepositories    workloadinterface.ObjectType = "CloudProviderDescribeRepositories"
 	TypeCloudProviderListEntitiesForPolicies workloadinterface.ObjectType = "CloudProviderListEntitiesForPolicies"
+	TypeCloudProviderPolicyVersion           workloadinterface.ObjectType = "CloudProviderPolicyVersion"
 )
 
 const (
@@ -219,4 +220,36 @@ func GetClusterDescribeAKS(aksSupport IAKSSupport, cluster string, subscriptionI
 	clusterInfo.SetData(data)
 
 	return clusterInfo, nil
+}
+
+func GetPolicyVersionEKS(eksSupport IEKSSupport, cluster string, region string) (*CloudProviderPolicyVersion, error) {
+	cluster = eksSupport.GetContextName(cluster)
+	// get cluster describe just to get cluster name
+	clusterDescribe, err := eksSupport.GetClusterDescribe(cluster, region)
+	if err != nil {
+		return nil, err
+	}
+	listPolicyVersion, err := eksSupport.GetPolicyVersion(region)
+	if err != nil {
+		return nil, err
+	}
+
+	resultInBytes, err := json.Marshal(listPolicyVersion)
+	if err != nil {
+		return nil, err
+	}
+	// set listEntitiesForPoliciesInfo object
+	listPolicyInfo := &CloudProviderPolicyVersion{}
+	listPolicyInfo.SetApiVersion(k8sinterface.JoinGroupVersion(apis.ApiVersionEKS, Version))
+	listPolicyInfo.SetName(eksSupport.GetName(clusterDescribe))
+	listPolicyInfo.SetProvider(EKS)
+	listPolicyInfo.SetKind(apis.CloudProviderPolicyVersionKind)
+
+	data := map[string]interface{}{}
+	if err := json.Unmarshal(resultInBytes, &data); err != nil {
+		return nil, err
+	}
+	listPolicyInfo.SetData(data)
+
+	return listPolicyInfo, nil
 }
