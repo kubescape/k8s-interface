@@ -56,3 +56,16 @@ type CloudProviderListEntitiesForPolicies struct {
 	Metadata   CloudProviderMetadata  `json:"metadata"`
 	Data       map[string]interface{} `json:"data"`
 }
+
+/*
+CloudProviderPolicyVersion:
+=========================
+
+CloudProviderPolicyVersion has a list of the PolicyVersion in the cloud provider (EKS)
+*/
+type CloudProviderPolicyVersion struct {
+	ApiVersion string                 `json:"apiVersion"`
+	Kind       string                 `json:"kind"`
+	Metadata   CloudProviderMetadata  `json:"metadata"`
+	Data       map[string]interface{} `json:"data"`
+}

@@ -30,6 +30,58 @@ func TestGetClusterDescribeEKS(t *testing.T) {
 	//assert.Equal(t, 1, len(des.GetData()))
 }
 
+// ==================== GetPolicyVersion ====================
+
+func TestGetPolicyVersion(t *testing.T) {
+	//TODO: Add more tests
+	g := NewEKSSupportMock()
+	repos, err := GetPolicyVersionEKS(g, "ca-terraform-eks-dev-stage", "")
+	assert.NoError(t, err)
+	assert.Equal(t, apis.CloudProviderPolicyVersionKind, repos.GetKind())
+	assert.Equal(t, "eks.amazonaws.com/v1/PolicyVersion/ca-terraform-eks-dev-stage", repos.GetID())
+	assert.Equal(t, k8sinterface.JoinGroupVersion(apis.ApiVersionEKS, Version), repos.GetApiVersion())
+	assert.Equal(t, "ca-terraform-eks-dev-stage", repos.GetName())
+	assert.Equal(t, TypeCloudProviderPolicyVersion, repos.GetObjectType())
+}
+
+func TestSetApiVersionGetPolicyVersion(t *testing.T) {
+	repos := &CloudProviderPolicyVersion{ApiVersion: "eks.amazonaws.com/v1"}
+	repos.SetApiVersion(apis.ApiVersionEKS)
+	assert.Equal(t, repos.ApiVersion, apis.ApiVersionEKS)
+}
+
+func TestSetNameGetPolicyVersion(t *testing.T) {
+	repos := &CloudProviderPolicyVersion{Metadata: CloudProviderMetadata{Name: "ca-terraform-eks-dev-stage"}}
+	repos.SetName("new-name")
+	assert.Equal(t, repos.Metadata.Name, "new-name")
+}
+
+func TestSetKindGetPolicyVersion(t *testing.T) {
+	repos := &CloudProviderPolicyVersion{Kind: "PolicyVersion"}
+	repos.SetKind("new-kind")
+	assert.Equal(t, repos.Kind, "new-kind")
+}
+
+func TestSetObjectGetPolicyVersion(t *testing.T) {
+	repos := &CloudProviderPolicyVersion{}
+	repos.SetObject(map[string]interface{}{
+		"kind": "PolicyVersion", "apiVersion": "eks.amazonaws.com/v1", "metadata": map[string]interface{}{"name": "new-object", "provider": "b"}})
+	assert.Equal(t, repos.GetObject(), map[string]interface{}{
+		"kind": "PolicyVersion", "apiVersion": "eks.amazonaws.com/v1", "data": interface{}(nil),
+		"metadata": map[string]interface{}{"name": "new-object", "provider": "b"}})
+}
+
+func TestSetWorkloadGetPolicyVersion(t *testing.T) {
+	repos := &CloudProviderPolicyVersion{}
+	repos.SetWorkload(map[string]interface{}{
+		"kind": "PolicyVersion", "apiVersion": "eks.amazonaws.com/v1",
+		"metadata": map[string]interface{}{"name": "new-workload", "provider": "bla"}})
+	assert.Equal(t, repos.GetObject(), map[string]interface{}{
+		"kind": "PolicyVersion", "apiVersion": "eks.amazonaws.com/v1", "data": interface{}(nil),
+		"metadata": map[string]interface{}{"name": "new-workload", "provider": "bla"}})
+
+}
+
 // ==================== ListEntitiesForPolicies ====================
 func TestGetListEntitiesForPoliciesEKS(t *testing.T) {
 	//TODO: Add more tests

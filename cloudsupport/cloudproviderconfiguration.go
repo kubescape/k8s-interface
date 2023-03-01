@@ -151,3 +151,29 @@ func GetListEntitiesForPoliciesFromCloudProvider(cluster string, cloudProvider s
 
 	return listEntitiesForPolicies, nil
 }
+
+// GetPolicyVersionFromCloudProvider returns PolicyVersion from the cloud provider wrapped in IMetadata obj
+func GetPolicyVersionFromCloudProvider(cluster string, cloudProvider string) (workloadinterface.IMetadata, error) {
+	var policyVersion *cloudsupportv1.CloudProviderPolicyVersion
+
+	switch cloudProvider {
+	case cloudsupportv1.EKS:
+		eksSupport := cloudsupportv1.NewEKSSupport()
+		region, err := eksSupport.GetRegion(cluster)
+		if err != nil {
+			return nil, err
+		}
+		policyVersion, err = cloudsupportv1.GetPolicyVersionEKS(eksSupport, cluster, region)
+		if err != nil {
+			return nil, err
+		}
+	case cloudsupportv1.GKE:
+		//TODO - implement GKE support
+		return nil, fmt.Errorf(cloudsupportv1.NotSupportedMsg)
+	case cloudsupportv1.AKS:
+		//TODO - implement AKS support
+		return nil, fmt.Errorf(cloudsupportv1.NotSupportedMsg)
+	}
+
+	return policyVersion, nil
+}
