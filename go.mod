@@ -7,9 +7,9 @@ require (
 	github.com/Azure/azure-sdk-for-go/sdk/azidentity v1.2.0
 	github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/authorization/armauthorization/v2 v2.0.0
 	github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/containerservice/armcontainerservice/v2 v2.2.0
-	github.com/armosec/armoapi-go v0.0.169
-	github.com/armosec/utils-go v0.0.12
-	github.com/armosec/utils-k8s-go v0.0.12
+	github.com/armosec/armoapi-go v0.0.172
+	github.com/armosec/utils-go v0.0.14
+	github.com/armosec/utils-k8s-go v0.0.13
 	github.com/aws/aws-sdk-go v1.44.51
 	github.com/aws/aws-sdk-go-v2 v1.17.3
 	github.com/aws/aws-sdk-go-v2/config v1.15.13
@@ -26,7 +26,10 @@ require (
 	sigs.k8s.io/controller-runtime v0.12.3
 )
 
-require github.com/stripe/stripe-go/v74 v74.8.0 // indirect
+require (
+	github.com/stripe/stripe-go/v74 v74.8.0 // indirect
+	gotest.tools/v3 v3.4.0 // indirect
+)
 
 require (
 	cloud.google.com/go/compute v1.7.0 // indirect
