@@ -32,7 +32,19 @@ func TestGetClusterDescribeEKS(t *testing.T) {
 
 // ==================== GetPolicyVersion ====================
 
-func TestGetPolicyVersion(t *testing.T) {
+func TestGetPolicyVersionAKS(t *testing.T) {
+	g := NewAKSSupportMock()
+	repos, err := GetPolicyVersionAKS(g, "", "", "")
+	assert.NoError(t, err)
+	assert.Equal(t, apis.CloudProviderPolicyVersionKind, repos.GetKind())
+	assert.Equal(t, "management.azure.com/v1/PolicyVersion/daniel", repos.GetID())
+	assert.Equal(t, k8sinterface.JoinGroupVersion(apis.ApiVersionAKS, Version), repos.GetApiVersion())
+	assert.Equal(t, "daniel", repos.GetName())
+	assert.Equal(t, TypeCloudProviderPolicyVersion, repos.GetObjectType())
+	assert.NotEmpty(t, repos.GetData()["roleDefinitions"])
+}
+
+func TestGetPolicyVersionEKS(t *testing.T) {
 	//TODO: Add more tests
 	g := NewEKSSupportMock()
 	repos, err := GetPolicyVersionEKS(g, "ca-terraform-eks-dev-stage", "")
@@ -83,6 +95,18 @@ func TestSetWorkloadGetPolicyVersion(t *testing.T) {
 }
 
 // ==================== ListEntitiesForPolicies ====================
+func TestGetListEntitiesForPoliciesAKS(t *testing.T) {
+	g := NewAKSSupportMock()
+	repos, err := GetListEntitiesForPoliciesAKS(g, "XXXXXX", "armo-testing", "armo-dev")
+	assert.NoError(t, err)
+	assert.Equal(t, apis.CloudProviderListEntitiesForPoliciesKind, repos.GetKind())
+	assert.Equal(t, "management.azure.com/v1/ListEntitiesForPolicies/daniel", repos.GetID())
+	assert.Equal(t, k8sinterface.JoinGroupVersion(apis.ApiVersionAKS, Version), repos.GetApiVersion())
+	assert.Equal(t, "daniel", repos.GetName())
+	assert.Equal(t, TypeCloudProviderListEntitiesForPolicies, repos.GetObjectType())
+	assert.NotEmpty(t, repos.GetData()["roleAssignments"])
+}
+
 func TestGetListEntitiesForPoliciesEKS(t *testing.T) {
 	//TODO: Add more tests
 	g := NewEKSSupportMock()

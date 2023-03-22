@@ -7,7 +7,8 @@ import (
 
 	// "github.com/Azure/azure-sdk-for-go/services/containerservice/mgmt/2019-04-30/containerservice"
 	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
-	armauthorization "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/authorization/armauthorization/v2"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/authorization/armauthorization"
+	armauthorizationv2 "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/authorization/armauthorization/v2"
 	armcontainerservice "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/containerservice/armcontainerservice/v2"
 	"github.com/kubescape/k8s-interface/k8sinterface"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -23,10 +24,19 @@ type IAKSSupport interface {
 	GetContextName(*armcontainerservice.ManagedCluster) string
 	GetSubscriptionID() (string, error)
 	GetResourceGroup() (string, error)
-	ListAllRolesForScope(subscriptionId string, scope string) ([]*armauthorization.RoleAssignment, error)
+	ListAllRolesForScope(subscriptionId string, scope string) (*ListRoleAssignment, error)
 	GetGroupIdsRoleBindings(kapi *k8sinterface.KubernetesApi, namespace string) ([]string, error)
+	ListAllRoleDefinitions(subscriptionId string, scope string) (*ListRoleDefinition, error)
 }
 type AKSSupport struct {
+}
+
+type ListRoleAssignment struct {
+	RoleAssignments []*armauthorizationv2.RoleAssignment `json:"roleAssignments"`
+}
+
+type ListRoleDefinition struct {
+	RoleDefinitions []*armauthorization.RoleDefinition `json:"roleDefinitions"`
 }
 
 func NewAKSSupport() *AKSSupport {
@@ -83,7 +93,7 @@ func (AKSSupport *AKSSupport) GetResourceGroup() (string, error) {
 // subscriptionID (format: '/subscriptions/{subscriptionId}'),
 // resource group ID (format:'/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}', or
 // resource ID (format:'/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/{resourceProviderNamespace}/[{parentResourcePath}/]{resourceType}/{resourceName}'
-func (AKSSupport *AKSSupport) ListAllRolesForScope(subscriptionId string, scope string) ([]*armauthorization.RoleAssignment, error) {
+func (AKSSupport *AKSSupport) ListAllRolesForScope(subscriptionId string, scope string) (*ListRoleAssignment, error) {
 
 	cred, err := azidentity.NewDefaultAzureCredential(nil)
 	if err != nil {
@@ -91,29 +101,54 @@ func (AKSSupport *AKSSupport) ListAllRolesForScope(subscriptionId string, scope 
 	}
 	ctx := context.Background()
 
-	client, err := armauthorization.NewRoleAssignmentsClient(subscriptionId, cred, nil)
+	client, err := armauthorizationv2.NewRoleAssignmentsClient(subscriptionId, cred, nil)
 	if err != nil {
 		return nil, err
 	}
 
-	pager := client.NewListForScopePager(scope, &armauthorization.RoleAssignmentsClientListForScopeOptions{Filter: nil,
+	pager := client.NewListForScopePager(scope, &armauthorizationv2.RoleAssignmentsClientListForScopeOptions{Filter: nil,
 		TenantID:  nil,
 		SkipToken: nil,
 	})
 
-	var roleList []*armauthorization.RoleAssignment
+	var roleList []*armauthorizationv2.RoleAssignment
 
 	for pager.More() {
 		nextResult, err := pager.NextPage(ctx)
 		if err != nil {
-			return roleList, fmt.Errorf("failed to advance page: %v", err)
+			return nil, fmt.Errorf("failed to advance page: %v", err)
 		}
 
 		roleList = append(roleList, nextResult.Value...)
 	}
 
-	return roleList, nil
+	return &ListRoleAssignment{RoleAssignments: roleList}, nil
 
+}
+
+func (AKSSupport *AKSSupport) ListAllRoleDefinitions(subscriptionId string, scope string) (*ListRoleDefinition, error) {
+	cred, err := azidentity.NewDefaultAzureCredential(nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to obtain a credential: %v", err)
+	}
+	ctx := context.Background()
+	listRoleAssignment, err := AKSSupport.ListAllRolesForScope(subscriptionId, scope)
+	var roleDefinitionList []*armauthorization.RoleDefinition
+	if err != nil {
+		return nil, fmt.Errorf("failed to ListAllRolesForScope: %v", err)
+	}
+	client, err := armauthorization.NewRoleDefinitionsClient(cred, nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create client: %v", err)
+	}
+	for index := range listRoleAssignment.RoleAssignments {
+		roleDefinition, err := client.GetByID(ctx, *listRoleAssignment.RoleAssignments[index].Properties.RoleDefinitionID, nil)
+		if err != nil {
+			return nil, fmt.Errorf("failed to GetRoleDefinition: %v", err)
+		}
+		roleDefinitionList = append(roleDefinitionList, &roleDefinition.RoleDefinition)
+	}
+	return &ListRoleDefinition{RoleDefinitions: roleDefinitionList}, nil
 }
 
 // Rolebindings contains the group-object-ids
