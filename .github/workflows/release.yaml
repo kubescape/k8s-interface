@@ -13,7 +13,7 @@ jobs:
   test:
     permissions:
       pull-requests: write
-    uses: kubescape/workflows/.github/workflows/package-release.yaml
+    uses: kubescape/workflows/.github/workflows/package-release.yaml@main
     with:
       GO_VERSION: 1.19
       RELEASE: "v0.0.${{ github.run_number }}"
