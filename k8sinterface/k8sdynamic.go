@@ -177,7 +177,7 @@ func (k8sAPI *KubernetesApi) CalculateWorkloadParentRecursive(workload IWorkload
 
 	parentWorkload, err := k8sAPI.GetWorkload(workload.GetNamespace(), ownerReference.Kind, ownerReference.Name)
 	if err != nil {
-		if strings.Contains(err.Error(), "not found in resourceMap") { // if parent is RCD
+		if strings.Contains(err.Error(), ResourceNotFoundErr) { // if parent is CRD
 			return workload.GetKind(), workload.GetName(), nil // parent found
 		}
 		return workload.GetKind(), workload.GetName(), err

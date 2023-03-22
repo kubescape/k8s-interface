@@ -11,7 +11,10 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 )
 
-const ValueNotFound = -1
+const (
+	ValueNotFound       = -1
+	ResourceNotFoundErr = "resource not found"
+)
 
 // ResourceGroupMapping mapping of all supported Kubernetes cluster resources to apiVersion
 var resourceGroupMapping = map[string]string{}
@@ -161,7 +164,7 @@ func GetGroupVersionResource(resource string) (schema.GroupVersionResource, erro
 	if resource == "" || resource == "*" {
 		return schema.GroupVersionResource{}, nil
 	}
-	return schema.GroupVersionResource{}, fmt.Errorf("resource '%s' unknown. Make sure the resource is found at `kubectl api-resources`", resource)
+	return schema.GroupVersionResource{}, fmt.Errorf("%s. resource '%s' unknown. Make sure the resource is found at `kubectl api-resources`", ResourceNotFoundErr, resource)
 }
 
 // IsNamespaceScope returns true if the schema.GroupVersionResource is a kubernetes namespaced resource
