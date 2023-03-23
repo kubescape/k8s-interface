@@ -20,6 +20,9 @@ jobs:
     needs: test
     runs-on: ubuntu-latest
     steps:
+    - uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c # ratchet:actions/checkout@v3
+      with:
+        submodules: recursive
     - uses: rickstaa/action-create-tag@v1
       with:
         tag: "v0.0.${{ github.run_number }}"
