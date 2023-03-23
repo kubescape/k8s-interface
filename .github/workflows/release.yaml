@@ -8,14 +8,19 @@ on:
       - '**.json' ### Ignore running when .json files change
       - '.github/*' ### Ignore running when files under path: .github/* changed.
 
-
 jobs:
   test:
     permissions:
       pull-requests: write
-    uses: kubescape/workflows/.github/workflows/package-release.yaml@main
+    uses: kubescape/workflows/.github/workflows/go-basic-tests.yaml@main
     with:
       GO_VERSION: 1.19
-      RELEASE: "v0.0.${{ github.run_number }}"
     secrets: inherit
+  release:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+    - uses: rickstaa/action-create-tag@v1
+      with:
+        tag: "v0.0.${{ github.run_number }}"
  
