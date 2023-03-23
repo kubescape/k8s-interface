@@ -104,18 +104,6 @@ func GetImageRegistryCredentials(imageTag string, pod *corev1.Pod) (map[string]t
 	return secrets, nil
 }
 
-func addCloudVendorSecret(imageTag string, secrets map[string]types.AuthConfig) error {
-	cloudVendorSecrets, err := GetCloudVendorRegistryCredentials(imageTag)
-	if err != nil {
-		logger.L().Error("failed to GetCloudVendorRegistryCredentials", helpers.String("imageTag", imageTag), helpers.Error(err))
-	} else if len(cloudVendorSecrets) > 0 {
-		for secName := range cloudVendorSecrets {
-			secrets[secName] = cloudVendorSecrets[secName]
-		}
-	}
-	return nil
-}
-
 // GetImageRegistryCredentials returns various credentials for images in the pod
 // imageTag empty means returns all of the credentials for all images in pod spec containers
 // pod.ObjectMeta.Namespace must be well setted
