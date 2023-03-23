@@ -4,6 +4,9 @@ import (
 	"context"
 	"fmt"
 
+	logger "github.com/kubescape/go-logger"
+	"github.com/kubescape/go-logger/helpers"
+
 	"github.com/armosec/utils-k8s-go/secrethandling"
 	"github.com/docker/docker/api/types"
 	"github.com/kubescape/k8s-interface/k8sinterface"
@@ -45,18 +48,15 @@ func getImagePullSecret(k8sAPI *k8sinterface.KubernetesApi, secrets []string, na
 	for i := range secrets {
 		res, err := k8sAPI.KubernetesClient.CoreV1().Secrets(namespace).Get(context.Background(), secrets[i], metav1.GetOptions{})
 		if err != nil {
-			// TODO - handle error
-			fmt.Println(err.Error())
+			logger.L().Error("unable to get secret", helpers.String("secret name", secrets[i]), helpers.Error(err))
 			continue
 		}
 		sec, err := secrethandling.ParseSecret(res, secrets[i])
-		if err == nil {
-			secretsAuthConfig[secrets[i]] = *sec
-		} else {
-			// TODO - handle error
-			fmt.Printf("unable to get secret: %s", err.Error())
+		if err != nil {
+			logger.L().Error("failed to pars secret", helpers.String("secret name", secrets[i]), helpers.Error(err))
+			continue
 		}
-
+		secretsAuthConfig[secrets[i]] = *sec
 	}
 
 	return secretsAuthConfig
@@ -80,8 +80,7 @@ func GetImageRegistryCredentials(imageTag string, pod *corev1.Pod) (map[string]t
 	if imageTag != "" {
 		cloudVendorSecrets, err := GetCloudVendorRegistryCredentials(imageTag)
 		if err != nil {
-			// TODO - handle error
-			fmt.Printf("failed to GetCloudVendorRegistryCredentials(%s): %v", imageTag, err.Error())
+			logger.L().Error("failed to GetCloudVendorRegistryCredentials", helpers.String("imageTag", imageTag), helpers.Error(err))
 		} else if len(cloudVendorSecrets) > 0 {
 			for secName := range cloudVendorSecrets {
 				secrets[secName] = cloudVendorSecrets[secName]
@@ -93,7 +92,7 @@ func GetImageRegistryCredentials(imageTag string, pod *corev1.Pod) (map[string]t
 
 			cloudVendorSecrets, err := GetCloudVendorRegistryCredentials(imageTag)
 			if err != nil {
-				fmt.Printf("failed to GetCloudVendorRegistryCredentials(%s): %s", imageTag, err.Error())
+				logger.L().Error("failed to GetCloudVendorRegistryCredentials", helpers.String("imageTag", imageTag), helpers.Error(err))
 			} else if len(cloudVendorSecrets) > 0 {
 				for secName := range cloudVendorSecrets {
 					secrets[secName] = cloudVendorSecrets[secName]
@@ -103,6 +102,18 @@ func GetImageRegistryCredentials(imageTag string, pod *corev1.Pod) (map[string]t
 	}
 
 	return secrets, nil
+}
+
+func addCloudVendorSecret(imageTag string, secrets map[string]types.AuthConfig) error {
+	cloudVendorSecrets, err := GetCloudVendorRegistryCredentials(imageTag)
+	if err != nil {
+		logger.L().Error("failed to GetCloudVendorRegistryCredentials", helpers.String("imageTag", imageTag), helpers.Error(err))
+	} else if len(cloudVendorSecrets) > 0 {
+		for secName := range cloudVendorSecrets {
+			secrets[secName] = cloudVendorSecrets[secName]
+		}
+	}
+	return nil
 }
 
 // GetImageRegistryCredentials returns various credentials for images in the pod
