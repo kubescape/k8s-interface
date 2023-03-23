@@ -3,9 +3,10 @@ package k8sinterface
 import (
 	"context"
 	"fmt"
-	"os"
 	"strings"
 
+	logger "github.com/kubescape/go-logger"
+	"github.com/kubescape/go-logger/helpers"
 	"k8s.io/client-go/discovery"
 	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/kubernetes"
@@ -38,25 +39,21 @@ func NewKubernetesApi() *KubernetesApi {
 	var err error
 
 	if !IsConnectedToCluster() {
-		fmt.Println(fmt.Errorf("failed to load kubernetes config: no configuration has been provided, try setting KUBECONFIG environment variable"))
-		os.Exit(1)
+		logger.L().Fatal("failed to load kubernetes config: no configuration has been provided, try setting KUBECONFIG environment variable")
 	}
 
 	kubernetesClient, err = kubernetes.NewForConfig(GetK8sConfig())
 	if err != nil {
-		fmt.Printf("failed to initialize a new kubernetes client, reason: %s", err.Error())
-		os.Exit(1)
+		logger.L().Fatal("failed to initialize a new kubernetes client", helpers.Error(err))
 	}
 	dynamicClient, err := dynamic.NewForConfig(K8SConfig)
 	if err != nil {
-		fmt.Printf("failed to initialize a new dynamic client, reason: %s", err.Error())
-		os.Exit(1)
+		logger.L().Fatal("failed to initialize a new dynamic client", helpers.Error(err))
 	}
 
 	discoveryClient, err := discovery.NewDiscoveryClientForConfig(GetK8sConfig())
 	if err != nil {
-		fmt.Printf("failed to initialize a new discovery client, reason: %s", err.Error())
-		os.Exit(1)
+		logger.L().Fatal("failed to initialize a new discovery client", helpers.Error(err))
 	}
 	restclient.SetDefaultWarningHandler(restclient.NoWarnings{})
 	InitializeMapResources(discoveryClient)
