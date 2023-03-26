@@ -1,4 +1,4 @@
-package instanceIDhandler
+package instanceidhandler
 
 type IInstanceID interface {
 	GetAPIVersion() string

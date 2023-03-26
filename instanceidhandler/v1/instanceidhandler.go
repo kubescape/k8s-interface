@@ -1,4 +1,4 @@
-package instanceIDhandler
+package instanceidhandler
 
 import (
 	"crypto/sha256"
