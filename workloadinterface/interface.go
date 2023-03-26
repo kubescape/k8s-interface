@@ -79,6 +79,22 @@ type IBasicWorkload interface {
 	RemoveResourceVersion()
 }
 
+type IInstanceID interface {
+	GetInstanceIDAPIVersion() string
+	GetInstanceIDNamespace() string
+	GetInstanceIDKind() string
+	GetInstanceIDName() string
+	GetInstanceIDContainerName() string
+	SetInstanceIDAPIVersion(string)
+	SetInstanceIDNamespace(string)
+	SetInstanceIDKind(string)
+	SetInstanceIDName(string)
+	SetInstanceIDContainerName(string)
+	GetInstanceIDStringFormatted() string
+	GetInstanceIDHashed() string
+	GetInstanceIDLabels() map[string]string
+}
+
 type IWorkload interface {
 	IBasicWorkload
 
