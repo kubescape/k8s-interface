@@ -1,8 +1,6 @@
 package workloadinterface
 
 import (
-	"crypto/sha256"
-	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"strconv"
@@ -17,28 +15,10 @@ import (
 	"k8s.io/utils/strings/slices"
 )
 
-const (
-	TypeWorkloadObject                    ObjectType = "workload"
-	instanceIDApiVersion                             = "apiVersion"
-	instanceIDNamespace                              = "namespace"
-	instanceIDKind                                   = "kind"
-	instanceIDName                                   = "name"
-	instanceIDContainerName                          = "containerName"
-	instanceIDStringFormat                           = "apiVersion-%s/namespace-%s/kind-%s/name-%s/containerName-%s"
-	instanceIDLabelFormatKeyApiGroup                 = "kubescape.io/workload-api-group"
-	instanceIDLabelFormatKeyApiVersion               = "kubescape.io/workload-api-version"
-	instanceIDLabelFormatKeyNamespace                = "kubescape.io/workload-namespace"
-	instanceIDLabelFormatKeyKind                     = "kubescape.io/workload-kind"
-	instanceIDLabelFormatKeyName                     = "kubescape.io/workload-name"
-	instanceIDLabelFormatKeyContainerName            = "kubescape.io/workload-container-name"
-)
+const TypeWorkloadObject ObjectType = "workload"
 
 type Workload struct {
 	workload map[string]interface{}
-}
-
-type InstanceID struct {
-	instance map[string]string
 }
 
 func NewWorkload(bWorkload []byte) (*Workload, error) {
@@ -705,150 +685,4 @@ func (w *Workload) GetPodStatus() (*corev1.PodStatus, error) {
 		}
 	}
 	return &status, nil
-}
-
-// splitApiVersion receives apiVersion ("group/version") returns the group and version splitted
-func splitApiVersion(apiVersion string) (string, string) {
-	group, version := "", ""
-	p := strings.Split(apiVersion, "/")
-	if len(p) >= 2 {
-		group = p[0]
-		version = p[1]
-	} else if len(p) >= 1 {
-		version = p[0]
-	}
-	return group, version
-}
-
-func (w *Workload) CreateInstanceID() ([]InstanceID, error) {
-	instanceIDs := make([]InstanceID, 0)
-	parentKind, parentName := "", ""
-
-	if w.GetKind() != "Pod" {
-		return nil, fmt.Errorf("CreateInstanceID: workload kind must be Pod for create instance ID")
-	}
-	ownerReferences, err := w.GetOwnerReferences()
-	if err != nil {
-		return nil, err
-	}
-	if len(ownerReferences) == 0 {
-		parentKind = "Pod"
-		parentName = w.GetName()
-	} else {
-		parentKind = ownerReferences[0].Kind
-		if parentKind == "Node" {
-			parentKind = "Pod"
-		}
-		parentName = ownerReferences[0].Name
-	}
-
-	containers, err := w.GetContainers()
-	if err != nil {
-		return nil, err
-	}
-
-	for i := range containers {
-		instanceID := InstanceID{
-			instance: map[string]string{
-				instanceIDApiVersion:    w.GetApiVersion(),
-				instanceIDNamespace:     w.GetNamespace(),
-				instanceIDKind:          parentKind,
-				instanceIDName:          parentName,
-				instanceIDContainerName: containers[i].Name,
-			},
-		}
-		instanceIDs = append(instanceIDs, instanceID)
-	}
-
-	return instanceIDs, nil
-}
-
-func (id *InstanceID) GetInstanceIDAPIVersion() string {
-	if id != nil {
-		return id.instance[instanceIDApiVersion]
-	}
-	return ""
-}
-
-func (id *InstanceID) GetInstanceIDNamespace() string {
-	if id != nil {
-		return id.instance[instanceIDNamespace]
-	}
-	return ""
-}
-
-func (id *InstanceID) GetInstanceIDKind() string {
-	if id != nil {
-		return id.instance[instanceIDKind]
-	}
-	return ""
-}
-
-func (id *InstanceID) GetInstanceIDName() string {
-	if id != nil {
-		return id.instance[instanceIDName]
-	}
-	return ""
-}
-
-func (id *InstanceID) GetInstanceIDContainerName() string {
-	if id != nil {
-		return id.instance[instanceIDContainerName]
-	}
-	return ""
-}
-
-func (id *InstanceID) SetInstanceIDAPIVersion(apiVersion string) {
-	if id != nil {
-		id.instance[instanceIDApiVersion] = apiVersion
-	}
-}
-
-func (id *InstanceID) SetInstanceIDNamespace(namespace string) {
-	if id != nil {
-		id.instance[instanceIDNamespace] = namespace
-	}
-}
-
-func (id *InstanceID) SetInstanceIDKind(kind string) {
-	if id != nil {
-		id.instance[instanceIDKind] = kind
-	}
-}
-
-func (id *InstanceID) SetInstanceIDName(name string) {
-	if id != nil {
-		id.instance[instanceIDName] = name
-	}
-}
-
-func (id *InstanceID) SetInstanceIDContainerName(containerName string) {
-	if id != nil {
-		id.instance[instanceIDContainerName] = containerName
-	}
-}
-
-func (id *InstanceID) GetInstanceIDStringFormatted() string {
-	return fmt.Sprintf(instanceIDStringFormat, id.GetInstanceIDAPIVersion(), id.GetInstanceIDNamespace(), id.GetInstanceIDKind(), id.GetInstanceIDName(), id.GetInstanceIDContainerName())
-}
-
-func (id *InstanceID) GetInstanceIDHashed() string {
-	hash := sha256.Sum256([]byte(id.GetInstanceIDStringFormatted()))
-	str := hex.EncodeToString(hash[:])
-	return str
-}
-
-func (id *InstanceID) GetInstanceIDLabels() map[string]string {
-	if id != nil {
-		group, version := splitApiVersion(id.GetInstanceIDAPIVersion())
-		return map[string]string{
-			instanceIDLabelFormatKeyApiGroup:      group,
-			instanceIDLabelFormatKeyApiVersion:    version,
-			instanceIDLabelFormatKeyNamespace:     id.GetInstanceIDNamespace(),
-			instanceIDLabelFormatKeyKind:          id.GetInstanceIDKind(),
-			instanceIDLabelFormatKeyName:          id.GetInstanceIDName(),
-			instanceIDLabelFormatKeyContainerName: id.GetInstanceIDContainerName(),
-		}
-	}
-	return map[string]string{}
 }
