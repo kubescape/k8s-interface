@@ -80,7 +80,7 @@ func GetImageRegistryCredentials(imageTag string, pod *corev1.Pod) (map[string]t
 	if imageTag != "" {
 		cloudVendorSecrets, err := GetCloudVendorRegistryCredentials(imageTag)
 		if err != nil {
-			logger.L().Error("failed to GetCloudVendorRegistryCredentials", helpers.String("imageTag", imageTag), helpers.Error(err))
+			logger.L().Debug("failed to GetCloudVendorRegistryCredentials", helpers.String("imageTag", imageTag), helpers.Error(err))
 		} else if len(cloudVendorSecrets) > 0 {
 			for secName := range cloudVendorSecrets {
 				secrets[secName] = cloudVendorSecrets[secName]
@@ -92,7 +92,7 @@ func GetImageRegistryCredentials(imageTag string, pod *corev1.Pod) (map[string]t
 
 			cloudVendorSecrets, err := GetCloudVendorRegistryCredentials(imageTag)
 			if err != nil {
-				logger.L().Error("failed to GetCloudVendorRegistryCredentials", helpers.String("imageTag", imageTag), helpers.Error(err))
+				logger.L().Debug("failed to GetCloudVendorRegistryCredentials", helpers.String("imageTag", imageTag), helpers.Error(err))
 			} else if len(cloudVendorSecrets) > 0 {
 				for secName := range cloudVendorSecrets {
 					secrets[secName] = cloudVendorSecrets[secName]
