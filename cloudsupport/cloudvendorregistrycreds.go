@@ -121,7 +121,7 @@ func getAzureAADAccessToken() (string, error) {
 
 	// Unmarshall response body into struct
 	var r azureADDResponseJson
-	if e := json.Unmarshal(responseBytes, &r); err != nil {
+	if e := json.Unmarshal(responseBytes, &r); e != nil {
 		return "", fmt.Errorf("failed to unmarshal the response: %w", e)
 	}
 	return r.AccessToken, nil
