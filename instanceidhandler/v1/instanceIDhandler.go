@@ -71,68 +71,43 @@ func GenerateInstanceID(w *workloadinterface.Workload) ([]InstanceID, error) {
 }
 
 func (id *InstanceID) GetAPIVersion() string {
-	if id != nil {
-		return id.apiVersion
-	}
-	return ""
+	return id.apiVersion
 }
 
 func (id *InstanceID) GetNamespace() string {
-	if id != nil {
-		return id.namespace
-	}
-	return ""
+	return id.namespace
 }
 
 func (id *InstanceID) GetKind() string {
-	if id != nil {
-		return id.kind
-	}
-	return ""
+	return id.kind
 }
 
 func (id *InstanceID) GetName() string {
-	if id != nil {
-		return id.name
-	}
-	return ""
+	return id.name
 }
 
 func (id *InstanceID) GetContainerName() string {
-	if id != nil {
-		return id.containerName
-	}
-	return ""
+	return id.containerName
 }
 
 func (id *InstanceID) SetAPIVersion(apiVersion string) {
-	if id != nil {
-		id.apiVersion = apiVersion
-	}
+	id.apiVersion = apiVersion
 }
 
 func (id *InstanceID) SetNamespace(namespace string) {
-	if id != nil {
-		id.namespace = namespace
-	}
+	id.namespace = namespace
 }
 
 func (id *InstanceID) SetKind(kind string) {
-	if id != nil {
-		id.kind = kind
-	}
+	id.kind = kind
 }
 
 func (id *InstanceID) SetName(name string) {
-	if id != nil {
-		id.name = name
-	}
+	id.name = name
 }
 
 func (id *InstanceID) SetContainerName(containerName string) {
-	if id != nil {
-		id.containerName = containerName
-	}
+	id.containerName = containerName
 }
 
 func (id *InstanceID) GetStringFormatted() string {
