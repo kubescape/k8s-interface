@@ -22,6 +22,7 @@ var (
 )
 
 func checkAllsFunctions(object string, apiversion, namespace, kind, name, containerName, formattedString, expectedHash string, expectedLabels map[string]string) error {
+
 	podWorkload, err := workloadinterface.NewWorkload([]byte(object))
 	if err != nil {
 		return fmt.Errorf(err.Error())
