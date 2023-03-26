@@ -105,12 +105,12 @@ func TestInstanceID(t *testing.T) {
 		t.Errorf("can't create instance ID from service")
 	}
 	expectedLabels := map[string]string{
-		LabelFormatKeyApiGroup:      "",
-		LabelFormatKeyApiVersion:    "v1",
-		LabelFormatKeyNamespace:     "default",
-		LabelFormatKeyKind:          "ReplicaSet",
-		LabelFormatKeyName:          "nginx-84f5585d68",
-		LabelFormatKeyContainerName: "nginx",
+		labelFormatKeyApiGroup:      "",
+		labelFormatKeyApiVersion:    "v1",
+		labelFormatKeyNamespace:     "default",
+		labelFormatKeyKind:          "ReplicaSet",
+		labelFormatKeyName:          "nginx-84f5585d68",
+		labelFormatKeyContainerName: "nginx",
 	}
 
 	err = checkAllsFunctions(deployment, "v1", "default", "ReplicaSet", "nginx-84f5585d68", "nginx", "apiVersion-v1/namespace-default/kind-ReplicaSet/name-nginx-84f5585d68/containerName-nginx", "1e1d6a960736b854844e98664e87f7bc6e43c84c04db55a952afe31e2b805689", expectedLabels)
@@ -119,12 +119,12 @@ func TestInstanceID(t *testing.T) {
 	}
 
 	expectedLabels = map[string]string{
-		LabelFormatKeyApiGroup:      "",
-		LabelFormatKeyApiVersion:    "v1",
-		LabelFormatKeyNamespace:     "default",
-		LabelFormatKeyKind:          "Job",
-		LabelFormatKeyName:          "nginx-job",
-		LabelFormatKeyContainerName: "nginx-job",
+		labelFormatKeyApiGroup:      "",
+		labelFormatKeyApiVersion:    "v1",
+		labelFormatKeyNamespace:     "default",
+		labelFormatKeyKind:          "Job",
+		labelFormatKeyName:          "nginx-job",
+		labelFormatKeyContainerName: "nginx-job",
 	}
 	err = checkAllsFunctions(jobPod, "v1", "default", "Job", "nginx", "nginx-job", "apiVersion-v1/namespace-default/kind-Job/name-nginx-job/containerName-nginx-job", "031d32a8c548dccfee4d3694890d36a44d4c8a6a5a4f689d0341ba9930e2e3ee", expectedLabels)
 	if err != nil {
@@ -132,12 +132,12 @@ func TestInstanceID(t *testing.T) {
 	}
 
 	expectedLabels = map[string]string{
-		LabelFormatKeyApiGroup:      "",
-		LabelFormatKeyApiVersion:    "v1",
-		LabelFormatKeyNamespace:     "default",
-		LabelFormatKeyKind:          "Pod",
-		LabelFormatKeyName:          "nginx",
-		LabelFormatKeyContainerName: "nginx",
+		labelFormatKeyApiGroup:      "",
+		labelFormatKeyApiVersion:    "v1",
+		labelFormatKeyNamespace:     "default",
+		labelFormatKeyKind:          "Pod",
+		labelFormatKeyName:          "nginx",
+		labelFormatKeyContainerName: "nginx",
 	}
 	err = checkAllsFunctions(mockPod, "v1", "default", "Pod", "nginx", "nginx", "apiVersion-v1/namespace-default/kind-Pod/name-nginx/containerName-nginx", "1ba506b28f9ee9c7e8a0c98840fe5a1fe21142d225ecc526fbb535d0d6344aaf", expectedLabels)
 	if err != nil {

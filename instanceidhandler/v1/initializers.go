@@ -2,6 +2,7 @@ package instanceidhandler
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/kubescape/k8s-interface/workloadinterface"
 	core1 "k8s.io/api/core/v1"
@@ -32,24 +33,36 @@ func GenerateInstanceIDFromPod(pod *core1.Pod) ([]*InstanceID, error) {
 }
 
 func GenerateInstanceIDFromString(input string) (*InstanceID, error) {
-	var apiVersion, namespace, kind, name, containerName string
-	input += "\n" // add new line to the end of the string so that Sscanf can read it
 
-	_, err := fmt.Sscanf(input, StringFormat, &apiVersion, &namespace, &kind, &name, &containerName)
-	if err != nil {
-		return nil, err
+	instanceID := &InstanceID{}
+
+	// Split the input string by the field separator "/"
+	fields := strings.Split(input, stringFormatSeparator)
+	if len(fields) != 5 && len(fields) != 6 {
+		return nil, fmt.Errorf("invalid format: %s", input)
 	}
 
-	instanceID := &InstanceID{
-		apiVersion:    apiVersion,
-		namespace:     namespace,
-		kind:          kind,
-		name:          name,
-		containerName: containerName,
+	i := 0
+	instanceID.apiVersion = strings.TrimPrefix(fields[0], prefixApiVersion)
+
+	// if the apiVersion has a group, e.g. apps/v1
+	if len(fields) == 6 {
+		instanceID.apiVersion += stringFormatSeparator + fields[1]
+		i += 1
 	}
+
+	instanceID.namespace = strings.TrimPrefix(fields[1+i], prefixNamespace)
+	instanceID.kind = strings.TrimPrefix(fields[2+i], prefixKind)
+	instanceID.name = strings.TrimPrefix(fields[3+i], prefixName)
+	instanceID.containerName = strings.TrimPrefix(fields[4+i], prefixContainer)
 
 	if err := validateInstanceID(instanceID); err != nil {
 		return nil, err
+	}
+
+	// Check if the input string is valid
+	if instanceID.GetStringFormatted() != input {
+		return nil, fmt.Errorf("invalid format: %s", input)
 	}
 
 	return instanceID, nil
