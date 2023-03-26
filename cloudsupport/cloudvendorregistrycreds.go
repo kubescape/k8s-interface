@@ -88,7 +88,7 @@ type azureADDResponseJson struct {
 func getAzureAADAccessToken() (string, error) {
 	msi_endpoint, err := url.Parse("http://169.254.169.254/metadata/identity/oauth2/token?api-version=2018-02-01")
 	if err != nil {
-		return "", fmt.Errorf("creating URL : %v", err)
+		return "", fmt.Errorf("creating URL: %w", err)
 	}
 	msi_parameters := url.Values{}
 	msi_parameters.Add("resource", "https://management.azure.com/")
@@ -121,9 +121,8 @@ func getAzureAADAccessToken() (string, error) {
 
 	// Unmarshall response body into struct
 	var r azureADDResponseJson
-	err = json.Unmarshal(responseBytes, &r)
-	if err != nil {
-		return "", fmt.Errorf("unmarshalling the response: %v", err)
+	if e := json.Unmarshal(responseBytes, &r); err != nil {
+		return "", fmt.Errorf("failed to unmarshal the response: %w", e)
 	}
 	return r.AccessToken, nil
 }
