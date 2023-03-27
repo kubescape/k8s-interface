@@ -5,9 +5,34 @@ import (
 	"encoding/hex"
 	"fmt"
 
+	"github.com/kubescape/k8s-interface/instanceidhandler"
 	"github.com/kubescape/k8s-interface/k8sinterface"
-	"github.com/kubescape/k8s-interface/workloadinterface"
 )
+
+// labels
+const (
+	labelPrefix                 = "kubescape.io"
+	labelFormatKeyApiGroup      = labelPrefix + "/workload-api-group"
+	labelFormatKeyApiVersion    = labelPrefix + "/workload-api-version"
+	labelFormatKeyNamespace     = labelPrefix + "/workload-namespace"
+	labelFormatKeyKind          = labelPrefix + "/workload-kind"
+	labelFormatKeyName          = labelPrefix + "/workload-name"
+	labelFormatKeyContainerName = labelPrefix + "/workload-container-name"
+)
+
+// string format: apiVersion-<apiVersion>/namespace-<namespace>/kind-<kind>/name-<name>/containerName-<containerName>
+const (
+	stringFormatSeparator = "/"
+	prefixApiVersion      = "apiVersion-"
+	prefixNamespace       = "namespace-"
+	prefixKind            = "kind-"
+	prefixName            = "name-"
+	prefixContainer       = "containerName-"
+	stringFormat          = prefixApiVersion + "%s" + stringFormatSeparator + prefixNamespace + "%s" + stringFormatSeparator + prefixKind + "%s" + stringFormatSeparator + prefixName + "%s" + stringFormatSeparator + prefixContainer + "%s"
+)
+
+// ensure that InstanceID implements IInstanceID
+var _ instanceidhandler.IInstanceID = &InstanceID{}
 
 type InstanceID struct {
 	apiVersion    string
@@ -15,59 +40,6 @@ type InstanceID struct {
 	kind          string
 	name          string
 	containerName string
-}
-
-const (
-	labelPrefix                 = "kubescape.io"
-	StringFormat                = "apiVersion-%s/namespace-%s/kind-%s/name-%s/containerName-%s"
-	LabelFormatKeyApiGroup      = labelPrefix + "/workload-api-group"
-	LabelFormatKeyApiVersion    = labelPrefix + "/workload-api-version"
-	LabelFormatKeyNamespace     = labelPrefix + "/workload-namespace"
-	LabelFormatKeyKind          = labelPrefix + "/workload-kind"
-	LabelFormatKeyName          = labelPrefix + "/workload-name"
-	LabelFormatKeyContainerName = labelPrefix + "/workload-container-name"
-)
-
-func GenerateInstanceID(w *workloadinterface.Workload) ([]InstanceID, error) {
-	instanceIDs := make([]InstanceID, 0)
-	parentKind, parentName := "", ""
-
-	if w.GetKind() != "Pod" {
-		return nil, fmt.Errorf("CreateInstanceID: workload kind must be Pod for create instance ID")
-	}
-	ownerReferences, err := w.GetOwnerReferences()
-	if err != nil {
-		return nil, err
-	}
-	if len(ownerReferences) == 0 {
-		parentKind = w.GetKind()
-		parentName = w.GetName()
-	} else {
-		parentKind = ownerReferences[0].Kind
-		parentName = ownerReferences[0].Name
-		if parentKind == "Node" {
-			parentKind = w.GetKind()
-			parentName = w.GetName()
-		}
-	}
-
-	containers, err := w.GetContainers()
-	if err != nil {
-		return nil, err
-	}
-
-	for i := range containers {
-		instanceID := InstanceID{
-			apiVersion:    w.GetApiVersion(),
-			namespace:     w.GetNamespace(),
-			kind:          parentKind,
-			name:          parentName,
-			containerName: containers[i].Name,
-		}
-		instanceIDs = append(instanceIDs, instanceID)
-	}
-
-	return instanceIDs, nil
 }
 
 func (id *InstanceID) GetAPIVersion() string {
@@ -111,26 +83,23 @@ func (id *InstanceID) SetContainerName(containerName string) {
 }
 
 func (id *InstanceID) GetStringFormatted() string {
-	return fmt.Sprintf(StringFormat, id.GetAPIVersion(), id.GetNamespace(), id.GetKind(), id.GetName(), id.GetContainerName())
+	return fmt.Sprintf(stringFormat, id.GetAPIVersion(), id.GetNamespace(), id.GetKind(), id.GetName(), id.GetContainerName())
 }
 
-func (id *InstanceID) GetIDHashed() string {
+func (id *InstanceID) GetHashed() string {
 	hash := sha256.Sum256([]byte(id.GetStringFormatted()))
 	str := hex.EncodeToString(hash[:])
 	return str
 }
 
 func (id *InstanceID) GetLabels() map[string]string {
-	if id != nil {
-		group, version := k8sinterface.SplitApiVersion(id.GetAPIVersion())
-		return map[string]string{
-			LabelFormatKeyApiGroup:      group,
-			LabelFormatKeyApiVersion:    version,
-			LabelFormatKeyNamespace:     id.GetNamespace(),
-			LabelFormatKeyKind:          id.GetKind(),
-			LabelFormatKeyName:          id.GetName(),
-			LabelFormatKeyContainerName: id.GetContainerName(),
-		}
+	group, version := k8sinterface.SplitApiVersion(id.GetAPIVersion())
+	return map[string]string{
+		labelFormatKeyApiGroup:      group,
+		labelFormatKeyApiVersion:    version,
+		labelFormatKeyNamespace:     id.GetNamespace(),
+		labelFormatKeyKind:          id.GetKind(),
+		labelFormatKeyName:          id.GetName(),
+		labelFormatKeyContainerName: id.GetContainerName(),
 	}
-	return map[string]string{}
 }
