@@ -61,8 +61,8 @@ func checkAllsFunctions(object string, apiversion, namespace, kind, name, contai
 		return fmt.Errorf("TestCreate: fail to format Instance ID in string format, get %s, expected %s", podWorkloadInstanceID[0].GetStringFormatted(), expected)
 	}
 	expected = expectedHash
-	if podWorkloadInstanceID[0].GetIDHashed() != expected {
-		return fmt.Errorf("TestCreate: GetHashed, get %s, expected %s", podWorkloadInstanceID[0].GetIDHashed(), expected)
+	if podWorkloadInstanceID[0].GetHashed() != expected {
+		return fmt.Errorf("TestCreate: GetHashed, get %s, expected %s", podWorkloadInstanceID[0].GetHashed(), expected)
 	}
 
 	labels := podWorkloadInstanceID[0].GetLabels()

@@ -320,7 +320,7 @@ func Test_listInstanceIDs(t *testing.T) {
 
 			for i := range got {
 				assert.Equal(t, tt.want[i].GetStringFormatted(), got[i].GetStringFormatted())
-				assert.Equal(t, tt.want[i].GetIDHashed(), got[i].GetIDHashed())
+				assert.Equal(t, tt.want[i].GetHashed(), got[i].GetHashed())
 			}
 		})
 	}

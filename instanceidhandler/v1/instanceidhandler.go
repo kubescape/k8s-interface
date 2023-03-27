@@ -5,6 +5,7 @@ import (
 	"encoding/hex"
 	"fmt"
 
+	"github.com/kubescape/k8s-interface/instanceidhandler"
 	"github.com/kubescape/k8s-interface/k8sinterface"
 )
 
@@ -29,6 +30,9 @@ const (
 	prefixContainer       = "containerName-"
 	stringFormat          = prefixApiVersion + "%s" + stringFormatSeparator + prefixNamespace + "%s" + stringFormatSeparator + prefixKind + "%s" + stringFormatSeparator + prefixName + "%s" + stringFormatSeparator + prefixContainer + "%s"
 )
+
+// ensure that InstanceID implements IInstanceID
+var _ instanceidhandler.IInstanceID = &InstanceID{}
 
 type InstanceID struct {
 	apiVersion    string
@@ -82,7 +86,7 @@ func (id *InstanceID) GetStringFormatted() string {
 	return fmt.Sprintf(stringFormat, id.GetAPIVersion(), id.GetNamespace(), id.GetKind(), id.GetName(), id.GetContainerName())
 }
 
-func (id *InstanceID) GetIDHashed() string {
+func (id *InstanceID) GetHashed() string {
 	hash := sha256.Sum256([]byte(id.GetStringFormatted()))
 	str := hex.EncodeToString(hash[:])
 	return str

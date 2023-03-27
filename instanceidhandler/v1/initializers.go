@@ -4,12 +4,14 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/kubescape/k8s-interface/instanceidhandler"
 	"github.com/kubescape/k8s-interface/workloadinterface"
+
 	core1 "k8s.io/api/core/v1"
 )
 
 // GenerateInstanceID generates instance ID from workload
-func GenerateInstanceID(w workloadinterface.IWorkload) ([]*InstanceID, error) {
+func GenerateInstanceID(w workloadinterface.IWorkload) ([]instanceidhandler.IInstanceID, error) {
 	if w.GetKind() != "Pod" {
 		return nil, fmt.Errorf("CreateInstanceID: workload kind must be Pod for create instance ID")
 	}
@@ -28,11 +30,13 @@ func GenerateInstanceID(w workloadinterface.IWorkload) ([]*InstanceID, error) {
 }
 
 // GenerateInstanceIDFromPod generates instance ID from pod
-func GenerateInstanceIDFromPod(pod *core1.Pod) ([]*InstanceID, error) {
+func GenerateInstanceIDFromPod(pod *core1.Pod) ([]instanceidhandler.IInstanceID, error) {
 	return listInstanceIDs(pod.GetOwnerReferences(), pod.Spec.Containers, pod.APIVersion, pod.GetNamespace(), pod.Kind, pod.GetName())
 }
 
-func GenerateInstanceIDFromString(input string) (*InstanceID, error) {
+// GenerateInstanceIDFromString generates instance ID from string
+// The string format is: apiVersion-<apiVersion>/namespace-<namespace>/kind-<kind>/name-<name>/containerName-<containerName>
+func GenerateInstanceIDFromString(input string) (instanceidhandler.IInstanceID, error) {
 
 	instanceID := &InstanceID{}
 

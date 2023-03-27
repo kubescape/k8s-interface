@@ -3,32 +3,33 @@ package instanceidhandler
 import (
 	"fmt"
 
+	"github.com/kubescape/k8s-interface/instanceidhandler"
 	core1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func validateInstanceID(instanceID *InstanceID) error {
-	if instanceID.apiVersion == "" {
+func validateInstanceID(instanceID instanceidhandler.IInstanceID) error {
+	if instanceID.GetAPIVersion() == "" {
 		return fmt.Errorf("invalid instanceID: apiVersion cannot be empty")
 	}
-	if instanceID.namespace == "" {
+	if instanceID.GetNamespace() == "" {
 		return fmt.Errorf("invalid instanceID: namespace cannot be empty")
 	}
-	if instanceID.kind == "" {
+	if instanceID.GetKind() == "" {
 		return fmt.Errorf("invalid instanceID: kind cannot be empty")
 	}
-	if instanceID.name == "" {
+	if instanceID.GetName() == "" {
 		return fmt.Errorf("invalid instanceID: name cannot be empty")
 	}
-	if instanceID.containerName == "" {
+	if instanceID.GetContainerName() == "" {
 		return fmt.Errorf("invalid instanceID: containerName cannot be empty")
 	}
 	return nil
 }
 
-func listInstanceIDs(ownerReferences []metav1.OwnerReference, containers []core1.Container, apiVersion, namespace, kind, name string) ([]*InstanceID, error) {
+func listInstanceIDs(ownerReferences []metav1.OwnerReference, containers []core1.Container, apiVersion, namespace, kind, name string) ([]instanceidhandler.IInstanceID, error) {
 
-	instanceIDs := make([]*InstanceID, 0)
+	instanceIDs := make([]instanceidhandler.IInstanceID, 0)
 	parentKind, parentName := "", ""
 
 	if len(ownerReferences) == 0 || ownerReferences[0].Kind == "Node" {

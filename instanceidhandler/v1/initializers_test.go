@@ -5,6 +5,7 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/kubescape/k8s-interface/instanceidhandler"
 	"github.com/kubescape/k8s-interface/workloadinterface"
 	"github.com/stretchr/testify/assert"
 	core1 "k8s.io/api/core/v1"
@@ -45,15 +46,15 @@ func TestInitInstanceID(t *testing.T) {
 
 }
 
-func compare(t *testing.T, a, b *InstanceID) {
-	assert.Equal(t, a.GetIDHashed(), b.GetIDHashed())
+func compare(t *testing.T, a, b instanceidhandler.IInstanceID) {
+	assert.Equal(t, a.GetHashed(), b.GetHashed())
 	assert.Equal(t, a.GetStringFormatted(), b.GetStringFormatted())
 
-	assert.Equal(t, a.apiVersion, b.apiVersion)
-	assert.Equal(t, a.namespace, b.namespace)
-	assert.Equal(t, a.kind, b.kind)
-	assert.Equal(t, a.name, b.name)
-	assert.Equal(t, a.containerName, b.containerName)
+	assert.Equal(t, a.GetAPIVersion(), b.GetAPIVersion())
+	assert.Equal(t, a.GetNamespace(), b.GetNamespace())
+	assert.Equal(t, a.GetKind(), b.GetKind())
+	assert.Equal(t, a.GetName(), b.GetName())
+	assert.Equal(t, a.GetContainerName(), b.GetContainerName())
 }
 
 func TestGenerateInstanceIDFromString(t *testing.T) {
