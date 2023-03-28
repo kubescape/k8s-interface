@@ -95,6 +95,7 @@ func GetListEntitiesForPoliciesEKS(eksSupport IEKSSupport, cluster string, regio
 	return listEntitiesForPoliciesInfo, nil
 }
 
+// GetListEntitiesForPoliciesAKS gets a list of entities for policies (role assignments)
 func GetListEntitiesForPoliciesAKS(aksSupport IAKSSupport, cluster string, subscriptionId string, resourceGroup string) (*CloudProviderListEntitiesForPolicies, error) {
 	// get cluster describe just to get cluster name
 	clusterDescribe, err := aksSupport.GetClusterDescribe(subscriptionId, cluster, resourceGroup)
@@ -286,6 +287,7 @@ func GetPolicyVersionEKS(eksSupport IEKSSupport, cluster string, region string) 
 	return listPolicyInfo, nil
 }
 
+// GetPolicyVersionAKS returns a list of all the role definitions that are assigned in this scope.
 func GetPolicyVersionAKS(aksSupport IAKSSupport, cluster string, subscriptionId string, resourceGroup string) (*CloudProviderPolicyVersion, error) {
 	// get cluster describe just to get cluster name
 	clusterDescribe, err := aksSupport.GetClusterDescribe(subscriptionId, cluster, resourceGroup)

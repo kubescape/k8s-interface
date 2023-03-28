@@ -126,6 +126,7 @@ func (AKSSupport *AKSSupport) ListAllRolesForScope(subscriptionId string, scope 
 
 }
 
+// ListAllRoleDefinitions - List all role definitions that are assigned in this scope
 func (AKSSupport *AKSSupport) ListAllRoleDefinitions(subscriptionId string, scope string) (*ListRoleDefinition, error) {
 	cred, err := azidentity.NewDefaultAzureCredential(nil)
 	if err != nil {
