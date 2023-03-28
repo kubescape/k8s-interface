@@ -239,8 +239,9 @@ func Test_listInstanceIDs(t *testing.T) {
 			args: args{
 				ownerReferences: []metav1.OwnerReference{
 					{
-						Kind: "ReplicasSet",
-						Name: "OwnerTest",
+						APIVersion: "apps/v1",
+						Kind:       "ReplicaSet",
+						Name:       "OwnerTest",
 					},
 				},
 				containers: []core1.Container{
@@ -255,9 +256,9 @@ func Test_listInstanceIDs(t *testing.T) {
 			},
 			want: []*InstanceID{
 				{
-					apiVersion:    "test",
+					apiVersion:    "apps/v1",
 					namespace:     "test",
-					kind:          "ReplicasSet",
+					kind:          "ReplicaSet",
 					name:          "OwnerTest",
 					containerName: "test",
 				},
@@ -269,8 +270,9 @@ func Test_listInstanceIDs(t *testing.T) {
 			args: args{
 				ownerReferences: []metav1.OwnerReference{
 					{
-						Kind: "ReplicasSet",
-						Name: "OwnerTest",
+						Kind:       "ReplicaSet",
+						Name:       "OwnerTest",
+						APIVersion: "apps/v1",
 					},
 				},
 				containers: []core1.Container{
@@ -288,16 +290,16 @@ func Test_listInstanceIDs(t *testing.T) {
 			},
 			want: []*InstanceID{
 				{
-					apiVersion:    "test",
+					apiVersion:    "apps/v1",
 					namespace:     "test",
-					kind:          "ReplicasSet",
+					kind:          "ReplicaSet",
 					name:          "OwnerTest",
 					containerName: "test-0",
 				},
 				{
-					apiVersion:    "test",
+					apiVersion:    "apps/v1",
 					namespace:     "test",
-					kind:          "ReplicasSet",
+					kind:          "ReplicaSet",
 					name:          "OwnerTest",
 					containerName: "test-1",
 				},
@@ -321,6 +323,81 @@ func Test_listInstanceIDs(t *testing.T) {
 			for i := range got {
 				assert.Equal(t, tt.want[i].GetStringFormatted(), got[i].GetStringFormatted())
 				assert.Equal(t, tt.want[i].GetHashed(), got[i].GetHashed())
+			}
+		})
+	}
+}
+
+func Test_ignoreOwnerReference(t *testing.T) {
+	type args struct {
+		ownerKind string
+	}
+	tests := []struct {
+		name string
+		args args
+		want bool
+	}{
+		{
+			name: "ignore - Node",
+			args: args{
+				ownerKind: "Node",
+			},
+			want: true,
+		},
+		{
+			name: "ignore - CRD",
+			args: args{
+				ownerKind: "Bla",
+			},
+			want: true,
+		},
+		{
+			name: "not ignore - Pod",
+			args: args{
+				ownerKind: "Pod",
+			},
+			want: false,
+		},
+		{
+			name: "not ignore",
+			args: args{
+				ownerKind: "ReplicaSet",
+			},
+			want: false,
+		},
+		{
+			name: "not ignore - StatefulSet",
+			args: args{
+				ownerKind: "StatefulSet",
+			},
+			want: false,
+		},
+		{
+			name: "not ignore - Job",
+			args: args{
+				ownerKind: "Job",
+			},
+			want: false,
+		},
+		{
+			name: "not ignore - CronJob",
+			args: args{
+				ownerKind: "CronJob",
+			},
+			want: false,
+		},
+		{
+			name: "not ignore - DaemonSet",
+			args: args{
+				ownerKind: "DaemonSet",
+			},
+			want: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := ignoreOwnerReference(tt.args.ownerKind); got != tt.want {
+				t.Errorf("ignoreOwnerReference() = %v, want %v", got, tt.want)
 			}
 		})
 	}
