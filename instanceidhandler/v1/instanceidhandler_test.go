@@ -29,7 +29,7 @@ func checkAllsFunctions(object string, apiversion, namespace, kind, name, contai
 	}
 	podWorkloadInstanceID, err := GenerateInstanceID(podWorkload)
 	if err != nil {
-		return fmt.Errorf("TestCreate: pod instance ID should be created")
+		return fmt.Errorf("TestCreate: GenerateInstanceID - pod instance ID should be created")
 	}
 	if len(podWorkloadInstanceID) != 1 {
 		return fmt.Errorf("TestCreate: should return only one ")
@@ -37,60 +37,60 @@ func checkAllsFunctions(object string, apiversion, namespace, kind, name, contai
 
 	expected := apiversion
 	if podWorkloadInstanceID[0].GetAPIVersion() != expected {
-		return fmt.Errorf("TestCreate: wrong , get %s, expected %s", podWorkloadInstanceID[0].GetAPIVersion(), expected)
+		return fmt.Errorf("TestCreate: GetAPIVersion - wrong , get %s, expected %s", podWorkloadInstanceID[0].GetAPIVersion(), expected)
 	}
 	expected = namespace
 	if podWorkloadInstanceID[0].GetNamespace() != expected {
-		return fmt.Errorf("TestCreate: wrong namespace, get %s, expected %s", podWorkloadInstanceID[0].GetNamespace(), expected)
+		return fmt.Errorf("TestCreate: GetNamespace - wrong namespace, get %s, expected %s", podWorkloadInstanceID[0].GetNamespace(), expected)
 	}
 	expected = kind
 	if podWorkloadInstanceID[0].GetKind() != expected {
-		return fmt.Errorf("TestCreate: wrong parent kind, get %s, expected %s", podWorkloadInstanceID[0].GetKind(), expected)
+		return fmt.Errorf("TestCreate: GetKind - wrong parent kind, get %s, expected %s", podWorkloadInstanceID[0].GetKind(), expected)
 	}
 	expected = name
 	if !strings.Contains(podWorkloadInstanceID[0].GetName(), expected) {
-		return fmt.Errorf("TestCreate: wrong parent name, get %s, expected %s", podWorkloadInstanceID[0].GetName(), expected)
+		return fmt.Errorf("TestCreate: GetName - wrong parent name, get %s, expected %s", podWorkloadInstanceID[0].GetName(), expected)
 	}
 	expected = containerName
 	if !strings.Contains(podWorkloadInstanceID[0].GetContainerName(), expected) {
-		return fmt.Errorf("TestCreate: wrong container name, get %s, expected %s", podWorkloadInstanceID[0].GetContainerName(), expected)
+		return fmt.Errorf("TestCreate: GetContainerName - wrong container name, get %s, expected %s", podWorkloadInstanceID[0].GetContainerName(), expected)
 	}
 	expected = formattedString
 	format := podWorkloadInstanceID[0].GetStringFormatted()
 	if format != expected {
-		return fmt.Errorf("TestCreate: fail to format Instance ID in string format, get %s, expected %s", podWorkloadInstanceID[0].GetStringFormatted(), expected)
+		return fmt.Errorf("TestCreate: GetStringFormatted - fail to format Instance ID in string format, get %s, expected %s", podWorkloadInstanceID[0].GetStringFormatted(), expected)
 	}
 	expected = expectedHash
 	if podWorkloadInstanceID[0].GetHashed() != expected {
-		return fmt.Errorf("TestCreate: GetHashed, get %s, expected %s", podWorkloadInstanceID[0].GetHashed(), expected)
+		return fmt.Errorf("TestCreate: GetHashed - GetHashed, get %s, expected %s", podWorkloadInstanceID[0].GetHashed(), expected)
 	}
 
 	labels := podWorkloadInstanceID[0].GetLabels()
 	eq := reflect.DeepEqual(labels, expectedLabels)
 	if !eq {
-		return fmt.Errorf("TestCreate: GetLabels failed, get %s, expected %s", podWorkloadInstanceID[0].GetLabels(), expectedLabels)
+		return fmt.Errorf("TestCreate: GetLabels - GetLabels failed, get %s, expected %s", podWorkloadInstanceID[0].GetLabels(), expectedLabels)
 	}
 
 	expected = "123"
 	podWorkloadInstanceID[0].SetAPIVersion(expected)
 	if podWorkloadInstanceID[0].GetAPIVersion() != expected {
-		return fmt.Errorf("TestCreate: wrong namespace, get %s, expected %s", podWorkloadInstanceID[0].GetNamespace(), expected)
+		return fmt.Errorf("TestCreate: SetAPIVersion - wrong namespace, get %s, expected %s", podWorkloadInstanceID[0].GetNamespace(), expected)
 	}
 	podWorkloadInstanceID[0].SetNamespace(expected)
 	if podWorkloadInstanceID[0].GetNamespace() != expected {
-		return fmt.Errorf("TestCreate: wrong namespace, get %s, expected %s", podWorkloadInstanceID[0].GetNamespace(), expected)
+		return fmt.Errorf("TestCreate: SetNamespace - wrong namespace, get %s, expected %s", podWorkloadInstanceID[0].GetNamespace(), expected)
 	}
 	podWorkloadInstanceID[0].SetKind(expected)
 	if podWorkloadInstanceID[0].GetKind() != expected {
-		return fmt.Errorf("TestCreate: wrong parent kind, get %s, expected %s", podWorkloadInstanceID[0].GetKind(), expected)
+		return fmt.Errorf("TestCreate: SetKind - wrong parent kind, get %s, expected %s", podWorkloadInstanceID[0].GetKind(), expected)
 	}
 	podWorkloadInstanceID[0].SetName(expected)
 	if !strings.Contains(podWorkloadInstanceID[0].GetName(), expected) {
-		return fmt.Errorf("TestCreate: wrong parent name, get %s, expected %s", podWorkloadInstanceID[0].GetName(), expected)
+		return fmt.Errorf("TestCreate: SetName - wrong parent name, get %s, expected %s", podWorkloadInstanceID[0].GetName(), expected)
 	}
 	podWorkloadInstanceID[0].SetContainerName(expected)
 	if !strings.Contains(podWorkloadInstanceID[0].GetContainerName(), expected) {
-		return fmt.Errorf("TestCreate: wrong container name, get %s, expected %s", podWorkloadInstanceID[0].GetContainerName(), expected)
+		return fmt.Errorf("TestCreate: SetContainerName - wrong container name, get %s, expected %s", podWorkloadInstanceID[0].GetContainerName(), expected)
 	}
 	return nil
 }
@@ -105,7 +105,7 @@ func TestInstanceID(t *testing.T) {
 		t.Errorf("can't create instance ID from service")
 	}
 	expectedLabels := map[string]string{
-		labelFormatKeyApiGroup:      "",
+		labelFormatKeyApiGroup:      "apps",
 		labelFormatKeyApiVersion:    "v1",
 		labelFormatKeyNamespace:     "default",
 		labelFormatKeyKind:          "ReplicaSet",
@@ -113,20 +113,20 @@ func TestInstanceID(t *testing.T) {
 		labelFormatKeyContainerName: "nginx",
 	}
 
-	err = checkAllsFunctions(deployment, "v1", "default", "ReplicaSet", "nginx-84f5585d68", "nginx", "apiVersion-v1/namespace-default/kind-ReplicaSet/name-nginx-84f5585d68/containerName-nginx", "1e1d6a960736b854844e98664e87f7bc6e43c84c04db55a952afe31e2b805689", expectedLabels)
+	err = checkAllsFunctions(deployment, "apps/v1", "default", "ReplicaSet", "nginx-84f5585d68", "nginx", "apiVersion-apps/v1/namespace-default/kind-ReplicaSet/name-nginx-84f5585d68/containerName-nginx", "57366ade3da2e7ba01f8b78251cb57bd70840939f4f207da91cb092b30c06feb", expectedLabels)
 	if err != nil {
 		t.Error(err)
 	}
 
 	expectedLabels = map[string]string{
-		labelFormatKeyApiGroup:      "",
+		labelFormatKeyApiGroup:      "batch",
 		labelFormatKeyApiVersion:    "v1",
 		labelFormatKeyNamespace:     "default",
 		labelFormatKeyKind:          "Job",
 		labelFormatKeyName:          "nginx-job",
 		labelFormatKeyContainerName: "nginx-job",
 	}
-	err = checkAllsFunctions(jobPod, "v1", "default", "Job", "nginx", "nginx-job", "apiVersion-v1/namespace-default/kind-Job/name-nginx-job/containerName-nginx-job", "031d32a8c548dccfee4d3694890d36a44d4c8a6a5a4f689d0341ba9930e2e3ee", expectedLabels)
+	err = checkAllsFunctions(jobPod, "batch/v1", "default", "Job", "nginx", "nginx-job", "apiVersion-batch/v1/namespace-default/kind-Job/name-nginx-job/containerName-nginx-job", "1fdef304b3383588f0e8a267914746de2bf03e1652908d57232cd543a87541c5", expectedLabels)
 	if err != nil {
 		t.Error(err)
 	}
