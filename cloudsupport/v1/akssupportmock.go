@@ -3,7 +3,6 @@ package v1
 import (
 	"encoding/json"
 
-	armauthorization "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/authorization/armauthorization/v2"
 	armcontainerservice "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/containerservice/armcontainerservice/v2"
 	"github.com/kubescape/k8s-interface/cloudsupport/mockobjects"
 	"github.com/kubescape/k8s-interface/k8sinterface"
@@ -23,8 +22,16 @@ func (AKSSupportM *AKSSupportMock) GetClusterDescribe(subscriptionId string, clu
 	return c, err
 }
 
-func (AKSSupportM *AKSSupportMock) ListAllRolesForScope(subscriptionId string, scope string) ([]*armauthorization.RoleAssignment, error) {
-	return nil, nil
+func (AKSSupportM *AKSSupportMock) ListAllRolesForScope(subscriptionId string, scope string) (*ListRoleAssignment, error) {
+	c := &ListRoleAssignment{}
+	err := json.Unmarshal([]byte(mockobjects.AKSListRoleAssignments), c)
+	return c, err
+}
+
+func (AKSSupportM *AKSSupportMock) ListAllRoleDefinitions(subscriptionId string, scope string) (*ListRoleDefinition, error) {
+	c := &ListRoleDefinition{}
+	err := json.Unmarshal([]byte(mockobjects.AKSListRoleDefinitions), c)
+	return c, err
 }
 func (AKSSupportM *AKSSupportMock) GetContextName(managedCluster *armcontainerservice.ManagedCluster) string {
 	return "daniel"

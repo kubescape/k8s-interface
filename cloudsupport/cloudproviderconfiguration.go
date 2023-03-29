@@ -145,8 +145,19 @@ func GetListEntitiesForPoliciesFromCloudProvider(cluster string, cloudProvider s
 		//TODO - implement GKE support
 		return nil, fmt.Errorf(cloudsupportv1.NotSupportedMsg)
 	case cloudsupportv1.AKS:
-		//TODO - implement AKS support
-		return nil, fmt.Errorf(cloudsupportv1.NotSupportedMsg)
+		aksSupport := cloudsupportv1.NewAKSSupport()
+		subscriptionID, err := aksSupport.GetSubscriptionID()
+		if err != nil {
+			return nil, err
+		}
+		resourceGroup, err := aksSupport.GetResourceGroup()
+		if err != nil {
+			return nil, err
+		}
+		listEntitiesForPolicies, err = cloudsupportv1.GetListEntitiesForPoliciesAKS(aksSupport, cluster, subscriptionID, resourceGroup)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return listEntitiesForPolicies, nil
@@ -171,8 +182,19 @@ func GetPolicyVersionFromCloudProvider(cluster string, cloudProvider string) (wo
 		//TODO - implement GKE support
 		return nil, fmt.Errorf(cloudsupportv1.NotSupportedMsg)
 	case cloudsupportv1.AKS:
-		//TODO - implement AKS support
-		return nil, fmt.Errorf(cloudsupportv1.NotSupportedMsg)
+		aksSupport := cloudsupportv1.NewAKSSupport()
+		subscriptionID, err := aksSupport.GetSubscriptionID()
+		if err != nil {
+			return nil, err
+		}
+		resourceGroup, err := aksSupport.GetResourceGroup()
+		if err != nil {
+			return nil, err
+		}
+		policyVersion, err = cloudsupportv1.GetPolicyVersionAKS(aksSupport, cluster, subscriptionID, resourceGroup)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return policyVersion, nil
