@@ -95,6 +95,39 @@ func GetListEntitiesForPoliciesEKS(eksSupport IEKSSupport, cluster string, regio
 	return listEntitiesForPoliciesInfo, nil
 }
 
+// GetListEntitiesForPoliciesAKS gets a list of entities for policies (role assignments)
+func GetListEntitiesForPoliciesAKS(aksSupport IAKSSupport, cluster string, subscriptionId string, resourceGroup string) (*CloudProviderListEntitiesForPolicies, error) {
+	// get cluster describe just to get cluster name
+	clusterDescribe, err := aksSupport.GetClusterDescribe(subscriptionId, cluster, resourceGroup)
+	if err != nil {
+		return nil, err
+	}
+	scope := fmt.Sprintf("/subscriptions/%s", subscriptionId)
+	listEntitiesForPolicies, err := aksSupport.ListAllRolesForScope(subscriptionId, scope)
+	if err != nil {
+		return nil, err
+	}
+
+	resultInBytes, err := json.Marshal(listEntitiesForPolicies)
+	if err != nil {
+		return nil, err
+	}
+	// set listEntitiesForPoliciesInfo object
+	listEntitiesForPoliciesInfo := &CloudProviderListEntitiesForPolicies{}
+	listEntitiesForPoliciesInfo.SetApiVersion(k8sinterface.JoinGroupVersion(apis.ApiVersionAKS, Version))
+	listEntitiesForPoliciesInfo.SetName(aksSupport.GetContextName(clusterDescribe))
+	listEntitiesForPoliciesInfo.SetProvider(AKS)
+	listEntitiesForPoliciesInfo.SetKind(apis.CloudProviderListEntitiesForPoliciesKind)
+
+	data := map[string]interface{}{}
+	if err := json.Unmarshal(resultInBytes, &data); err != nil {
+		return nil, err
+	}
+	listEntitiesForPoliciesInfo.SetData(data)
+
+	return listEntitiesForPoliciesInfo, nil
+}
+
 // ================================ DescribeRepositories ================================
 
 func GetDescribeRepositoriesEKS(eksSupport IEKSSupport, cluster string, region string) (*CloudProviderDescribeRepositories, error) {
@@ -243,6 +276,44 @@ func GetPolicyVersionEKS(eksSupport IEKSSupport, cluster string, region string) 
 	listPolicyInfo.SetApiVersion(k8sinterface.JoinGroupVersion(apis.ApiVersionEKS, Version))
 	listPolicyInfo.SetName(eksSupport.GetName(clusterDescribe))
 	listPolicyInfo.SetProvider(EKS)
+	listPolicyInfo.SetKind(apis.CloudProviderPolicyVersionKind)
+
+	data := map[string]interface{}{}
+	if err := json.Unmarshal(resultInBytes, &data); err != nil {
+		return nil, err
+	}
+	listPolicyInfo.SetData(data)
+
+	return listPolicyInfo, nil
+}
+
+// GetPolicyVersionAKS returns a list of all the role definitions that are assigned in this scope.
+func GetPolicyVersionAKS(aksSupport IAKSSupport, cluster string, subscriptionId string, resourceGroup string) (*CloudProviderPolicyVersion, error) {
+	// get cluster describe just to get cluster name
+	clusterDescribe, err := aksSupport.GetClusterDescribe(subscriptionId, cluster, resourceGroup)
+	if err != nil {
+		return nil, err
+	}
+
+	scope := fmt.Sprintf("/subscriptions/%s", subscriptionId)
+	listPolicyVersion, err := aksSupport.ListAllRoleDefinitions(subscriptionId, scope)
+	if err != nil {
+		return nil, err
+	}
+	if listPolicyVersion == nil {
+		return nil, fmt.Errorf("error getting cluster descriptive information")
+	}
+
+	resultInBytes, err := json.Marshal(listPolicyVersion)
+	if err != nil {
+		return nil, err
+	}
+
+	// set listEntitiesForPoliciesInfo object
+	listPolicyInfo := &CloudProviderPolicyVersion{}
+	listPolicyInfo.SetApiVersion(k8sinterface.JoinGroupVersion(apis.ApiVersionAKS, Version))
+	listPolicyInfo.SetName(aksSupport.GetContextName(clusterDescribe))
+	listPolicyInfo.SetProvider(AKS)
 	listPolicyInfo.SetKind(apis.CloudProviderPolicyVersionKind)
 
 	data := map[string]interface{}{}

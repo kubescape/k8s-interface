@@ -313,13 +313,6 @@ var GkeDescriptor = `    {
 }`
 
 var EksDescribeRepositories = `{
-    "apiVersion": "eks.amazonaws.com/v1",
-    "kind": "DescribeRepositories",
-    "metadata": {
-        "name": "ca-terraform-eks-dev-stage",
-        "provider": "eks"
-    },
-    "data": {
         "NextToken": null,
         "Repositories": [
             {
@@ -351,55 +344,46 @@ var EksDescribeRepositories = `{
             }
         ],
         "ResultMetadata": {}
-    }
 }
     `
 
 var EksListEntitiesForPolicies = `
 {
-    "apiVersion": "eks.amazonaws.com/v1",
-    "kind": "ListEntitiesForPolicies",
-    "metadata": {
-        "name": "ca-terraform-eks-dev-stage",
-        "provider": "eks"
-    },
-    "data": {
-        "rolesPolicies": {
-            "arn:aws:iam::XXXXXXXXXXXX:policy/FullAccess": {
-                "IsTruncated": false,
-                "Marker": null,
-                "PolicyGroups": [
-                    {
-                        "GroupId": "XXXXXXXXXXXX",
-                        "GroupName": "Developers"
-                    }
-                ],
-                "PolicyRoles": [],
-                "PolicyUsers": [
-                    {
-                        "UserId": "XXXXXXXXXXXX",
-                        "UserName": "my-user"
-                    }
-                ],
-                "ResultMetadata": {}
-            },
-            "arn:aws:iam::XXXXXXXXXXXX:policy/DevStage": {
-                "IsTruncated": false,
-                "Marker": null,
-                "PolicyGroups": [],
-                "PolicyRoles": [
-                    {
-                        "RoleId": "XXXXXXXXXXXX",
-                        "RoleName": "eks-dev"
-                    },
-                    {
-                        "RoleId": "XXXXXXXXXXXX",
-                        "RoleName": "eks-dev-test"
-                    }
-                ],
-                "PolicyUsers": [],
-                "ResultMetadata": {}
-            }
+    "rolesPolicies": {
+        "arn:aws:iam::XXXXXXXXXXXX:policy/FullAccess": {
+            "IsTruncated": false,
+            "Marker": null,
+            "PolicyGroups": [
+                {
+                    "GroupId": "XXXXXXXXXXXX",
+                    "GroupName": "Developers"
+                }
+            ],
+            "PolicyRoles": [],
+            "PolicyUsers": [
+                {
+                    "UserId": "XXXXXXXXXXXX",
+                    "UserName": "my-user"
+                }
+            ],
+            "ResultMetadata": {}
+        },
+        "arn:aws:iam::XXXXXXXXXXXX:policy/DevStage": {
+            "IsTruncated": false,
+            "Marker": null,
+            "PolicyGroups": [],
+            "PolicyRoles": [
+                {
+                    "RoleId": "XXXXXXXXXXXX",
+                    "RoleName": "eks-dev"
+                },
+                {
+                    "RoleId": "XXXXXXXXXXXX",
+                    "RoleName": "eks-dev-test"
+                }
+            ],
+            "PolicyUsers": [],
+            "ResultMetadata": {}
         }
     }
 }
@@ -454,5 +438,135 @@ var EksGetPolicyVersion = `
             }
         }
     }
+}
+`
+
+var AKSListRoleAssignments = `
+    {
+        "roleAssignments": [
+            {
+                "id": "/subscriptions/********/providers/Microsoft.Authorization/roleAssignments/b925e22e-a17f-4228-b268-bed5500e463a",
+                "name": "b925e22e-a17f-4228-b268-bed5500e463a",
+                "properties": {
+                    "createdBy": "*******",
+                    "createdOn": "2022-12-25T09:58:55.3897463Z",
+                    "principalId": "123456789",
+                    "principalType": "User",
+                    "roleDefinitionId": "/subscriptions/********/providers/Microsoft.Authorization/roleDefinitions/2222222",
+                    "scope": "/subscriptions/********",
+                    "updatedBy": "*******",
+                    "updatedOn": "2022-12-25T09:58:55.3897463Z"
+                },
+                "type": "Microsoft.Authorization/roleAssignments"
+            },
+            {
+                "id": "/subscriptions/*********/providers/Microsoft.Authorization/roleAssignments/98765",
+                "name": "98765",
+                "properties": {
+                    "createdBy": "******",
+                    "createdOn": "2023-02-12T11:50:35.2541275Z",
+                    "principalId": "8fd8eace-5423-4110-b6c8-38f94223bca7",
+                    "principalType": "Group",
+                    "roleDefinitionId": "/subscriptions/*********/providers/Microsoft.Authorization/roleDefinitions/b24988ac-6180-42a0-ab88-20f7382dd24c",
+                    "scope": "/subscriptions/*********",
+                    "updatedBy": "******",
+                    "updatedOn": "2023-02-12T11:50:35.2541275Z"
+                },
+                "type": "Microsoft.Authorization/roleAssignments"
+            },
+            {
+                "id": "/subscriptions/*********/resourceGroups/MC_matan-nypnk-rg_matan-nypnk-aks_northeurope/providers/Microsoft.Authorization/roleAssignments/987654321",
+                "name": "987654321",
+                "properties": {
+                    "createdBy": "123456",
+                    "createdOn": "2023-03-14T11:49:41.0899644Z",
+                    "principalId": "1234561234",
+                    "principalType": "ServicePrincipal",
+                    "roleDefinitionId": "/subscriptions/*********/providers/Microsoft.Authorization/roleDefinitions/b24988ac-6180-42a0-ab88-20f7382dd24c",
+                    "scope": "/subscriptions/*********/resourceGroups/MC_matan-nypnk-rg_matan-nypnk-aks_northeurope",
+                    "updatedBy": "123456",
+                    "updatedOn": "2023-03-14T11:49:41.0899644Z"
+                },
+                "type": "Microsoft.Authorization/roleAssignments"
+            }
+        ]
+}`
+
+var AKSListRoleDefinitions = `
+{
+    "roleDefinitions": [
+        {
+            "properties": {
+                "assignableScopes": [
+                    "/"
+                ],
+                "description": "acr push",
+                "permissions": [
+                    {
+                        "actions": [
+                            "Microsoft.ContainerRegistry/registries/pull/read",
+                            "Microsoft.ContainerRegistry/registries/push/write"
+                        ],
+                        "notActions": []
+                    }
+                ],
+                "roleName": "AcrPush",
+                "type": "BuiltInRole"
+            },
+            "id": "/subscriptions/05fed2cc-041d-4c53-b4b8-a1aa128d189f/providers/Microsoft.Authorization/roleDefinitions/8311e382-0749-4cb8-b61a-304f252e45ec",
+            "name": "8311e382-0749-4cb8-b61a-304f252e45ec",
+            "type": "Microsoft.Authorization/roleDefinitions"
+        },
+        {
+            "properties": {
+                "assignableScopes": [
+                    "/"
+                ],
+                "description": "Used by the Avere vFXT cluster to manage the cluster",
+                "permissions": [
+                    {
+                        "actions": [
+                            "Microsoft.Compute/virtualMachines/read",
+                            "Microsoft.Network/networkInterfaces/read",
+                            "Microsoft.Network/virtualNetworks/read",
+                            "Microsoft.Network/virtualNetworks/subnets/read",
+                            "Microsoft.Resources/subscriptions/resourceGroups/read",
+                            "Microsoft.Storage/storageAccounts/blobServices/containers/read"
+                        ],
+                        "notActions": []
+                    }
+                ],
+                "roleName": "Avere Operator",
+                "type": "BuiltInRole"
+            },
+            "id": "/subscriptions/05fed2cc-041d-4c53-b4b8-a1aa128d189f/providers/Microsoft.Authorization/roleDefinitions/c025889f-8102-4ebf-b32c-fc0c6f0c6bd9",
+            "name": "c025889f-8102-4ebf-b32c-fc0c6f0c6bd9",
+            "type": "Microsoft.Authorization/roleDefinitions"
+        },
+        {
+            "properties": {
+                "assignableScopes": [
+                    "/"
+                ],
+                "description": "Lets you manage Azure Stack registrations.",
+                "permissions": [
+                    {
+                        "actions": [
+                            "Microsoft.AzureStack/edgeSubscriptions/read",
+                            "Microsoft.AzureStack/registrations/products/*/action",
+                            "Microsoft.AzureStack/registrations/products/read",
+                            "Microsoft.AzureStack/registrations/read"
+                        ],
+                        "notActions": []
+                    }
+                ],
+                "roleName": "Azure Stack Registration Owner",
+                "type": "BuiltInRole"
+            },
+            "id": "/subscriptions/05fed2cc-041d-4c53-b4b8-a1aa128d189f/providers/Microsoft.Authorization/roleDefinitions/6f12a6df-dd06-4f3e-bcb1-ce8be600526a",
+            "name": "6f12a6df-dd06-4f3e-bcb1-ce8be600526a",
+            "type": "Microsoft.Authorization/roleDefinitions"
+        }
+    ]
 }
 `
