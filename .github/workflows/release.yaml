@@ -12,6 +12,9 @@ jobs:
   test:
     permissions:
       pull-requests: write
+      actions: read
+      contents: read
+      security-events: write
     uses: kubescape/workflows/.github/workflows/go-basic-tests.yaml@main
     with:
       GO_VERSION: 1.19
