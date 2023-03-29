@@ -22,8 +22,11 @@ const (
 
 // annotations
 const (
-	annotationPrefix                  = "kubescape.io"
-	AnnotationsFormatForInstanceIDKey = annotationPrefix + "/instance-id"
+	annotationPrefix        = "kubescape.io"
+	ImageTagAnnotationKey   = annotationPrefix + "/image-tag"
+	InstanceIDAnnotationKey = annotationPrefix + "/instance-id"
+	StatusAnnotationKey     = annotationPrefix + "/status"
+	WlidAnnotationKey       = annotationPrefix + "/wlid"
 )
 
 // string format: apiVersion-<apiVersion>/namespace-<namespace>/kind-<kind>/name-<name>/containerName-<containerName>
