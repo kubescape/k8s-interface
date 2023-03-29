@@ -20,6 +20,15 @@ const (
 	labelFormatKeyContainerName = labelPrefix + "/workload-container-name"
 )
 
+// annotations
+const (
+	annotationPrefix        = "kubescape.io"
+	ImageTagAnnotationKey   = annotationPrefix + "/image-tag"
+	InstanceIDAnnotationKey = annotationPrefix + "/instance-id"
+	StatusAnnotationKey     = annotationPrefix + "/status"
+	WlidAnnotationKey       = annotationPrefix + "/wlid"
+)
+
 // string format: apiVersion-<apiVersion>/namespace-<namespace>/kind-<kind>/name-<name>/containerName-<containerName>
 const (
 	stringFormatSeparator = "/"
