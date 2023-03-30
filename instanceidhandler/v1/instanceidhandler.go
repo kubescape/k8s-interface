@@ -12,12 +12,12 @@ import (
 // labels
 const (
 	labelPrefix                 = "kubescape.io"
-	labelFormatKeyApiGroup      = labelPrefix + "/workload-api-group"
-	labelFormatKeyApiVersion    = labelPrefix + "/workload-api-version"
-	labelFormatKeyNamespace     = labelPrefix + "/workload-namespace"
-	labelFormatKeyKind          = labelPrefix + "/workload-kind"
-	labelFormatKeyName          = labelPrefix + "/workload-name"
-	labelFormatKeyContainerName = labelPrefix + "/workload-container-name"
+	LabelFormatKeyApiGroup      = labelPrefix + "/workload-api-group"
+	LabelFormatKeyApiVersion    = labelPrefix + "/workload-api-version"
+	LabelFormatKeyNamespace     = labelPrefix + "/workload-namespace"
+	LabelFormatKeyKind          = labelPrefix + "/workload-kind"
+	LabelFormatKeyName          = labelPrefix + "/workload-name"
+	LabelFormatKeyContainerName = labelPrefix + "/workload-container-name"
 )
 
 // annotations
