@@ -105,11 +105,11 @@ func (id *InstanceID) GetHashed() string {
 func (id *InstanceID) GetLabels() map[string]string {
 	group, version := k8sinterface.SplitApiVersion(id.GetAPIVersion())
 	return map[string]string{
-		labelFormatKeyApiGroup:      group,
-		labelFormatKeyApiVersion:    version,
-		labelFormatKeyNamespace:     id.GetNamespace(),
-		labelFormatKeyKind:          id.GetKind(),
-		labelFormatKeyName:          id.GetName(),
-		labelFormatKeyContainerName: id.GetContainerName(),
+		LabelFormatKeyApiGroup:      group,
+		LabelFormatKeyApiVersion:    version,
+		LabelFormatKeyNamespace:     id.GetNamespace(),
+		LabelFormatKeyKind:          id.GetKind(),
+		LabelFormatKeyName:          id.GetName(),
+		LabelFormatKeyContainerName: id.GetContainerName(),
 	}
 }
