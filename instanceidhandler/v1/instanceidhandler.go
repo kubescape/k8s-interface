@@ -12,12 +12,12 @@ import (
 // labels
 const (
 	labelPrefix                 = "kubescape.io"
-	labelFormatKeyApiGroup      = labelPrefix + "/workload-api-group"
-	labelFormatKeyApiVersion    = labelPrefix + "/workload-api-version"
-	labelFormatKeyNamespace     = labelPrefix + "/workload-namespace"
-	labelFormatKeyKind          = labelPrefix + "/workload-kind"
-	labelFormatKeyName          = labelPrefix + "/workload-name"
-	labelFormatKeyContainerName = labelPrefix + "/workload-container-name"
+	LabelFormatKeyApiGroup      = labelPrefix + "/workload-api-group"
+	LabelFormatKeyApiVersion    = labelPrefix + "/workload-api-version"
+	LabelFormatKeyNamespace     = labelPrefix + "/workload-namespace"
+	LabelFormatKeyKind          = labelPrefix + "/workload-kind"
+	LabelFormatKeyName          = labelPrefix + "/workload-name"
+	LabelFormatKeyContainerName = labelPrefix + "/workload-container-name"
 )
 
 // annotations
@@ -105,11 +105,11 @@ func (id *InstanceID) GetHashed() string {
 func (id *InstanceID) GetLabels() map[string]string {
 	group, version := k8sinterface.SplitApiVersion(id.GetAPIVersion())
 	return map[string]string{
-		labelFormatKeyApiGroup:      group,
-		labelFormatKeyApiVersion:    version,
-		labelFormatKeyNamespace:     id.GetNamespace(),
-		labelFormatKeyKind:          id.GetKind(),
-		labelFormatKeyName:          id.GetName(),
-		labelFormatKeyContainerName: id.GetContainerName(),
+		LabelFormatKeyApiGroup:      group,
+		LabelFormatKeyApiVersion:    version,
+		LabelFormatKeyNamespace:     id.GetNamespace(),
+		LabelFormatKeyKind:          id.GetKind(),
+		LabelFormatKeyName:          id.GetName(),
+		LabelFormatKeyContainerName: id.GetContainerName(),
 	}
 }
