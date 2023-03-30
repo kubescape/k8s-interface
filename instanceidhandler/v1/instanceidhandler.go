@@ -23,6 +23,7 @@ const (
 // annotations
 const (
 	annotationPrefix        = "kubescape.io"
+	ImageNameAnnotationKey  = annotationPrefix + "/image-name"
 	ImageTagAnnotationKey   = annotationPrefix + "/image-tag"
 	InstanceIDAnnotationKey = annotationPrefix + "/instance-id"
 	StatusAnnotationKey     = annotationPrefix + "/status"
