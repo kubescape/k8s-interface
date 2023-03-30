@@ -9,25 +9,20 @@ import (
 	"github.com/kubescape/k8s-interface/k8sinterface"
 )
 
-// labels
+// metadata keys
 const (
-	labelPrefix                 = "kubescape.io"
-	labelFormatKeyApiGroup      = labelPrefix + "/workload-api-group"
-	labelFormatKeyApiVersion    = labelPrefix + "/workload-api-version"
-	labelFormatKeyNamespace     = labelPrefix + "/workload-namespace"
-	labelFormatKeyKind          = labelPrefix + "/workload-kind"
-	labelFormatKeyName          = labelPrefix + "/workload-name"
-	labelFormatKeyContainerName = labelPrefix + "/workload-container-name"
-)
-
-// annotations
-const (
-	annotationPrefix        = "kubescape.io"
-	ImageNameAnnotationKey  = annotationPrefix + "/image-name"
-	ImageTagAnnotationKey   = annotationPrefix + "/image-tag"
-	InstanceIDAnnotationKey = annotationPrefix + "/instance-id"
-	StatusAnnotationKey     = annotationPrefix + "/status"
-	WlidAnnotationKey       = annotationPrefix + "/wlid"
+	metadataPrefix           = "kubescape.io"
+	ApiGroupMetadataKey      = metadataPrefix + "/workload-api-group"
+	ApiVersionMetadataKey    = metadataPrefix + "/workload-api-version"
+	ContainerNameMetadataKey = metadataPrefix + "/workload-container-name"
+	ImageNameMetadataKey     = metadataPrefix + "/image-name"
+	ImageTagMetadataKey      = metadataPrefix + "/image-tag"
+	InstanceIDMetadataKey    = metadataPrefix + "/instance-id"
+	KindMetadataKey          = metadataPrefix + "/workload-kind"
+	NameMetadataKey          = metadataPrefix + "/workload-name"
+	NamespaceMetadataKey     = metadataPrefix + "/workload-namespace"
+	StatusMetadataKey        = metadataPrefix + "/status"
+	WlidMetadataKey          = metadataPrefix + "/wlid"
 )
 
 // string format: apiVersion-<apiVersion>/namespace-<namespace>/kind-<kind>/name-<name>/containerName-<containerName>
@@ -105,11 +100,11 @@ func (id *InstanceID) GetHashed() string {
 func (id *InstanceID) GetLabels() map[string]string {
 	group, version := k8sinterface.SplitApiVersion(id.GetAPIVersion())
 	return map[string]string{
-		labelFormatKeyApiGroup:      group,
-		labelFormatKeyApiVersion:    version,
-		labelFormatKeyNamespace:     id.GetNamespace(),
-		labelFormatKeyKind:          id.GetKind(),
-		labelFormatKeyName:          id.GetName(),
-		labelFormatKeyContainerName: id.GetContainerName(),
+		ApiGroupMetadataKey:      group,
+		ApiVersionMetadataKey:    version,
+		NamespaceMetadataKey:     id.GetNamespace(),
+		KindMetadataKey:          id.GetKind(),
+		NameMetadataKey:          id.GetName(),
+		ContainerNameMetadataKey: id.GetContainerName(),
 	}
 }
