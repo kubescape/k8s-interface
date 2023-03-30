@@ -105,12 +105,12 @@ func TestInstanceID(t *testing.T) {
 		t.Errorf("can't create instance ID from service")
 	}
 	expectedLabels := map[string]string{
-		LabelFormatKeyApiGroup:      "apps",
-		LabelFormatKeyApiVersion:    "v1",
-		LabelFormatKeyNamespace:     "default",
-		LabelFormatKeyKind:          "ReplicaSet",
-		LabelFormatKeyName:          "nginx-84f5585d68",
-		LabelFormatKeyContainerName: "nginx",
+		ApiGroupMetadataKey:      "apps",
+		ApiVersionMetadataKey:    "v1",
+		NamespaceMetadataKey:     "default",
+		KindMetadataKey:          "ReplicaSet",
+		NameMetadataKey:          "nginx-84f5585d68",
+		ContainerNameMetadataKey: "nginx",
 	}
 
 	err = checkAllsFunctions(deployment, "apps/v1", "default", "ReplicaSet", "nginx-84f5585d68", "nginx", "apiVersion-apps/v1/namespace-default/kind-ReplicaSet/name-nginx-84f5585d68/containerName-nginx", "57366ade3da2e7ba01f8b78251cb57bd70840939f4f207da91cb092b30c06feb", expectedLabels)
@@ -119,12 +119,12 @@ func TestInstanceID(t *testing.T) {
 	}
 
 	expectedLabels = map[string]string{
-		LabelFormatKeyApiGroup:      "batch",
-		LabelFormatKeyApiVersion:    "v1",
-		LabelFormatKeyNamespace:     "default",
-		LabelFormatKeyKind:          "Job",
-		LabelFormatKeyName:          "nginx-job",
-		LabelFormatKeyContainerName: "nginx-job",
+		ApiGroupMetadataKey:      "batch",
+		ApiVersionMetadataKey:    "v1",
+		NamespaceMetadataKey:     "default",
+		KindMetadataKey:          "Job",
+		NameMetadataKey:          "nginx-job",
+		ContainerNameMetadataKey: "nginx-job",
 	}
 	err = checkAllsFunctions(jobPod, "batch/v1", "default", "Job", "nginx", "nginx-job", "apiVersion-batch/v1/namespace-default/kind-Job/name-nginx-job/containerName-nginx-job", "1fdef304b3383588f0e8a267914746de2bf03e1652908d57232cd543a87541c5", expectedLabels)
 	if err != nil {
@@ -132,12 +132,12 @@ func TestInstanceID(t *testing.T) {
 	}
 
 	expectedLabels = map[string]string{
-		LabelFormatKeyApiGroup:      "",
-		LabelFormatKeyApiVersion:    "v1",
-		LabelFormatKeyNamespace:     "default",
-		LabelFormatKeyKind:          "Pod",
-		LabelFormatKeyName:          "nginx",
-		LabelFormatKeyContainerName: "nginx",
+		ApiGroupMetadataKey:      "",
+		ApiVersionMetadataKey:    "v1",
+		NamespaceMetadataKey:     "default",
+		KindMetadataKey:          "Pod",
+		NameMetadataKey:          "nginx",
+		ContainerNameMetadataKey: "nginx",
 	}
 	err = checkAllsFunctions(mockPod, "v1", "default", "Pod", "nginx", "nginx", "apiVersion-v1/namespace-default/kind-Pod/name-nginx/containerName-nginx", "1ba506b28f9ee9c7e8a0c98840fe5a1fe21142d225ecc526fbb535d0d6344aaf", expectedLabels)
 	if err != nil {
