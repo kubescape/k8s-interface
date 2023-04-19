@@ -23,6 +23,13 @@ const (
 	NamespaceMetadataKey     = metadataPrefix + "/workload-namespace"
 	StatusMetadataKey        = metadataPrefix + "/status"
 	WlidMetadataKey          = metadataPrefix + "/wlid"
+	ContextMetadataKey       = metadataPrefix + "/context"
+)
+
+// metadata values
+const (
+	ContextMetadataKeyFiltered    = "filtered"
+	ContextMetadataKeyNonFiltered = "non-filtered"
 )
 
 // string format: apiVersion-<apiVersion>/namespace-<namespace>/kind-<kind>/name-<name>/containerName-<containerName>
