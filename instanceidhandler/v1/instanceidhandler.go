@@ -17,6 +17,7 @@ const (
 	ContainerNameMetadataKey = metadataPrefix + "/workload-container-name"
 	ImageNameMetadataKey     = metadataPrefix + "/image-name"
 	ImageTagMetadataKey      = metadataPrefix + "/image-tag"
+	ImageIDMetadataKey      = metadataPrefix + "/image-id"
 	InstanceIDMetadataKey    = metadataPrefix + "/instance-id"
 	KindMetadataKey          = metadataPrefix + "/workload-kind"
 	NameMetadataKey          = metadataPrefix + "/workload-name"
