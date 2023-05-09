@@ -44,6 +44,11 @@ const (
 	stringFormat          = prefixApiVersion + "%s" + stringFormatSeparator + prefixNamespace + "%s" + stringFormatSeparator + prefixKind + "%s" + stringFormatSeparator + prefixName + "%s" + stringFormatSeparator + prefixContainer + "%s"
 )
 
+// SBOM/VULN object statuses
+const (
+	Incomplete = "incomplete"
+)
+
 // ensure that InstanceID implements IInstanceID
 var _ instanceidhandler.IInstanceID = &InstanceID{}
 
