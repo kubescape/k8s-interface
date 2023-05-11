@@ -14,4 +14,6 @@ type IInstanceID interface {
 	GetStringFormatted() string
 	GetHashed() string
 	GetLabels() map[string]string
+	// GetFriendlyName returns a string with a human-friendly name
+	GetFriendlyName() (string, error)
 }

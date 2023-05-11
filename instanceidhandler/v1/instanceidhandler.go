@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	"github.com/kubescape/k8s-interface/instanceidhandler"
+	"github.com/kubescape/k8s-interface/names"
 	"github.com/kubescape/k8s-interface/k8sinterface"
 )
 
@@ -17,7 +18,7 @@ const (
 	ContainerNameMetadataKey = metadataPrefix + "/workload-container-name"
 	ImageNameMetadataKey     = metadataPrefix + "/image-name"
 	ImageTagMetadataKey      = metadataPrefix + "/image-tag"
-	ImageIDMetadataKey      = metadataPrefix + "/image-id"
+	ImageIDMetadataKey       = metadataPrefix + "/image-id"
 	InstanceIDMetadataKey    = metadataPrefix + "/instance-id"
 	KindMetadataKey          = metadataPrefix + "/workload-kind"
 	NameMetadataKey          = metadataPrefix + "/workload-name"
@@ -120,4 +121,8 @@ func (id *InstanceID) GetLabels() map[string]string {
 		NameMetadataKey:          id.GetName(),
 		ContainerNameMetadataKey: id.GetContainerName(),
 	}
+}
+
+func (id *InstanceID) GetFriendlyName() (string, error) {
+	return names.InstanceIDToFriendlyName(id.GetName(), id.GetNamespace() , id.GetKind(), id.GetHashed())
 }
