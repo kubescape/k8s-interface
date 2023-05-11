@@ -312,9 +312,7 @@ func listPoliciesWithPagination(svc *iam.Client, input *iam.ListPoliciesInput) (
 		if err != nil {
 			return nil, fmt.Errorf("error: fail to list policies: %v", err)
 		}
-		for _, policy := range output.Policies {
-			policiesList = append(policiesList, policy)
-		}
+		policiesList = append(policiesList, output.Policies...)
 	}
 	return policiesList, nil
 }
