@@ -1,7 +1,6 @@
 package cloudsupport
 
 import (
-	"bytes"
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
@@ -11,12 +10,6 @@ import (
 	"os"
 	"strings"
 	"time"
-
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/ecr"
-	"github.com/docker/docker/api/types"
-	cloudsupportv1 "github.com/kubescape/k8s-interface/cloudsupport/v1"
 )
 
 // For GCR there are some permissions one need to assign in order to allow ARMO to pull images:
@@ -38,36 +31,6 @@ var (
 // CheckIsECRImage check if this image is suspected as ECR hosted image
 func CheckIsECRImage(imageTag string) bool {
 	return strings.Contains(imageTag, "dkr.ecr")
-}
-
-// GetLoginDetailsForECR return user name + password using the default iam-role OR ~/.aws/config of the machine
-func GetLoginDetailsForECR(imageTag string) (string, string, error) {
-	// imageTag := "015253967648.dkr.ecr.eu-central-1.amazonaws.com/armo:1"
-	imageTagSlices := strings.Split(imageTag, ".")
-	repo := imageTagSlices[0]
-	region := imageTagSlices[3]
-	mySession := session.Must(session.NewSession())
-	ecrClient := ecr.New(mySession, aws.NewConfig().WithRegion(region))
-	input := &ecr.GetAuthorizationTokenInput{
-		RegistryIds: []*string{&repo},
-	}
-	res, err := ecrClient.GetAuthorizationToken(input)
-	if err != nil {
-		return "", "", fmt.Errorf("in PullFromECR, failed to GetAuthorizationToken: %v", err)
-	}
-	res64 := (*res.AuthorizationData[0].AuthorizationToken)
-	resB, err := base64.StdEncoding.DecodeString(res64)
-	if err != nil {
-		return "", "", fmt.Errorf("in PullFromECR, failed to DecodeString: %v", err)
-	}
-	delimiterIdx := bytes.IndexByte(resB, ':')
-	// userName := resB[:delimiterIdx]
-	// resB = resB[delimiterIdx+1:]
-	// resB, err = base64.StdEncoding.DecodeString(string(resB))
-	// if err != nil {
-	// 	t.Errorf("failed to DecodeString #2: %v\n\n", err)
-	// }
-	return string(resB[:delimiterIdx]), string(resB[delimiterIdx+1:]), nil
 }
 
 func CheckIsACRImage(imageTag string) bool {
@@ -191,62 +154,4 @@ func excahngeAzureAADAccessTokenForACRRefreshToken(registry, tenantID, azureAADA
 		return "", fmt.Errorf("unmarshalling the response: %v", err)
 	}
 	return resultMap["refresh_token"], nil
-}
-
-func CheckIsGCRImage(imageTag string) bool {
-	// gcr.io/elated-pottery-310110/golang-inf:2
-	return strings.Contains(imageTag, "gcr.io/")
-}
-
-// GetLoginDetailsForGCR return user name + password to use
-func GetLoginDetailsForGCR(imageTag string) (string, string, error) {
-
-	gs := cloudsupportv1.NewGKESupport()
-	accesstoken, err := gs.GetAuthorizationKey()
-	if err == nil {
-		return "oauth2accesstoken", accesstoken, nil
-	}
-	return "", "", err
-}
-
-func GetCloudVendorRegistryCredentials(imageTag string) (map[string]types.AuthConfig, error) {
-	secrets := map[string]types.AuthConfig{}
-	var errRes error
-	if CheckIsACRImage(imageTag) {
-		userName, password, err := GetLoginDetailsForAzurCR(imageTag)
-		if err != nil {
-			errRes = fmt.Errorf("failed to GetLoginDetailsForACR(%s): %v", imageTag, err)
-		} else {
-			secrets[imageTag] = types.AuthConfig{
-				Username: userName,
-				Password: password,
-			}
-		}
-	}
-
-	if CheckIsECRImage(imageTag) {
-		userName, password, err := GetLoginDetailsForECR(imageTag)
-		if err != nil {
-			errRes = fmt.Errorf("failed to GetLoginDetailsForECR(%s): %v", imageTag, err)
-		} else {
-			secrets[imageTag] = types.AuthConfig{
-				Username: userName,
-				Password: password,
-			}
-		}
-	}
-
-	if CheckIsGCRImage(imageTag) {
-		userName, password, err := GetLoginDetailsForGCR(imageTag)
-		if err != nil {
-			errRes = fmt.Errorf("failed to GetLoginDetailsForGCR(%s): %v", imageTag, err)
-		} else {
-			secrets[imageTag] = types.AuthConfig{
-				Username: userName,
-				Password: password,
-			}
-		}
-	}
-
-	return secrets, errRes
 }

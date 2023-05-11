@@ -104,46 +104,7 @@ func GetImageRegistryCredentials(imageTag string, pod *corev1.Pod) (map[string]t
 	return secrets, nil
 }
 
-// GetImageRegistryCredentials returns various credentials for images in the pod
-// imageTag empty means returns all of the credentials for all images in pod spec containers
-// pod.ObjectMeta.Namespace must be well setted
-func GetWorkloadImageRegistryCredentials(imageTag string, workload k8sinterface.IWorkload) (map[string]types.AuthConfig, error) {
-	podSpec, err := workload.GetPodSpec()
-	if err != nil {
-		return nil, err
-	}
-	k8sAPI := k8sinterface.NewKubernetesApi()
-	listSecret, _ := listPodImagePullSecrets(podSpec)
-	listServiceSecret, _ := listServiceAccountImagePullSecrets(k8sAPI, workload.GetNamespace(), podSpec.ServiceAccountName)
-	listSecret = append(listSecret, listServiceSecret...)
-	secrets := getImagePullSecret(k8sAPI, listSecret, workload.GetNamespace())
 
-	if len(secrets) == 0 {
-		secrets = make(map[string]types.AuthConfig)
-	}
-
-	if imageTag != "" {
-		if cloudVendorSecrets, err := GetCloudVendorRegistryCredentials(imageTag); err != nil {
-			return secrets, fmt.Errorf("failed to GetCloudVendorRegistryCredentials, image: %s, message: %v", imageTag, err)
-		} else if len(cloudVendorSecrets) > 0 {
-			for secName := range cloudVendorSecrets {
-				secrets[secName] = cloudVendorSecrets[secName]
-			}
-		}
-	} else {
-		images := GetWorkloadsImages(workload)
-		for imageTag := range images {
-			if cloudVendorSecrets, err := GetCloudVendorRegistryCredentials(imageTag); err != nil {
-				return secrets, fmt.Errorf("failed to GetCloudVendorRegistryCredentials, image: %s, message: %v", imageTag, err)
-			} else if len(cloudVendorSecrets) > 0 {
-				for secName := range cloudVendorSecrets {
-					secrets[secName] = cloudVendorSecrets[secName]
-				}
-			}
-		}
-	}
-	return secrets, nil
-}
 
 // GetWorkloadsImages returns map[<image name>]<container name>
 func GetWorkloadsImages(workload k8sinterface.IWorkload) map[string]string {
