@@ -21,6 +21,7 @@ type IGKESupport interface {
 	GetProject(cluster string) (string, error)
 	GetRegion(cluster string) (string, error)
 	GetContextName(cluster string) string
+	GetIAMMappings(project string) (map[string]string, map[string]string, error)
 }
 type GKESupport struct {
 }
