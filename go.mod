@@ -4,6 +4,7 @@ go 1.23.2
 
 require (
 	cloud.google.com/go/container v1.31.0
+	cloud.google.com/go/iam v0.8.0
 	github.com/Azure/azure-sdk-for-go/sdk/azidentity v1.6.0
 	github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/authorization/armauthorization v1.0.0
 	github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/authorization/armauthorization/v2 v2.1.1
