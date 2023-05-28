@@ -170,12 +170,42 @@ func (k8sAPI *KubernetesApi) CalculateWorkloadParentRecursive(workload IWorkload
 	if err != nil {
 		return workload.GetKind(), workload.GetName(), err
 	}
-	if len(ownerReferences) == 0 {
-		return workload.GetKind(), workload.GetName(), nil // parent found
-	}
-	ownerReference := ownerReferences[0]
 
-	parentWorkload, err := k8sAPI.GetWorkload(workload.GetNamespace(), ownerReference.Kind, ownerReference.Name)
+	var ownerKind, ownerName string
+	if len(ownerReferences) == 0 {
+
+		podLabels := workload.GetLabels()
+		_, ok := podLabels["pod-template-hash"]
+
+		if workload.GetKind() != "Pod" || !ok {
+			return workload.GetKind(), workload.GetName(), nil // parent found
+		}
+
+		// Pod without owner, fallback to pod-template-hash label
+		replicas, err := k8sAPI.ListWorkloads(&schema.GroupVersionResource{
+			Group:    "apps",
+			Version:  "v1",
+			Resource: "replicasets",
+		}, workload.GetNamespace(), podLabels, map[string]string{})
+
+		if err != nil {
+			return workload.GetKind(), workload.GetName(), err
+		}
+
+		if len(replicas) > 0 {
+			parentReplica := replicas[0]
+			ownerKind = parentReplica.GetKind()
+			ownerName = parentReplica.GetName()
+		} else {
+			return workload.GetKind(), workload.GetName(), fmt.Errorf("could not find replicaset for Pod: %s, in namespace: %s", workload.GetName(), workload.GetNamespace()) // parent not found
+		}
+	} else {
+		ownerReference := ownerReferences[0]
+		ownerKind = ownerReference.Kind
+		ownerName = ownerReference.Name
+	}
+
+	parentWorkload, err := k8sAPI.GetWorkload(workload.GetNamespace(), ownerKind, ownerName)
 	if err != nil {
 		if strings.Contains(err.Error(), ResourceNotFoundErr) { // if parent is CRD
 			return workload.GetKind(), workload.GetName(), nil // parent found
