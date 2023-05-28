@@ -189,7 +189,7 @@ func TestInstanceIDToDisplayName(t *testing.T) {
 				containerName: "leader",
 			},
 			want:    "",
-			wantErr: names.ErrInvalidFriendlyName,
+			wantErr: names.ErrInvalidSlug,
 		},
 	}
 

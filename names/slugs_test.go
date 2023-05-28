@@ -47,38 +47,38 @@ func TestImageInfoToFriendlyName(t *testing.T) {
 			"",
 			"f4e3b6489888647ce1834b601c6c06b9f8c03dee6e097e13ed3e28c01ea3ac8c",
 			"",
-			ErrInvalidFriendlyName,
+			ErrInvalidSlug,
 		},
 		{
 			"Empty image hash returns empty value and error",
 			"nginx",
 			"",
 			"",
-			ErrInvalidFriendlyName,
+			ErrInvalidSlug,
 		},
 		{
 			"Short image hash returns empty value and error",
 			"nginx",
 			"3ac8c",
 			"",
-			ErrInvalidFriendlyName,
+			ErrInvalidSlug,
 		},
 		{
 			"Colon in image hash returns empty value and error",
 			"nginx",
 			"f4e3b6489888647ce1834b601c6c06b9f8c03dee6e097e13ed3e28c01ea3ac:8c",
 			"",
-			ErrInvalidFriendlyName,
+			ErrInvalidSlug,
 		},
 		{
 			"Slash in image hash returns empty value and error",
 			"nginx",
 			"f4e3b6489888647ce1834b601c6c06b9f8c03dee6e097e13ed3e28c01ea3ac/8c",
 			"",
-			ErrInvalidFriendlyName,
+			ErrInvalidSlug,
 		},
 		{
-			"Image names that would produce overflowing friendly names should get truncated to limit",
+			"Image names that would produce overflowing slugs should get truncated to limit",
 			"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaabc",
 			"f4e3b6489888647ce1834b601c6c06b9f8c03dee6e097e13ed3e28c01ea3ac8c",
 			"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaab-a3ac8c",
@@ -88,7 +88,7 @@ func TestImageInfoToFriendlyName(t *testing.T) {
 
 	for _, tc := range tt {
 		t.Run(tc.name, func(t *testing.T) {
-			got, err := ImageInfoToFriendlyName(tc.imageTag, tc.imageHash)
+			got, err := ImageInfoToSlug(tc.imageTag, tc.imageHash)
 
 			assert.Equal(t, tc.expected, got)
 			assert.ErrorIs(t, tc.wantErr, err)
@@ -125,7 +125,7 @@ func TestInstanceIDToFriendlyName(t *testing.T) {
 			wantErr:        nil,
 		},
 		{
-			name:           "instanceID that produces overflowing friendly name gets truncated to limit",
+			name:           "instanceID that produces overflowing slugs gets truncated to limit",
 			inputNamespace: "0123456789",
 			inputKind:      "0123456789",
 			inputName:      "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaab",
@@ -140,13 +140,13 @@ func TestInstanceIDToFriendlyName(t *testing.T) {
 			inputName:      "web/app",
 			inputHashedID:  "1ba506b28f9ee9c7e8a0c98840fe5a1fe21142d225ecc526fbb535d0d6344aaf",
 			want:           "",
-			wantErr:        ErrInvalidFriendlyName,
+			wantErr:        ErrInvalidSlug,
 		},
 	}
 
 	for _, tc := range tt {
 		t.Run(tc.name, func(t *testing.T) {
-			got, err := InstanceIDToFriendlyName(tc.inputName, tc.inputNamespace, tc.inputKind, tc.inputHashedID)
+			got, err := InstanceIDToSlug(tc.inputName, tc.inputNamespace, tc.inputKind, tc.inputHashedID)
 
 			assert.Equal(t, tc.want, got)
 			assert.ErrorIs(t, tc.wantErr, err)

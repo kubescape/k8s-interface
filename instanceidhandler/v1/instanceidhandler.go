@@ -124,5 +124,5 @@ func (id *InstanceID) GetLabels() map[string]string {
 }
 
 func (id *InstanceID) GetFriendlyName() (string, error) {
-	return names.InstanceIDToFriendlyName(id.GetName(), id.GetNamespace() , id.GetKind(), id.GetHashed())
+	return names.InstanceIDToSlug(id.GetName(), id.GetNamespace() , id.GetKind(), id.GetHashed())
 }
