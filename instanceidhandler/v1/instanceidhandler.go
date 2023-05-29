@@ -6,8 +6,8 @@ import (
 	"fmt"
 
 	"github.com/kubescape/k8s-interface/instanceidhandler"
-	"github.com/kubescape/k8s-interface/names"
 	"github.com/kubescape/k8s-interface/k8sinterface"
+	"github.com/kubescape/k8s-interface/names"
 )
 
 // metadata keys
@@ -124,5 +124,5 @@ func (id *InstanceID) GetLabels() map[string]string {
 }
 
 func (id *InstanceID) GetFriendlyName() (string, error) {
-	return names.InstanceIDToSlug(id.GetName(), id.GetNamespace() , id.GetKind(), id.GetHashed())
+	return names.InstanceIDToSlug(id.GetName(), id.GetNamespace(), id.GetKind(), id.GetHashed())
 }

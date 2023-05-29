@@ -26,8 +26,8 @@ const (
 var imageToDNSSubdomainReplacer = strings.NewReplacer("://", "-", ":", "-", "/", "-")
 
 var (
-	dnsSubdomainRegexp = regexp.MustCompile(`^[a-zA-Z0-9][a-zA-Z0-9.-]{0,251}[a-zA-Z0-9]$`)
-	dnsLabelRegexp     = regexp.MustCompile(`^[a-zA-Z0-9][a-zA-Z0-9-]{0,61}[a-zA-Z0-9]$`)
+	dnsSubdomainRegexp = regexp.MustCompile(`^[a-z0-9][a-z0-9.-]{0,251}[a-z0-9]$`)
+	dnsLabelRegexp     = regexp.MustCompile(`^[a-z0-9][a-z0-9-]{0,61}[a-z0-9]$`)
 )
 
 // IsValidDNSSubdomainName returns true if a given string is a valid DNS Subdomain name as defined in the Kubernetes docs
@@ -80,12 +80,13 @@ func InstanceIDToSlug(name, namespace, kind, hashedID string) (string, error) {
 
 	var err error
 	slug, err := fmt.Sprintf(instanceIDSlugFormat, hashlessInstanceIDSlug, leadingDigest, trailingDigest), nil
+	slug = strings.ToLower(slug)
 
 	if !IsValidSlug(slug) {
 		slug, err = "", ErrInvalidSlug
 	}
 
-	return slug, err
+	return strings.ToLower(slug), err
 }
 
 // ImageInfoToSlug returns a human-friendly representation for a given image information
@@ -100,6 +101,7 @@ func ImageInfoToSlug(image, imageHash string) (string, error) {
 	imageHashStub := imageHash[len(imageHash)-imageIDSlugHashLength:]
 	sanitizedImage := sanitizeImage(image)
 	slug, err := fmt.Sprintf(imageIDSlugFormat, sanitizedImage, imageHashStub), nil
+	slug = strings.ToLower(slug)
 
 	if !IsValidSlug(slug) {
 		slug, err = "", ErrInvalidSlug

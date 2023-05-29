@@ -43,6 +43,13 @@ func TestImageInfoToFriendlyName(t *testing.T) {
 			nil,
 		},
 		{
+			"Image ID format with uppercase symbols produces matching lowercase value",
+			"docker-pullable://GCR.io/etcD-development/Etcd",
+			"f4e3b6489888647ce1834b601c6c06b9f8c03dee6e097e13ed3e28c01ea3ac8c",
+			"docker-pullable-gcr.io-etcd-development-etcd-a3ac8c",
+			nil,
+		},
+		{
 			"Empty image name returns empty value and error",
 			"",
 			"f4e3b6489888647ce1834b601c6c06b9f8c03dee6e097e13ed3e28c01ea3ac8c",
@@ -112,7 +119,7 @@ func TestInstanceIDToFriendlyName(t *testing.T) {
 			inputKind:      "Pod",
 			inputName:      "reverse-proxy",
 			inputHashedID:  "1ba506b28f9ee9c7e8a0c98840fe5a1fe21142d225ecc526fbb535d0d6344aaf",
-			want:           "default-Pod-reverse-proxy-1ba5-4aaf",
+			want:           "default-pod-reverse-proxy-1ba5-4aaf",
 			wantErr:        nil,
 		},
 		{
@@ -121,7 +128,7 @@ func TestInstanceIDToFriendlyName(t *testing.T) {
 			inputKind:      "Service",
 			inputName:      "webapp",
 			inputHashedID:  "1ba506b28f9ee9c7e8a0c98840fe5a1fe21142d225ecc526fbb535d0d6344aaf",
-			want:           "default-Service-webapp-1ba5-4aaf",
+			want:           "default-service-webapp-1ba5-4aaf",
 			wantErr:        nil,
 		},
 		{
@@ -149,7 +156,7 @@ func TestInstanceIDToFriendlyName(t *testing.T) {
 			got, err := InstanceIDToSlug(tc.inputName, tc.inputNamespace, tc.inputKind, tc.inputHashedID)
 
 			assert.Equal(t, tc.want, got)
-			assert.ErrorIs(t, tc.wantErr, err)
+			assert.ErrorIs(t, err, tc.wantErr)
 		})
 	}
 }
@@ -213,6 +220,11 @@ func TestIsValidSubdomainName(t *testing.T) {
 		{
 			name:      "Names over 253 characters should be invalid",
 			inputName: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaX",
+			want:      false,
+		},
+		{
+			name:      "An uppercase character is considered invalid",
+			inputName: "nGinx",
 			want:      false,
 		},
 	}
@@ -284,6 +296,11 @@ func TestIsValidDSNLabelName(t *testing.T) {
 		{
 			name:      "Names over 63 characters should be invalid",
 			inputName: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaX",
+			want:      false,
+		},
+		{
+			name:      "An uppercase character is considered valid",
+			inputName: "nginX",
 			want:      false,
 		},
 	}
