@@ -7,7 +7,9 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/kubescape/k8s-interface/names"
 	"github.com/kubescape/k8s-interface/workloadinterface"
+	"github.com/stretchr/testify/assert"
 )
 
 var (
@@ -144,4 +146,59 @@ func TestInstanceID(t *testing.T) {
 		t.Error(err)
 	}
 
+}
+
+func TestInstanceIDToDisplayName(t *testing.T) {
+	tt := []struct {
+		name    string
+		input   *InstanceID
+		want    string
+		wantErr error
+	}{
+		{
+			name: "valid instanceID produces matching display name",
+			input: &InstanceID{
+				apiVersion:    "v1",
+				namespace:     "default",
+				kind:          "Pod",
+				name:          "reverse-proxy",
+				containerName: "nginx",
+			},
+			want:    "default-pod-reverse-proxy-2f07-68bd",
+			wantErr: nil,
+		},
+		{
+			name: "valid instanceID produces matching display name",
+			input: &InstanceID{
+				apiVersion:    "v1",
+				namespace:     "default",
+				kind:          "Service",
+				name:          "webapp",
+				containerName: "leader",
+			},
+			want:    "default-service-webapp-cca3-8ea7",
+			wantErr: nil,
+		},
+		{
+			name: "invalid instanceID produces matching error",
+			input: &InstanceID{
+				apiVersion:    "v1",
+				namespace:     "default",
+				kind:          "Service",
+				name:          "web/app",
+				containerName: "leader",
+			},
+			want:    "",
+			wantErr: names.ErrInvalidSlug,
+		},
+	}
+
+	for _, tc := range tt {
+		t.Run(tc.name, func(t *testing.T) {
+			got, err := tc.input.GetSlug()
+
+			assert.Equal(t, tc.want, got)
+			assert.ErrorIs(t, tc.wantErr, err)
+		})
+	}
 }
