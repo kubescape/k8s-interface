@@ -123,6 +123,6 @@ func (id *InstanceID) GetLabels() map[string]string {
 	}
 }
 
-func (id *InstanceID) GetFriendlyName() (string, error) {
+func (id *InstanceID) GetSlug() (string, error) {
 	return names.InstanceIDToSlug(id.GetName(), id.GetNamespace(), id.GetKind(), id.GetHashed())
 }

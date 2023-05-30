@@ -195,7 +195,7 @@ func TestInstanceIDToDisplayName(t *testing.T) {
 
 	for _, tc := range tt {
 		t.Run(tc.name, func(t *testing.T) {
-			got, err := tc.input.GetFriendlyName()
+			got, err := tc.input.GetSlug()
 
 			assert.Equal(t, tc.want, got)
 			assert.ErrorIs(t, tc.wantErr, err)

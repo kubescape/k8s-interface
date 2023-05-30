@@ -14,6 +14,6 @@ type IInstanceID interface {
 	GetStringFormatted() string
 	GetHashed() string
 	GetLabels() map[string]string
-	// GetFriendlyName returns a string with a human-friendly name
-	GetFriendlyName() (string, error)
+	// GetSlug returns a string with a human-friendly and Kubernetes-compatible name
+	GetSlug() (string, error)
 }
