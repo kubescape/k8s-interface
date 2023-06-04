@@ -9,7 +9,7 @@ import (
 	container "cloud.google.com/go/container/apiv1"
 	"github.com/kubescape/k8s-interface/k8sinterface"
 	"golang.org/x/oauth2/google"
-	containerpb "google.golang.org/genproto/googleapis/container/v1"
+	containerpb "cloud.google.com/go/container/apiv1/containerpb"
 )
 
 type IGKESupport interface {
