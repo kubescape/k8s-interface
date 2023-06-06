@@ -57,6 +57,13 @@ func TestImageInfoToFriendlyName(t *testing.T) {
 			nil,
 		},
 		{
+			"Image ID format with at sign works",
+			"docker.io/kindest/local-path-provisioner:v0.0.23-kind.0@sha256:f2d0a02831ff3a03cf51343226670d5060623b43a4cfc4808bd0875b2c4b9501",
+			"docker.io/kindest/local-path-provisioner:v0.0.23-kind.0@sha256:f2d0a02831ff3a03cf51343226670d5060623b43a4cfc4808bd0875b2c4b9501",
+			"docker.io-kindest-local-path-provisioner-v0.0.23-kind.0-sha256-f2d0a02831ff3a03cf51343226670d5060623b43a4cfc4808bd0875b2c4b9501-4b9501",
+			nil,
+		},
+		{
 			"Empty image name returns empty value and error",
 			"",
 			"f4e3b6489888647ce1834b601c6c06b9f8c03dee6e097e13ed3e28c01ea3ac8c",
