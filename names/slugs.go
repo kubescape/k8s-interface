@@ -23,7 +23,7 @@ const (
 )
 
 // imageToDNSSubdomainReplacer is a replacer that can replace a valid, well-formed container image string to a valid DNS Subdomain
-var imageToDNSSubdomainReplacer = strings.NewReplacer("://", "-", ":", "-", "/", "-")
+var imageToDNSSubdomainReplacer = strings.NewReplacer("://", "-", ":", "-", "/", "-", "_", "-")
 
 var (
 	dnsSubdomainRegexp = regexp.MustCompile(`^[a-z0-9][a-z0-9.-]{0,251}[a-z0-9]$`)
