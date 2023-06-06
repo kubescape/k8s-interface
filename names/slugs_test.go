@@ -50,6 +50,13 @@ func TestImageInfoToFriendlyName(t *testing.T) {
 			nil,
 		},
 		{
+			"Image ID format with underscore works",
+			"quay.io/matthiasb_1/kubevuln:renaming",
+			"quay.io/matthiasb_1/kubevuln@sha256:85c1b06d541d61ddb46efcd8b316855f544278c9ab27a07ec35bbe81be54fbec",
+			"quay.io-matthiasb-1-kubevuln-renaming-54fbec",
+			nil,
+		},
+		{
 			"Empty image name returns empty value and error",
 			"",
 			"f4e3b6489888647ce1834b601c6c06b9f8c03dee6e097e13ed3e28c01ea3ac8c",
