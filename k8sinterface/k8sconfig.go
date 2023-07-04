@@ -31,6 +31,7 @@ type KubernetesApi struct {
 	DynamicClient    dynamic.Interface
 	DiscoveryClient  discovery.DiscoveryInterface
 	Context          context.Context
+	K8SConfig        *restclient.Config
 }
 
 // NewKubernetesApi -
@@ -42,16 +43,19 @@ func NewKubernetesApi() *KubernetesApi {
 		logger.L().Fatal("failed to load kubernetes config: no configuration has been provided, try setting KUBECONFIG environment variable")
 	}
 
-	kubernetesClient, err = kubernetes.NewForConfig(GetK8sConfig())
+	k8sConfig := GetK8sConfig()
+
+	kubernetesClient, err = kubernetes.NewForConfig(k8sConfig)
 	if err != nil {
 		logger.L().Fatal("failed to initialize a new kubernetes client", helpers.Error(err))
 	}
-	dynamicClient, err := dynamic.NewForConfig(K8SConfig)
+
+	dynamicClient, err := dynamic.NewForConfig(k8sConfig)
 	if err != nil {
 		logger.L().Fatal("failed to initialize a new dynamic client", helpers.Error(err))
 	}
 
-	discoveryClient, err := discovery.NewDiscoveryClientForConfig(GetK8sConfig())
+	discoveryClient, err := discovery.NewDiscoveryClientForConfig(k8sConfig)
 	if err != nil {
 		logger.L().Fatal("failed to initialize a new discovery client", helpers.Error(err))
 	}
@@ -63,6 +67,7 @@ func NewKubernetesApi() *KubernetesApi {
 		DynamicClient:    dynamicClient,
 		DiscoveryClient:  discoveryClient,
 		Context:          context.Background(),
+		K8SConfig:        k8sConfig,
 	}
 }
 
