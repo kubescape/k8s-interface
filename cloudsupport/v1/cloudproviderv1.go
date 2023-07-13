@@ -335,7 +335,7 @@ func IsAKS() bool {
 
 // check if the server is EKS. e.g. arn:aws:eks:eu-west-1:xxx:cluster/xxxx
 func IsEKS(config *clientcmdapi.Config) bool {
-	version, err := k8sinterface.GetK8SServerGitVersion(k8sinterface.NewKubernetesApi().DiscoveryClient)
+	version, err := k8sinterface.GetK8SServerGitVersion()
 	if err != nil {
 		return false
 	}
@@ -344,7 +344,7 @@ func IsEKS(config *clientcmdapi.Config) bool {
 
 // check if the server is GKE. e.g. gke_xxx-xx-0000_us-central1-c_xxxx-1
 func IsGKE(config *clientcmdapi.Config) bool {
-	version, err := k8sinterface.GetK8SServerGitVersion(k8sinterface.NewKubernetesApi().DiscoveryClient)
+	version, err := k8sinterface.GetK8SServerGitVersion()
 	if err != nil {
 		return false
 	}

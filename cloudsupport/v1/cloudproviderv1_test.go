@@ -281,7 +281,7 @@ func assertMap(t *testing.T, expected, actual map[string]interface{}) {
 
 func Test_IsGKE(t *testing.T) {
 	type args struct {
-		// config  *clientcmdapi.Config
+		config  *clientcmdapi.Config
 		context string
 	}
 	tests := []struct {
@@ -292,7 +292,7 @@ func Test_IsGKE(t *testing.T) {
 		{
 			name: "Test_IsGKE",
 			args: args{
-				// config:  getKubeConfigMock(),
+				config:  getKubeConfigMock(),
 				context: "gke_xxx-xx-0000_us-central1-c_xxxx-1",
 			},
 			want: true,
@@ -312,7 +312,7 @@ func Test_IsGKE(t *testing.T) {
 
 func Test_IsEKS(t *testing.T) {
 	type args struct {
-		// config  *clientcmdapi.Config
+		config  *clientcmdapi.Config
 		context string
 	}
 	tests := []struct {
@@ -323,7 +323,7 @@ func Test_IsEKS(t *testing.T) {
 		{
 			name: "Test_IsEKS",
 			args: args{
-				// config:  getKubeConfigMock(),
+				config:  getKubeConfigMock(),
 				context: "arn:aws:eks:eu-west-1:xxx:cluster/xxxx",
 			},
 			want: true,
@@ -343,7 +343,7 @@ func Test_IsEKS(t *testing.T) {
 
 func Test_IsAKS(t *testing.T) {
 	type args struct {
-		// config  *clientcmdapi.Config
+		config  *clientcmdapi.Config
 		context string
 	}
 	tests := []struct {
@@ -354,7 +354,7 @@ func Test_IsAKS(t *testing.T) {
 		{
 			name: "Test_IsAKS",
 			args: args{
-				// config:  getKubeConfigMock(),
+				config:  getKubeConfigMock(),
 				context: "xxxx-2",
 			},
 			want: true,
