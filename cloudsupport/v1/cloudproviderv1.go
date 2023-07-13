@@ -8,6 +8,7 @@ import (
 	"github.com/kubescape/k8s-interface/cloudsupport/apis"
 	"github.com/kubescape/k8s-interface/k8sinterface"
 	"github.com/kubescape/k8s-interface/workloadinterface"
+	clientcmdapi "k8s.io/client-go/tools/clientcmd/api"
 )
 
 const (
@@ -323,4 +324,29 @@ func GetPolicyVersionAKS(aksSupport IAKSSupport, cluster string, subscriptionId 
 	listPolicyInfo.SetData(data)
 
 	return listPolicyInfo, nil
+}
+
+// check if the server is AKS. e.g. https://XXX.XX.XXX.azmk8s.io:443
+func IsAKS(config *clientcmdapi.Config) bool {
+	const serverIdentifierAKS = "azmk8s.io"
+	if cluster, ok := config.Clusters[k8sinterface.GetContextName()]; ok {
+		return strings.Contains(cluster.Server, serverIdentifierAKS)
+	}
+	return false
+}
+
+// check if the server is EKS. e.g. arn:aws:eks:eu-west-1:xxx:cluster/xxxx
+func IsEKS(config *clientcmdapi.Config) bool {
+	if context, ok := config.Contexts[k8sinterface.GetContextName()]; ok {
+		return strings.Contains(context.Cluster, EKS)
+	}
+	return false
+}
+
+// check if the server is GKE. e.g. gke_xxx-xx-0000_us-central1-c_xxxx-1
+func IsGKE(config *clientcmdapi.Config) bool {
+	if context, ok := config.Contexts[k8sinterface.GetContextName()]; ok {
+		return strings.Contains(context.Cluster, GKE)
+	}
+	return false
 }
