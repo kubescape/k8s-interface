@@ -327,26 +327,26 @@ func GetPolicyVersionAKS(aksSupport IAKSSupport, cluster string, subscriptionId 
 }
 
 // check if the server is AKS. e.g. https://XXX.XX.XXX.azmk8s.io:443
-func IsAKS(config *clientcmdapi.Config) bool {
+func IsAKS() bool {
 	const serverIdentifierAKS = "azmk8s.io"
-	if cluster, ok := config.Clusters[k8sinterface.GetContextName()]; ok {
-		return strings.Contains(cluster.Server, serverIdentifierAKS)
-	}
-	return false
+	clusterServerName := k8sinterface.GetK8sConfigClusterServerName()
+	return strings.Contains(clusterServerName, serverIdentifierAKS)
 }
 
 // check if the server is EKS. e.g. arn:aws:eks:eu-west-1:xxx:cluster/xxxx
 func IsEKS(config *clientcmdapi.Config) bool {
-	if context, ok := config.Contexts[k8sinterface.GetContextName()]; ok {
-		return strings.Contains(context.Cluster, EKS)
+	version, err := k8sinterface.GetK8SServerGitVersion(k8sinterface.NewKubernetesApi().DiscoveryClient)
+	if err != nil {
+		return false
 	}
-	return false
+	return strings.Contains(version, EKS)
 }
 
 // check if the server is GKE. e.g. gke_xxx-xx-0000_us-central1-c_xxxx-1
 func IsGKE(config *clientcmdapi.Config) bool {
-	if context, ok := config.Contexts[k8sinterface.GetContextName()]; ok {
-		return strings.Contains(context.Cluster, GKE)
+	version, err := k8sinterface.GetK8SServerGitVersion(k8sinterface.NewKubernetesApi().DiscoveryClient)
+	if err != nil {
+		return false
 	}
-	return false
+	return strings.Contains(version, GKE)
 }

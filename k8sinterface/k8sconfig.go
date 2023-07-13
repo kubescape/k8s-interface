@@ -21,6 +21,8 @@ import (
 
 var connectedToCluster = true
 var clusterContextName = ""
+var ConfigClusterServerName = ""
+var K8SGitServerVersion = ""
 
 // K8SConfig pointer to k8s config
 var K8SConfig *restclient.Config
@@ -174,4 +176,22 @@ func GetDefaultNamespace() string {
 // SetClusterContextName set the name of desired cluster context. The package will use this name when loading the context
 func SetClusterContextName(contextName string) {
 	clusterContextName = contextName
+}
+
+func SetK8SGitServerVersion(K8SGitServerVersionInput string) {
+	K8SGitServerVersion = K8SGitServerVersionInput
+}
+
+func SetConfigClusterServerName(contextName string) {
+	ConfigClusterServerName = contextName
+}
+
+func GetK8sConfigClusterServerName() string {
+	if ConfigClusterServerName == "" {
+		config := GetConfig()
+		if _, exist := config.Clusters[config.CurrentContext]; !exist {
+			ConfigClusterServerName = config.Clusters[config.CurrentContext].Server
+		}
+	}
+	return ConfigClusterServerName
 }

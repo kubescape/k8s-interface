@@ -382,3 +382,14 @@ func IsTypeWorkload(object map[string]interface{}) bool {
 
 	return len(getResourceTriplets(group, version, s2)) == 1
 }
+
+func GetK8SServerGitVersion(discoveryClient discovery.DiscoveryInterface) (string, error) {
+	if K8SGitServerVersion == "" {
+		serverVersion, err := discoveryClient.ServerVersion()
+		if err != nil {
+			return "", err
+		}
+		K8SGitServerVersion = serverVersion.GitVersion
+	}
+	return K8SGitServerVersion, nil
+}

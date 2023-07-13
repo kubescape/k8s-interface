@@ -302,7 +302,7 @@ func Test_IsGKE(t *testing.T) {
 
 		t.Run(tt.name, func(t *testing.T) {
 			// set context
-			k8sinterface.SetClusterContextName(tt.args.context)
+			k8sinterface.SetK8SGitServerVersion("gke_xxx-xx-0000_us-central1-c_xxxx-1")
 			if got := IsGKE(tt.args.config); got != tt.want {
 				t.Errorf("IsGKE() = %v, want %v", got, tt.want)
 			}
@@ -333,7 +333,7 @@ func Test_IsEKS(t *testing.T) {
 
 		t.Run(tt.name, func(t *testing.T) {
 			// set context
-			k8sinterface.SetClusterContextName(tt.args.context)
+			k8sinterface.SetK8SGitServerVersion("arn:aws:eks:eu-west-1:xxx:cluster/xxxx")
 			if got := IsEKS(tt.args.config); got != tt.want {
 				t.Errorf("IsEKS() = %v, want %v", got, tt.want)
 			}
@@ -364,8 +364,8 @@ func Test_IsAKS(t *testing.T) {
 
 		t.Run(tt.name, func(t *testing.T) {
 			// set context
-			k8sinterface.SetClusterContextName(tt.args.context)
-			if got := IsAKS(tt.args.config); got != tt.want {
+			k8sinterface.SetConfigClusterServerName("https://XXX.XX.XXX.azmk8s.io:443")
+			if got := IsAKS(); got != tt.want {
 				t.Errorf("IsAKS() = %v, want %v", got, tt.want)
 			}
 		})
