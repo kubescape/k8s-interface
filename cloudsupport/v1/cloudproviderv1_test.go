@@ -1,12 +1,28 @@
 package v1
 
 import (
+	_ "embed"
+	"encoding/json"
 	"testing"
 
 	"github.com/kubescape/k8s-interface/cloudsupport/apis"
 	"github.com/kubescape/k8s-interface/k8sinterface"
 	"github.com/stretchr/testify/assert"
+	clientcmdapi "k8s.io/client-go/tools/clientcmd/api"
 )
+
+var (
+	//go:embed kubeconfig_mock.json
+	kubeConfigMock string
+)
+
+func getKubeConfigMock() *clientcmdapi.Config {
+	kubeConfig := clientcmdapi.Config{}
+	if err := json.Unmarshal([]byte(kubeConfigMock), &kubeConfig); err != nil {
+		panic(err)
+	}
+	return &kubeConfig
+}
 
 func TestGetClusterDescribeGKE(t *testing.T) {
 	g := NewGKESupportMock()
@@ -260,5 +276,98 @@ func assertMap(t *testing.T, expected, actual map[string]interface{}) {
 				assertMap(t, v0.(map[string]interface{}), f)
 			}
 		}
+	}
+}
+
+func Test_IsGKE(t *testing.T) {
+	type args struct {
+		config  *clientcmdapi.Config
+		context string
+	}
+	tests := []struct {
+		name string
+		args args
+		want bool
+	}{
+		{
+			name: "Test_IsGKE",
+			args: args{
+				config:  getKubeConfigMock(),
+				context: "gke_xxx-xx-0000_us-central1-c_xxxx-1",
+			},
+			want: true,
+		},
+	}
+	for _, tt := range tests {
+
+		t.Run(tt.name, func(t *testing.T) {
+			// set context
+			k8sinterface.SetK8SGitServerVersion("gke_xxx-xx-0000_us-central1-c_xxxx-1")
+			if got := IsGKE(tt.args.config); got != tt.want {
+				t.Errorf("IsGKE() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func Test_IsEKS(t *testing.T) {
+	type args struct {
+		config  *clientcmdapi.Config
+		context string
+	}
+	tests := []struct {
+		name string
+		args args
+		want bool
+	}{
+		{
+			name: "Test_IsEKS",
+			args: args{
+				config:  getKubeConfigMock(),
+				context: "arn:aws:eks:eu-west-1:xxx:cluster/xxxx",
+			},
+			want: true,
+		},
+	}
+	for _, tt := range tests {
+
+		t.Run(tt.name, func(t *testing.T) {
+			// set context
+			k8sinterface.SetK8SGitServerVersion("arn:aws:eks:eu-west-1:xxx:cluster/xxxx")
+			if got := IsEKS(tt.args.config); got != tt.want {
+				t.Errorf("IsEKS() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func Test_IsAKS(t *testing.T) {
+	type args struct {
+		config  *clientcmdapi.Config
+		context string
+	}
+	tests := []struct {
+		name string
+		args args
+		want bool
+	}{
+		{
+			name: "Test_IsAKS",
+			args: args{
+				config:  getKubeConfigMock(),
+				context: "xxxx-2",
+			},
+			want: true,
+		},
+	}
+	for _, tt := range tests {
+
+		t.Run(tt.name, func(t *testing.T) {
+			// set context
+			k8sinterface.SetConfigClusterServerName("https://XXX.XX.XXX.azmk8s.io:443")
+			if got := IsAKS(); got != tt.want {
+				t.Errorf("IsAKS() = %v, want %v", got, tt.want)
+			}
+		})
 	}
 }
