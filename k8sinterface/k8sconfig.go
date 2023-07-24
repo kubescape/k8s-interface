@@ -189,7 +189,7 @@ func SetConfigClusterServerName(contextName string) {
 func GetK8sConfigClusterServerName() string {
 	if ConfigClusterServerName == "" {
 		config := GetConfig()
-		if _, exist := config.Clusters[config.CurrentContext]; !exist {
+		if _, exist := config.Clusters[config.CurrentContext]; exist {
 			ConfigClusterServerName = config.Clusters[config.CurrentContext].Server
 		}
 	}
