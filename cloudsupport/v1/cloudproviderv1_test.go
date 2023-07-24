@@ -14,11 +14,21 @@ import (
 var (
 	//go:embed kubeconfig_mock.json
 	kubeConfigMock string
+	//go:embed kubeconfig_mock_context_not_exist.json
+	kubeConfigContextNotExistMock string
 )
 
 func getKubeConfigMock() *clientcmdapi.Config {
 	kubeConfig := clientcmdapi.Config{}
 	if err := json.Unmarshal([]byte(kubeConfigMock), &kubeConfig); err != nil {
+		panic(err)
+	}
+	return &kubeConfig
+}
+
+func getkubeConfigContextNotExistMock() *clientcmdapi.Config {
+	kubeConfig := clientcmdapi.Config{}
+	if err := json.Unmarshal([]byte(kubeConfigContextNotExistMock), &kubeConfig); err != nil {
 		panic(err)
 	}
 	return &kubeConfig
@@ -376,4 +386,16 @@ func Test_GetK8sConfigClusterServerName(t *testing.T) {
 	expectedClusterName := "https://XXX.XX.XXX.azmk8s.io:443"
 	k8sClusterConfigName := k8sinterface.GetK8sConfigClusterServerName(getKubeConfigMock())
 	assert.Equal(t, k8sClusterConfigName, expectedClusterName)
+}
+
+func Test_GetK8sConfigClusterServerNameCheckIsNotExist(t *testing.T) {
+	expectedClusterName := ""
+	k8sinterface.SetConfigClusterServerName("")
+	k8sClusterConfigName := k8sinterface.GetK8sConfigClusterServerName(getkubeConfigContextNotExistMock())
+	assert.Equal(t, k8sClusterConfigName, expectedClusterName)
+}
+
+func Test_GetK8sConfigClusterServerNameIsConfigNil(t *testing.T) {
+	k8sClusterConfigName := k8sinterface.GetK8sConfigClusterServerName(nil)
+	assert.Equal(t, k8sClusterConfigName, "")
 }
