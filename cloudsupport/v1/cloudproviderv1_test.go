@@ -371,3 +371,9 @@ func Test_IsAKS(t *testing.T) {
 		})
 	}
 }
+
+func Test_GetK8sConfigClusterServerName(t *testing.T) {
+	expectedClusterName := "https://XXX.XX.XXX.azmk8s.io:443"
+	k8sClusterConfigName := k8sinterface.GetK8sConfigClusterServerName(getKubeConfigMock())
+	assert.Equal(t, k8sClusterConfigName, expectedClusterName)
+}

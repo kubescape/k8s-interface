@@ -186,9 +186,8 @@ func SetConfigClusterServerName(contextName string) {
 	ConfigClusterServerName = contextName
 }
 
-func GetK8sConfigClusterServerName() string {
+func GetK8sConfigClusterServerName(config *clientcmdapi.Config) string {
 	if ConfigClusterServerName == "" {
-		config := GetConfig()
 		if _, exist := config.Clusters[config.CurrentContext]; exist {
 			ConfigClusterServerName = config.Clusters[config.CurrentContext].Server
 		}
