@@ -329,7 +329,8 @@ func GetPolicyVersionAKS(aksSupport IAKSSupport, cluster string, subscriptionId 
 // check if the server is AKS. e.g. https://XXX.XX.XXX.azmk8s.io:443
 func IsAKS() bool {
 	const serverIdentifierAKS = "azmk8s.io"
-	clusterServerName := k8sinterface.GetK8sConfigClusterServerName()
+	config := k8sinterface.GetConfig()
+	clusterServerName := k8sinterface.GetK8sConfigClusterServerName(config)
 	return strings.Contains(clusterServerName, serverIdentifierAKS)
 }
 
