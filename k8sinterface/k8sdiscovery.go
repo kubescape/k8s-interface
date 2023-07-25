@@ -385,6 +385,9 @@ func IsTypeWorkload(object map[string]interface{}) bool {
 
 func GetK8SServerGitVersion() (string, error) {
 	if K8SGitServerVersion == "" {
+		if !IsConnectedToCluster() {
+			return "", fmt.Errorf("not connected to any cluster")
+		}
 		serverVersion, err := NewKubernetesApi().DiscoveryClient.ServerVersion()
 		if err != nil {
 			return "", err
