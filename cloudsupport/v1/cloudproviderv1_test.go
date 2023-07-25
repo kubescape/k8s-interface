@@ -401,7 +401,7 @@ func Test_GetK8sConfigClusterServerNameIsConfigNil(t *testing.T) {
 }
 
 func Test_GetK8SServerGitVersionNotConnectedToCluster(t *testing.T) {
-	k8sinterface.SetConfigClusterServerName("")
+	k8sinterface.SetClusterContextName("")
 	K8SGitServerVersion, err := k8sinterface.GetK8SServerGitVersion()
 	assert.NotEqual(t, err, nil)
 	assert.Equal(t, K8SGitServerVersion, "")
