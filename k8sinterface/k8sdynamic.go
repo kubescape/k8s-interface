@@ -10,6 +10,7 @@ import (
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/dynamic"
+	"k8s.io/utils/strings/slices"
 	//
 	// Uncomment to load all auth plugins
 	// _ "k8s.io/client-go/plugin/pkg/client/auth
@@ -166,6 +167,15 @@ func (k8sAPI *KubernetesApi) ResourceInterface(resource *schema.GroupVersionReso
 }
 
 func (k8sAPI *KubernetesApi) CalculateWorkloadParentRecursive(workload IWorkload) (string, string, error) {
+	if workload == nil {
+		return "", "", fmt.Errorf("workload is nil")
+	}
+
+	// filter out non-controller workloads
+	if !slices.Contains([]string{"Pod", "Job", "ReplicaSet"}, workload.GetKind()) {
+		return workload.GetKind(), workload.GetName(), nil
+	}
+
 	ownerReferences, err := workload.GetOwnerReferences() // OwnerReferences in workload
 	if err != nil {
 		return workload.GetKind(), workload.GetName(), err
@@ -175,8 +185,7 @@ func (k8sAPI *KubernetesApi) CalculateWorkloadParentRecursive(workload IWorkload
 	if len(ownerReferences) == 0 {
 
 		podLabels := workload.GetLabels()
-		_, ok := podLabels["pod-template-hash"]
-
+		podHash, ok := podLabels["pod-template-hash"]
 		if workload.GetKind() != "Pod" || !ok {
 			return workload.GetKind(), workload.GetName(), nil // parent found
 		}
@@ -186,8 +195,7 @@ func (k8sAPI *KubernetesApi) CalculateWorkloadParentRecursive(workload IWorkload
 			Group:    "apps",
 			Version:  "v1",
 			Resource: "replicasets",
-		}, workload.GetNamespace(), podLabels, map[string]string{})
-
+		}, workload.GetNamespace(), map[string]string{"pod-template-hash": podHash}, map[string]string{})
 		if err != nil {
 			return workload.GetKind(), workload.GetName(), err
 		}
