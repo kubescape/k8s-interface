@@ -4,6 +4,9 @@ import (
 	"context"
 	"testing"
 
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	"github.com/kubescape/k8s-interface/workloadinterface"
 	"k8s.io/apimachinery/pkg/runtime"
 	dynamicfake "k8s.io/client-go/dynamic/fake"
 	kubernetesfake "k8s.io/client-go/kubernetes/fake"
@@ -51,4 +54,106 @@ func TestListDynamic(t *testing.T) {
 		return
 	}
 
+}
+
+func mockWorkload(apiVersion, kind, namespace, name, ownerReferenceKind string) workloadinterface.IWorkload {
+	mock := workloadinterface.NewWorkloadMock(nil)
+	mock.SetKind(kind)
+	mock.SetApiVersion(apiVersion)
+	mock.SetName(name)
+	mock.SetNamespace(namespace)
+
+	if ownerReferenceKind != "" {
+		ownerreferences := []metav1.OwnerReference{
+			{
+				Kind: ownerReferenceKind,
+			},
+		}
+		workloadinterface.SetInMap(mock.GetWorkload(), []string{"metadata"}, "ownerReferences", ownerreferences)
+	}
+
+	return mock
+}
+func TestWorkloadHasParent(t *testing.T) {
+
+	// 1. Check if a nil workload returns false
+	if WorkloadHasParent(nil) {
+		t.Error("Expected false when provided a nil workload, but got true")
+	}
+
+	// 2. Provide an unsupported kind, ensure it returns false
+	mockUnsupportedKind := mockWorkload("", "mockUnsupportedKind", "", "", "")
+	if WorkloadHasParent(mockUnsupportedKind) {
+		t.Error("Expected false for unsupported kind, but got true")
+	}
+
+	// 3. Provide a supported kind but no owner references
+	mockJobWithoutOwner := mockWorkload("", "Job", "", "", "")
+	if WorkloadHasParent(mockJobWithoutOwner) {
+		t.Error("Expected false for Job without owner, but got true")
+	}
+
+	// 4. Provide a supported kind with owner references
+	mockJobWithOwner := mockWorkload("", "Pod", "", "", "ReplicaSet")
+	if !WorkloadHasParent(mockJobWithOwner) {
+		t.Error("Expected true for Job with owner, but got false")
+	}
+
+	// 5. Provide a Pod without the pod-template-hash label
+	mockPodWithoutHash := mockWorkload("", "Pod", "", "", "")
+	mockPodWithoutHash.SetLabel("some-label", "value")
+	if WorkloadHasParent(mockPodWithoutHash) {
+		t.Error("Expected false for Pod without pod-template-hash, but got true")
+	}
+
+	// 6. Provide a Pod with the pod-template-hash label
+	mockPodWithHash := mockWorkload("", "Pod", "", "", "")
+	mockPodWithHash.SetLabel("pod-template-hash", "value")
+	if !WorkloadHasParent(mockPodWithHash) {
+		t.Error("Expected true for Pod with pod-template-hash, but got false")
+	}
+
+	// 7. Provide a Pod with an empty pod-template-hash label
+	mockPodWithEmptyHash := mockWorkload("", "Pod", "", "", "")
+	mockPodWithEmptyHash.SetLabel("pod-template-hash", "")
+	if WorkloadHasParent(mockPodWithEmptyHash) {
+		t.Error("Expected false for Pod with empty pod-template-hash, but got true")
+	}
+
+	// 8. Provide a ReplicaSet with owner references
+	mockReplicaSetWithOwner := mockWorkload("", "ReplicaSet", "", "", "owner1")
+	if !WorkloadHasParent(mockReplicaSetWithOwner) {
+		t.Error("Expected true for ReplicaSet with owner, but got false")
+	}
+
+	// 9. Provide a ReplicaSet without owner references
+	mockReplicaSetWithoutOwner := mockWorkload("", "ReplicaSet", "", "", "")
+	if WorkloadHasParent(mockReplicaSetWithoutOwner) {
+		t.Error("Expected false for ReplicaSet without owner, but got true")
+	}
+
+	// 10. Provide a Job with multiple owner references
+	mockJobWithMultipleOwners := mockWorkload("", "Job", "", "", "owner1")
+	if !WorkloadHasParent(mockJobWithMultipleOwners) {
+		t.Error("Expected true for Job with multiple owners, but got false")
+	}
+
+	// 11. Test with other kinds of workloads to ensure they return false when they aren't "Pod", "Job", or "ReplicaSet".
+	mockDaemonSet := mockWorkload("", "DaemonSet", "", "", "owner1")
+	if WorkloadHasParent(mockDaemonSet) {
+		t.Error("Expected false for DaemonSet regardless of owner references, but got true")
+	}
+
+	// 12. Test with a Pod that has both an owner reference and a pod-template-hash. It should return true because it satisfies both conditions.
+	mockPodWithBoth := mockWorkload("", "Pod", "", "", "ReplicaSet")
+	mockPodWithBoth.SetLabel("pod-template-hash", "value")
+	if !WorkloadHasParent(mockPodWithBoth) {
+		t.Error("Expected true for Pod with both owner reference and pod-template-hash, but got false")
+	}
+
+	// 13. Test a Pod without labels, it should return true.
+	mockPodNoLabels := mockWorkload("", "Pod", "", "", "ReplicaSet")
+	if !WorkloadHasParent(mockPodNoLabels) {
+		t.Error("Expected false for Pod without labels, but got true")
+	}
 }
