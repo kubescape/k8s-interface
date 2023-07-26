@@ -6,11 +6,11 @@ import (
 
 	wlidpkg "github.com/armosec/utils-k8s-go/wlid"
 	"github.com/kubescape/k8s-interface/workloadinterface"
+	"golang.org/x/exp/slices"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/dynamic"
-	"k8s.io/utils/strings/slices"
 	//
 	// Uncomment to load all auth plugins
 	// _ "k8s.io/client-go/plugin/pkg/client/auth
@@ -166,36 +166,29 @@ func (k8sAPI *KubernetesApi) ResourceInterface(resource *schema.GroupVersionReso
 	return k8sAPI.DynamicClient.Resource(*resource)
 }
 
+// CalculateWorkloadParentRecursive returns the parent of the workload kind and name
 func (k8sAPI *KubernetesApi) CalculateWorkloadParentRecursive(workload IWorkload) (string, string, error) {
 	if workload == nil {
 		return "", "", fmt.Errorf("workload is nil")
 	}
 
-	// filter out non-controller workloads
-	if !slices.Contains([]string{"Pod", "Job", "ReplicaSet"}, workload.GetKind()) {
+	if !WorkloadHasParent(workload) {
 		return workload.GetKind(), workload.GetName(), nil
 	}
 
-	ownerReferences, err := workload.GetOwnerReferences() // OwnerReferences in workload
-	if err != nil {
-		return workload.GetKind(), workload.GetName(), err
-	}
+	ownerReferences, _ := workload.GetOwnerReferences() // OwnerReferences in workload
 
 	var ownerKind, ownerName string
 	if len(ownerReferences) == 0 {
 
 		podLabels := workload.GetLabels()
-		podHash, ok := podLabels["pod-template-hash"]
-		if workload.GetKind() != "Pod" || !ok {
-			return workload.GetKind(), workload.GetName(), nil // parent found
-		}
 
 		// Pod without owner, fallback to pod-template-hash label
 		replicas, err := k8sAPI.ListWorkloads(&schema.GroupVersionResource{
 			Group:    "apps",
 			Version:  "v1",
 			Resource: "replicasets",
-		}, workload.GetNamespace(), map[string]string{"pod-template-hash": podHash}, map[string]string{})
+		}, workload.GetNamespace(), map[string]string{"pod-template-hash": podLabels["pod-template-hash"]}, map[string]string{})
 		if err != nil {
 			return workload.GetKind(), workload.GetName(), err
 		}
@@ -221,4 +214,34 @@ func (k8sAPI *KubernetesApi) CalculateWorkloadParentRecursive(workload IWorkload
 		return workload.GetKind(), workload.GetName(), err
 	}
 	return k8sAPI.CalculateWorkloadParentRecursive(parentWorkload)
+}
+
+func WorkloadHasParent(workload IWorkload) bool {
+	if workload == nil {
+		return false
+	}
+
+	// filter out non-controller workloads
+	if !slices.Contains([]string{"Pod", "Job", "ReplicaSet"}, workload.GetKind()) {
+		return false
+	}
+
+	// check if workload has owner
+	ownerReferences, err := workload.GetOwnerReferences() // OwnerReferences in workload
+	if err != nil {
+		return false
+	}
+	if len(ownerReferences) > 0 {
+		return true
+	}
+
+	// check if workload is Pod with pod-template-hash label
+	if workload.GetKind() == "Pod" {
+		if podLabels := workload.GetLabels(); podLabels != nil {
+			if podHash, ok := podLabels["pod-template-hash"]; ok && podHash != "" {
+				return true
+			}
+		}
+	}
+	return false
 }
