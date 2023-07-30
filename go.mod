@@ -16,7 +16,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/config v1.18.30
 	github.com/aws/aws-sdk-go-v2/service/eks v1.28.1
 	github.com/docker/docker v24.0.5+incompatible
-	github.com/kubescape/go-logger v0.0.14-0.20230730134225-e59751254525
+	github.com/kubescape/go-logger v0.0.15
 	github.com/stretchr/testify v1.8.4
 	golang.org/x/exp v0.0.0-20230728194245-b0cb94b80691
 	golang.org/x/oauth2 v0.10.0
