@@ -232,7 +232,7 @@ func WorkloadHasParent(workload IWorkload) bool {
 		return false
 	}
 	if len(ownerReferences) > 0 {
-		return true
+		return slices.Contains([]string{"apps/v1", "batch/v1", "batch/v1beta1"}, ownerReferences[0].APIVersion)
 	}
 
 	// check if workload is Pod with pod-template-hash label
