@@ -64,9 +64,17 @@ func mockWorkload(apiVersion, kind, namespace, name, ownerReferenceKind string) 
 	mock.SetNamespace(namespace)
 
 	if ownerReferenceKind != "" {
+		apiVersion := ""
+		switch ownerReferenceKind {
+		case "Deployment", "ReplicaSet":
+			apiVersion = "apps/v1"
+		case "CronJob":
+			apiVersion = "batch/v1"
+		}
 		ownerreferences := []metav1.OwnerReference{
 			{
-				Kind: ownerReferenceKind,
+				APIVersion: apiVersion,
+				Kind:       ownerReferenceKind,
 			},
 		}
 		workloadinterface.SetInMap(mock.GetWorkload(), []string{"metadata"}, "ownerReferences", ownerreferences)
@@ -121,7 +129,7 @@ func TestWorkloadHasParent(t *testing.T) {
 	}
 
 	// 8. Provide a ReplicaSet with owner references
-	mockReplicaSetWithOwner := mockWorkload("", "ReplicaSet", "", "", "owner1")
+	mockReplicaSetWithOwner := mockWorkload("", "ReplicaSet", "", "", "Deployment")
 	if !WorkloadHasParent(mockReplicaSetWithOwner) {
 		t.Error("Expected true for ReplicaSet with owner, but got false")
 	}
@@ -133,7 +141,7 @@ func TestWorkloadHasParent(t *testing.T) {
 	}
 
 	// 10. Provide a Job with multiple owner references
-	mockJobWithMultipleOwners := mockWorkload("", "Job", "", "", "owner1")
+	mockJobWithMultipleOwners := mockWorkload("", "Job", "", "", "CronJob")
 	if !WorkloadHasParent(mockJobWithMultipleOwners) {
 		t.Error("Expected true for Job with multiple owners, but got false")
 	}
@@ -155,5 +163,17 @@ func TestWorkloadHasParent(t *testing.T) {
 	mockPodNoLabels := mockWorkload("", "Pod", "", "", "ReplicaSet")
 	if !WorkloadHasParent(mockPodNoLabels) {
 		t.Error("Expected false for Pod without labels, but got true")
+	}
+
+	// 14. Provide a ReplicaSet with owner references CRD
+	mockReplicaSetWithCRDOwner := mockWorkload("", "ReplicaSet", "", "", "CRD")
+	if WorkloadHasParent(mockReplicaSetWithCRDOwner) {
+		t.Error("Expected true for ReplicaSet with owner, but got false")
+	}
+
+	// 15. Provide a Pod with owner references CRD
+	mockPodWithCRDOwner := mockWorkload("", "Pod", "", "", "Node")
+	if WorkloadHasParent(mockPodWithCRDOwner) {
+		t.Error("Expected true for ReplicaSet with owner, but got false")
 	}
 }
