@@ -33,6 +33,7 @@ require (
 	github.com/armosec/gojay v1.2.15 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.14.14 // indirect
 	github.com/cenkalti/backoff/v4 v4.2.1 // indirect
+	github.com/docker/distribution v2.8.2+incompatible // indirect
 	github.com/fatih/color v1.15.0 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/google/s2a-go v0.1.4 // indirect
