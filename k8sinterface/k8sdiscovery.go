@@ -343,6 +343,10 @@ func StringToResourceGroup(str string) (string, string, string) {
 func updateResourceKind(resource string) string {
 	resource = strings.ToLower(resource)
 
+	if resource == "ingress" {
+		return "ingresses"
+	}
+
 	if resource != "" && !strings.HasSuffix(resource, "s") {
 		if strings.HasSuffix(resource, "y") {
 			return fmt.Sprintf("%sies", strings.TrimSuffix(resource, "y")) // e.g. NetworkPolicy -> networkpolicies
