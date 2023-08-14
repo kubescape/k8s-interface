@@ -116,3 +116,34 @@ func TestIsTypeWorkload(t *testing.T) {
 	InitializeMapResourcesMock()
 	assert.True(t, IsTypeWorkload(cronJobObjectMock()))
 }
+
+func TestUpdateResourceKind(t *testing.T) {
+	tests := []struct {
+		input    string
+		expected string
+	}{
+		{"Pod", "pods"},
+		{"Service", "services"},
+		{"Node", "nodes"},
+		{"Deployment", "deployments"},
+		{"NetworkPolicy", "networkpolicies"},
+		{"Ingress", "ingresses"},
+
+		{"pod", "pods"},
+		{"service", "services"},
+		{"node", "nodes"},
+		{"deployment", "deployments"},
+		{"networkPolicy", "networkpolicies"},
+		{"ingress", "ingresses"},
+		{"", ""},
+	}
+
+	for _, test := range tests {
+		t.Run(fmt.Sprintf("Input: %s", test.input), func(t *testing.T) {
+			result := updateResourceKind(test.input)
+			if result != test.expected {
+				t.Errorf("Expected: %s, Got: %s", test.expected, result)
+			}
+		})
+	}
+}
