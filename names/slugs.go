@@ -109,3 +109,18 @@ func ImageInfoToSlug(image, imageHash string) (string, error) {
 
 	return slug, err
 }
+
+func GetNamespaceLessSlug(slug, namespace string) (string, error) {
+	if !IsValidSlug(slug) {
+		return "", ErrInvalidSlug
+	}
+	namespaceLessSlug := strings.TrimPrefix(slug, namespace+"-")
+	if slug == namespaceLessSlug {
+		return "", ErrInvalidSlug
+	}
+	if !IsValidSlug(namespaceLessSlug) {
+		return "", ErrInvalidSlug
+	}
+
+	return namespaceLessSlug, nil
+}

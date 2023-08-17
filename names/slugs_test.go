@@ -326,3 +326,70 @@ func TestIsValidDSNLabelName(t *testing.T) {
 		})
 	}
 }
+
+func TestGetNamespaceLessSlug(t *testing.T) {
+	tt := []struct {
+		inputName string
+		want      string
+		namespace string
+	}{
+		{
+			inputName: "default-replicaset-nginx-77b4fdf86c-6e03-a89e",
+			want:      "replicaset-nginx-77b4fdf86c-6e03-a89e",
+			namespace: "default",
+		},
+		{
+			inputName: "kubescape-statefulset-kollector-c1be-77d8",
+			want:      "statefulset-kollector-c1be-77d8",
+			namespace: "kubescape",
+		},
+		{
+			inputName: "kubescape-replicaset-kubevuln-7d894c4494-3b54-2a81",
+			want:      "replicaset-kubevuln-7d894c4494-3b54-2a81",
+			namespace: "kubescape",
+		},
+		{
+			inputName: "kubescape-replicaset-otel-collector-5674d77b9f-3eeb-8ca1",
+			want:      "replicaset-otel-collector-5674d77b9f-3eeb-8ca1",
+			namespace: "kubescape",
+		},
+		{
+			inputName: "kube-system-daemonset-kube-proxy-4e8b-ad45",
+			want:      "daemonset-kube-proxy-4e8b-ad45",
+			namespace: "kube-system",
+		},
+		{
+			inputName: "kubescape-replicaset-gateway-6d4fddc958-54db-85c8",
+			want:      "replicaset-gateway-6d4fddc958-54db-85c8",
+			namespace: "kubescape",
+		},
+	}
+
+	ttError := []struct {
+		inputName string
+		namespace string
+	}{
+		{
+			inputName: "kubescape-replicaset-gateway-6d4fddc958-54db-85c8",
+			namespace: "notexistone",
+		},
+		{
+			inputName: "notValidSlug",
+		},
+	}
+
+	for _, tc := range tt {
+		t.Run(tc.inputName, func(t *testing.T) {
+			got, err := GetNamespaceLessSlug(tc.inputName, tc.namespace)
+			assert.Equal(t, err, nil)
+			assert.Equal(t, tc.want, got)
+		})
+	}
+
+	for _, tc := range ttError {
+		t.Run(tc.inputName, func(t *testing.T) {
+			_, err := GetNamespaceLessSlug(tc.inputName, tc.namespace)
+			assert.NotEqual(t, err, nil)
+		})
+	}
+}
