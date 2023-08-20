@@ -186,13 +186,24 @@ func SetConfigClusterServerName(contextName string) {
 	ConfigClusterServerName = contextName
 }
 
+// GetK8sConfigClusterServerName get the server name of desired cluster context
 func GetK8sConfigClusterServerName(config *clientcmdapi.Config) string {
-	if config != nil {
-		if ConfigClusterServerName == "" {
-			if _, exist := config.Clusters[config.CurrentContext]; exist {
-				ConfigClusterServerName = config.Clusters[config.CurrentContext].Server
-			}
-		}
+	if config == nil {
+		return ConfigClusterServerName
 	}
+
+	contextName := ConfigClusterServerName
+	if contextName == "" {
+		// if context name is not set, use the current context
+		contextName = config.CurrentContext
+		SetClusterContextName(contextName)
+	}
+
+	if context, exist := config.Clusters[contextName]; exist {
+		// return the server name of the context
+		return context.Server
+	}
+
+	// return current context in case the server name is not available
 	return ConfigClusterServerName
 }
