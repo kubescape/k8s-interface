@@ -8,7 +8,6 @@ import (
 	"github.com/kubescape/k8s-interface/cloudsupport/apis"
 	"github.com/kubescape/k8s-interface/k8sinterface"
 	"github.com/kubescape/k8s-interface/workloadinterface"
-	clientcmdapi "k8s.io/client-go/tools/clientcmd/api"
 )
 
 const (
@@ -31,14 +30,14 @@ const (
 
 // GetCloudProvider from
 func GetCloudProvider() string {
-	if IsAKS() {
-		return AKS
-	}
-	if IsEKS(k8sinterface.GetConfig()) {
+	if IsEKS() {
 		return EKS
 	}
-	if IsGKE(k8sinterface.GetConfig()) {
+	if IsGKE() {
 		return GKE
+	}
+	if IsAKS() {
+		return AKS
 	}
 	return ""
 }
@@ -351,7 +350,7 @@ func IsAKS() bool {
 }
 
 // check if the server is EKS. e.g. arn:aws:eks:eu-west-1:xxx:cluster/xxxx
-func IsEKS(config *clientcmdapi.Config) bool {
+func IsEKS() bool {
 	version, err := k8sinterface.GetK8SServerGitVersion()
 	if err != nil {
 		return false
@@ -360,7 +359,7 @@ func IsEKS(config *clientcmdapi.Config) bool {
 }
 
 // check if the server is GKE. e.g. gke_xxx-xx-0000_us-central1-c_xxxx-1
-func IsGKE(config *clientcmdapi.Config) bool {
+func IsGKE() bool {
 	version, err := k8sinterface.GetK8SServerGitVersion()
 	if err != nil {
 		return false

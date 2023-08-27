@@ -237,6 +237,8 @@ func TestSetWorkloadDescribeRepositories(t *testing.T) {
 // ==================== DescribeCluster ====================
 
 func TestGetClusterDescribeAKS(t *testing.T) {
+	defer tearDown()
+
 	g := NewAKSSupportMock()
 	clusterDescribe, err := GetClusterDescribeAKS(g, "XXXXXX", "armo-testing", "armo-dev")
 	assert.NoError(t, err)
@@ -253,6 +255,8 @@ func TestGetClusterDescribeAKS(t *testing.T) {
 
 }
 func TestNewDescriptiveInfoFromCloudProvider(t *testing.T) {
+	defer tearDown()
+
 	g := NewEKSSupportMock()
 	des, err := GetClusterDescribeEKS(g, "ca-terraform-eks-dev-stage", "")
 	assert.NoError(t, err)
@@ -265,6 +269,8 @@ func TestNewDescriptiveInfoFromCloudProvider(t *testing.T) {
 
 }
 func TestSetObjectClusterDescribe(t *testing.T) {
+	defer tearDown()
+
 	g := NewEKSSupportMock()
 	des, err := GetClusterDescribeEKS(g, "ca-terraform-eks-dev-stage", "")
 	assert.NoError(t, err)
@@ -290,6 +296,8 @@ func assertMap(t *testing.T, expected, actual map[string]interface{}) {
 }
 
 func Test_IsGKE(t *testing.T) {
+	defer tearDown()
+
 	type args struct {
 		config  *clientcmdapi.Config
 		context string
@@ -312,8 +320,9 @@ func Test_IsGKE(t *testing.T) {
 
 		t.Run(tt.name, func(t *testing.T) {
 			// set context
+			k8sinterface.SetClientConfigAPI(tt.args.config)
 			k8sinterface.SetK8SGitServerVersion("gke_xxx-xx-0000_us-central1-c_xxxx-1")
-			if got := IsGKE(tt.args.config); got != tt.want {
+			if got := IsGKE(); got != tt.want {
 				t.Errorf("IsGKE() = %v, want %v", got, tt.want)
 			}
 		})
@@ -321,6 +330,8 @@ func Test_IsGKE(t *testing.T) {
 }
 
 func Test_IsEKS(t *testing.T) {
+	defer tearDown()
+
 	type args struct {
 		config  *clientcmdapi.Config
 		context string
@@ -343,8 +354,9 @@ func Test_IsEKS(t *testing.T) {
 
 		t.Run(tt.name, func(t *testing.T) {
 			// set context
+			k8sinterface.SetClientConfigAPI(tt.args.config)
 			k8sinterface.SetK8SGitServerVersion("arn:aws:eks:eu-west-1:xxx:cluster/xxxx")
-			if got := IsEKS(tt.args.config); got != tt.want {
+			if got := IsEKS(); got != tt.want {
 				t.Errorf("IsEKS() = %v, want %v", got, tt.want)
 			}
 		})
@@ -352,6 +364,8 @@ func Test_IsEKS(t *testing.T) {
 }
 
 func Test_IsAKS(t *testing.T) {
+	defer tearDown()
+
 	type args struct {
 		config  *clientcmdapi.Config
 		context string
@@ -374,6 +388,8 @@ func Test_IsAKS(t *testing.T) {
 
 		t.Run(tt.name, func(t *testing.T) {
 			// set context
+			k8sinterface.SetClientConfigAPI(tt.args.config)
+			k8sinterface.SetClusterContextName(tt.args.context)
 			k8sinterface.SetConfigClusterServerName("https://XXX.XX.XXX.azmk8s.io:443")
 			if got := IsAKS(); got != tt.want {
 				t.Errorf("IsAKS() = %v, want %v", got, tt.want)
@@ -382,28 +398,143 @@ func Test_IsAKS(t *testing.T) {
 	}
 }
 
-func Test_GetK8sConfigClusterServerName(t *testing.T) {
-	expectedClusterName := "https://XXX.XX.XXX.azmk8s.io:443"
-	k8sClusterConfigName := k8sinterface.GetK8sConfigClusterServerName(getKubeConfigMock())
-	assert.Equal(t, k8sClusterConfigName, expectedClusterName)
-}
+func Test_GetK8sConfigClusterServerName2(t *testing.T) {
+	defer tearDown()
 
-func Test_GetK8sConfigClusterServerNameCheckIsNotExist(t *testing.T) {
-	expectedClusterName := ""
-	k8sinterface.SetConfigClusterServerName("")
-	k8sClusterConfigName := k8sinterface.GetK8sConfigClusterServerName(getkubeConfigContextNotExistMock())
-	assert.Equal(t, k8sClusterConfigName, expectedClusterName)
-}
+	tests := []struct {
+		name               string
+		clusterContextName string
+		clientConfigAPI    *clientcmdapi.Config
+		expectedResult     string
+	}{
+		{
+			name:               "Test_GetK8sConfigClusterServerName with valid config",
+			clusterContextName: "xxxx-2",
+			clientConfigAPI:    getKubeConfigMock(),
+			expectedResult:     "https://XXX.XX.XXX.azmk8s.io:443",
+		},
+		{
+			name:               "Test_GetK8sConfigClusterServerName with empty config",
+			clusterContextName: "",
+			clientConfigAPI:    &clientcmdapi.Config{},
+			expectedResult:     "",
+		},
+		{
+			name:               "Test_GetK8sConfigClusterServerName with non-existent context",
+			clusterContextName: "non-existent-context",
+			clientConfigAPI:    getkubeConfigContextNotExistMock(),
+			expectedResult:     "",
+		},
+	}
 
-func Test_GetK8sConfigClusterServerNameIsConfigNil(t *testing.T) {
-	k8sClusterConfigName := k8sinterface.GetK8sConfigClusterServerName(nil)
-	assert.Equal(t, k8sClusterConfigName, "")
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			k8sinterface.SetClusterContextName(tt.clusterContextName)
+			k8sinterface.SetClientConfigAPI(tt.clientConfigAPI)
+			k8sClusterConfigName := k8sinterface.GetK8sConfigClusterServerName()
+			assert.Equal(t, tt.expectedResult, k8sClusterConfigName)
+		})
+	}
+
 }
 
 func Test_GetK8SServerGitVersionNotConnectedToCluster(t *testing.T) {
+	defer tearDown()
+
 	k8sinterface.SetK8SGitServerVersion("")
 	k8sinterface.SetClusterContextName("no-such-cluster")
 	K8SGitServerVersion, err := k8sinterface.GetK8SServerGitVersion()
 	assert.NotEqual(t, nil, err)
 	assert.Equal(t, "", K8SGitServerVersion)
+}
+
+func TestGetCloudProvider(t *testing.T) {
+	tearDown()
+	defer tearDown()
+	configMock := &clientcmdapi.Config{
+		Clusters: map[string]*clientcmdapi.Cluster{
+			"0-context": {
+				Server: "https://XXX.XX.XXX.azmk8s.io:443",
+			},
+			"1-context": {
+				Server: "arn:aws:eks:eu-west-2:0:cluster/0",
+			},
+			"2-context": {
+				Server: "https://0.0.0.0",
+			},
+			"3-context": {
+				Server: "https://0.0.0.0",
+			},
+		},
+		Contexts: map[string]*clientcmdapi.Context{
+			"0-context": {
+				Cluster: "0-context",
+			},
+			"1-context": {
+				Cluster: "1-context",
+			},
+			"2-context": {
+				Cluster: "2-context",
+			},
+			"3-context": {
+				Cluster: "3-context",
+			},
+		},
+	}
+
+	tests := []struct {
+		name       string
+		config     *clientcmdapi.Config
+		context    string
+		expected   string
+		gitVersion string
+	}{
+		{
+			name:       "AKS",
+			config:     configMock,
+			context:    "0-context",
+			expected:   AKS,
+			gitVersion: "v1",
+		},
+		{
+			name:       "EKS",
+			config:     configMock,
+			context:    "1-context",
+			expected:   EKS,
+			gitVersion: "eks",
+		},
+		{
+			name:       "GKE",
+			config:     configMock,
+			context:    "2-context",
+			expected:   GKE,
+			gitVersion: "gke",
+		},
+		{
+			name:       "Unknown",
+			config:     configMock,
+			context:    "3-context",
+			expected:   "",
+			gitVersion: "",
+		},
+	}
+	k8sinterface.SetConnectedToCluster(true)
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			k8sinterface.SetClusterContextName(tt.context)
+			k8sinterface.SetK8SGitServerVersion(tt.gitVersion)
+			k8sinterface.SetClientConfigAPI(tt.config)
+			if got := GetCloudProvider(); got != tt.expected {
+				t.Errorf("GetCloudProvider() = %v, want %v", got, tt.expected)
+			}
+		})
+	}
+}
+
+func tearDown() {
+	k8sinterface.SetClientConfigAPI(nil)
+	k8sinterface.SetClusterContextName("")
+	k8sinterface.SetConfigClusterServerName("")
+	k8sinterface.SetK8SGitServerVersion("")
 }
