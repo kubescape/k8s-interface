@@ -19,12 +19,29 @@ const (
 )
 
 const (
+	AKS string = "aks"
+	GKE string = "gke"
+	EKS string = "eks"
+)
+
+const (
 	Version         = "v1"
-	AKS             = "aks"
-	GKE             = "gke"
-	EKS             = "eks"
 	NotSupportedMsg = "Not supported"
 )
+
+// GetCloudProvider from
+func GetCloudProvider() string {
+	if IsAKS() {
+		return AKS
+	}
+	if IsEKS(k8sinterface.GetConfig()) {
+		return EKS
+	}
+	if IsGKE(k8sinterface.GetConfig()) {
+		return GKE
+	}
+	return ""
+}
 
 // NewDescriptiveInfoFromCloudProvider construct a CloudProviderDescribe from map[string]interface{}. If the map does not match the object, will return nil
 func NewDescriptiveInfoFromCloudProvider(object map[string]interface{}) *CloudProviderDescribe {
@@ -329,8 +346,7 @@ func GetPolicyVersionAKS(aksSupport IAKSSupport, cluster string, subscriptionId 
 // check if the server is AKS. e.g. https://XXX.XX.XXX.azmk8s.io:443
 func IsAKS() bool {
 	const serverIdentifierAKS = "azmk8s.io"
-	config := k8sinterface.GetConfig()
-	clusterServerName := k8sinterface.GetK8sConfigClusterServerName(config)
+	clusterServerName := k8sinterface.GetK8sConfigClusterServerName()
 	return strings.Contains(clusterServerName, serverIdentifierAKS)
 }
 
