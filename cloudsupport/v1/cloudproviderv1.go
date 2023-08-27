@@ -28,7 +28,7 @@ const (
 	NotSupportedMsg = "Not supported"
 )
 
-// GetCloudProvider from
+// GetCloudProvider get cloud provider name from gitVersion/server URL
 func GetCloudProvider() string {
 	if IsEKS() {
 		return EKS
@@ -57,25 +57,6 @@ func NewDescriptiveInfoFromCloudProvider(object map[string]interface{}) *CloudPr
 		return nil
 	}
 	return description
-}
-
-// DEPRECATED - Use apis.IsTypeDescriptiveInfoFromCloudProvider instead
-func IsTypeDescriptiveInfoFromCloudProvider(object map[string]interface{}) bool {
-	if object == nil {
-		return false
-	}
-	if apiVersion, ok := object["apiVersion"]; ok {
-		if p, k := apiVersion.(string); k {
-			if group := strings.Split(p, "/"); group[0] == apis.ApiVersionGKE || group[0] == apis.ApiVersionEKS {
-				if kind, ok := object["kind"]; ok {
-					if k, kk := kind.(string); kk && k == apis.CloudProviderDescribeKind || k == "Describe" {
-						return true
-					}
-				}
-			}
-		}
-	}
-	return false
 }
 
 // ================================ ListEntitiesForPolicies ================================
