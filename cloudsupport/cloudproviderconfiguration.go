@@ -13,7 +13,6 @@ import (
 const (
 	TypeCloudProviderDescription workloadinterface.ObjectType = "CloudProviderDescribe" // DEPRECATED
 	CloudProviderDescriptionKind                              = "ClusterDescription"    // DEPRECATED
-	KS_CLOUD_PROVIDER_ENV_VAR                                 = "KS_CLOUD_PROVIDER"
 	KS_KUBE_CLUSTER_ENV_VAR                                   = "KS_KUBE_CLUSTER"
 )
 
@@ -36,20 +35,9 @@ func GetKubeContextName() string {
 	return k8sinterface.GetContextName()
 }
 
-// Try to lookup from env var and then from current context
-func GetCloudProvider(currContext string) string {
-	val, ok := os.LookupEnv(KS_CLOUD_PROVIDER_ENV_VAR)
-	if ok {
-		return val
-	}
-	if strings.Contains(currContext, strings.ToLower(cloudsupportv1.EKS)) {
-		return cloudsupportv1.EKS
-	} else if strings.Contains(currContext, strings.ToLower(cloudsupportv1.GKE)) {
-		return cloudsupportv1.GKE
-	} else if strings.Contains(currContext, strings.ToLower(cloudsupportv1.AKS)) {
-		return cloudsupportv1.AKS
-	}
-	return ""
+// GetCloudProvider returns the cloud provider name
+func GetCloudProvider() string {
+	return cloudsupportv1.GetCloudProvider()
 }
 
 // GetDescriptiveInfoFromCloudProvider returns the cluster description from the cloud provider wrapped in IMetadata obj

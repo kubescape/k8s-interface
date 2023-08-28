@@ -8,7 +8,6 @@ import (
 	"github.com/kubescape/k8s-interface/cloudsupport/apis"
 	"github.com/kubescape/k8s-interface/k8sinterface"
 	"github.com/kubescape/k8s-interface/workloadinterface"
-	clientcmdapi "k8s.io/client-go/tools/clientcmd/api"
 )
 
 const (
@@ -19,12 +18,29 @@ const (
 )
 
 const (
+	AKS string = "aks"
+	GKE string = "gke"
+	EKS string = "eks"
+)
+
+const (
 	Version         = "v1"
-	AKS             = "aks"
-	GKE             = "gke"
-	EKS             = "eks"
 	NotSupportedMsg = "Not supported"
 )
+
+// GetCloudProvider get cloud provider name from gitVersion/server URL
+func GetCloudProvider() string {
+	if IsEKS() {
+		return EKS
+	}
+	if IsGKE() {
+		return GKE
+	}
+	if IsAKS() {
+		return AKS
+	}
+	return ""
+}
 
 // NewDescriptiveInfoFromCloudProvider construct a CloudProviderDescribe from map[string]interface{}. If the map does not match the object, will return nil
 func NewDescriptiveInfoFromCloudProvider(object map[string]interface{}) *CloudProviderDescribe {
@@ -41,25 +57,6 @@ func NewDescriptiveInfoFromCloudProvider(object map[string]interface{}) *CloudPr
 		return nil
 	}
 	return description
-}
-
-// DEPRECATED - Use apis.IsTypeDescriptiveInfoFromCloudProvider instead
-func IsTypeDescriptiveInfoFromCloudProvider(object map[string]interface{}) bool {
-	if object == nil {
-		return false
-	}
-	if apiVersion, ok := object["apiVersion"]; ok {
-		if p, k := apiVersion.(string); k {
-			if group := strings.Split(p, "/"); group[0] == apis.ApiVersionGKE || group[0] == apis.ApiVersionEKS {
-				if kind, ok := object["kind"]; ok {
-					if k, kk := kind.(string); kk && k == apis.CloudProviderDescribeKind || k == "Describe" {
-						return true
-					}
-				}
-			}
-		}
-	}
-	return false
 }
 
 // ================================ ListEntitiesForPolicies ================================
@@ -329,13 +326,12 @@ func GetPolicyVersionAKS(aksSupport IAKSSupport, cluster string, subscriptionId 
 // check if the server is AKS. e.g. https://XXX.XX.XXX.azmk8s.io:443
 func IsAKS() bool {
 	const serverIdentifierAKS = "azmk8s.io"
-	config := k8sinterface.GetConfig()
-	clusterServerName := k8sinterface.GetK8sConfigClusterServerName(config)
+	clusterServerName := k8sinterface.GetK8sConfigClusterServerName()
 	return strings.Contains(clusterServerName, serverIdentifierAKS)
 }
 
 // check if the server is EKS. e.g. arn:aws:eks:eu-west-1:xxx:cluster/xxxx
-func IsEKS(config *clientcmdapi.Config) bool {
+func IsEKS() bool {
 	version, err := k8sinterface.GetK8SServerGitVersion()
 	if err != nil {
 		return false
@@ -344,7 +340,7 @@ func IsEKS(config *clientcmdapi.Config) bool {
 }
 
 // check if the server is GKE. e.g. gke_xxx-xx-0000_us-central1-c_xxxx-1
-func IsGKE(config *clientcmdapi.Config) bool {
+func IsGKE() bool {
 	version, err := k8sinterface.GetK8SServerGitVersion()
 	if err != nil {
 		return false

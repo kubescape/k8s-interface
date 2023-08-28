@@ -26,6 +26,7 @@ var K8SGitServerVersion = ""
 
 // K8SConfig pointer to k8s config
 var K8SConfig *restclient.Config
+var clientConfigAPI *clientcmdapi.Config
 
 // KubernetesApi -
 type KubernetesApi struct {
@@ -100,24 +101,33 @@ func GetK8sConfig() *restclient.Config {
 	return K8SConfig
 }
 
-// DEPRECATED
-func GetCurrentContext() *clientcmdapi.Context {
-	if kubeConfig := GetConfig(); kubeConfig != nil {
-		if clusterContextName != "" {
-			if c, ok := kubeConfig.Contexts[clusterContextName]; ok {
-				return c
-			}
-		}
-		// if context name is not set, return the current context
-		return kubeConfig.Contexts[kubeConfig.CurrentContext]
+func GetContext() *clientcmdapi.Context {
+	kubeConfig := GetConfig()
+	if kubeConfig == nil {
+		return nil
+	}
+
+	contextName := clusterContextName
+	if contextName == "" {
+		// if context name is not set, use the current context
+		contextName = kubeConfig.CurrentContext
+	}
+
+	if context, exist := kubeConfig.Contexts[contextName]; exist && context != nil {
+		// return the context
+		return context
 	}
 	return nil
+}
+
+func SetClientConfigAPI(conf *clientcmdapi.Config) {
+	clientConfigAPI = conf
 }
 
 func IsConnectedToCluster() bool {
 	if K8SConfig == nil {
 		if err := LoadK8sConfig(); err != nil {
-			connectedToCluster = false
+			SetConnectedToCluster(false)
 		}
 	}
 	return connectedToCluster
@@ -141,36 +151,46 @@ func GetConfig() *clientcmdapi.Config {
 	if !connectedToCluster {
 		return nil
 	}
+	if clientConfigAPI != nil {
+		return clientConfigAPI
+	}
 
 	kubeConfig := clientcmd.NewNonInteractiveDeferredLoadingClientConfig(clientcmd.NewDefaultClientConfigLoadingRules(), &clientcmd.ConfigOverrides{CurrentContext: clusterContextName})
 	config, err := kubeConfig.RawConfig()
 	if err != nil {
 		return nil
 	}
+
+	// set the config to the global variable
+	SetClientConfigAPI(&config)
+
 	return &config
 }
 
 // GetDefaultNamespace returns the default namespace for the current context
 func GetDefaultNamespace() string {
-	defaultNamespace := "default"
-	clientCfg, err := clientcmd.NewDefaultClientConfigLoadingRules().Load()
-	if err != nil {
-		return defaultNamespace
+
+	if context := GetContext(); context != nil {
+		return context.Namespace
 	}
 
-	tempClusterContextName := clusterContextName
-	if tempClusterContextName == "" {
-		tempClusterContextName = clientCfg.CurrentContext
+	// return default namespace in case the context is not available
+	return "default"
+}
+
+// GetCluster returns a pointer to the clientcmdapi Cluster object of the current context
+func GetCluster() *clientcmdapi.Cluster {
+	config := GetConfig()
+	if config == nil {
+		return nil
 	}
-	apiContext, ok := clientCfg.Contexts[tempClusterContextName]
-	if !ok || apiContext == nil {
-		return defaultNamespace
+
+	if context, exist := config.Clusters[GetContextName()]; exist && context != nil {
+		// return the cluster as based on the context
+		return context
 	}
-	namespace := apiContext.Namespace
-	if apiContext.Namespace == "" {
-		namespace = defaultNamespace
-	}
-	return namespace
+	return nil
+
 }
 
 // SetClusterContextName set the name of desired cluster context. The package will use this name when loading the context
@@ -187,23 +207,22 @@ func SetConfigClusterServerName(contextName string) {
 }
 
 // GetK8sConfigClusterServerName get the server name of desired cluster context
-func GetK8sConfigClusterServerName(config *clientcmdapi.Config) string {
+func GetK8sConfigClusterServerName() string {
+
+	config := GetConfig()
 	if config == nil {
-		return ConfigClusterServerName
+		return ""
 	}
 
-	contextName := ConfigClusterServerName
-	if contextName == "" {
-		// if context name is not set, use the current context
-		contextName = config.CurrentContext
-		SetClusterContextName(contextName)
-	}
-
-	if context, exist := config.Clusters[contextName]; exist && context != nil {
+	if context, exist := config.Clusters[GetContextName()]; exist && context != nil {
 		// return the server name of the context
 		return context.Server
 	}
 
 	// return current context in case the server name is not available
 	return ConfigClusterServerName
+}
+
+func SetConnectedToCluster(isConnected bool) {
+	connectedToCluster = isConnected
 }
