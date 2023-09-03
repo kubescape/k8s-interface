@@ -332,6 +332,11 @@ func (w *Workload) GetLabels() map[string]string {
 	if v, ok := InspectWorkload(w.workload, "metadata", "labels"); ok && v != nil {
 		labels := make(map[string]string)
 		for k, i := range v.(map[string]interface{}) {
+			// null labels will be ignored
+			if i == nil {
+				continue
+			}
+
 			labels[k] = i.(string)
 		}
 		return labels
