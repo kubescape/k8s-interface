@@ -393,3 +393,132 @@ func TestGetNamespaceLessSlug(t *testing.T) {
 		})
 	}
 }
+
+func TestIsValidLabelValue(t *testing.T) {
+	tests := []struct {
+		value    string
+		expected bool
+	}{
+		{"", true},
+		{"valid_value", true},
+		{"Valid_value", true},
+		{"Valid_value1", true},
+		{"1Valid_value", true},
+		{"valid.value", true},
+		{"valid-value", true},
+		{"valid_value", true},
+		{"invalid:value", false},
+		{"$special_char", false},
+		{"very_long_value_that_is_more_than_63_characters_long_and_should_fail_validation", false},
+	}
+
+	for _, test := range tests {
+		actual := IsValidLabelValue(test.value)
+		if actual != test.expected {
+			t.Errorf("For value '%s', expected %t but got %t", test.value, test.expected, actual)
+		}
+	}
+}
+
+func TestToValidLabelValue(t *testing.T) {
+	tests := []struct {
+		input    string
+		expected string
+	}{
+		{"valid_value", "valid_value"},
+		{"1Valid.value", "1Valid.value"},
+		{"1number", "1number"},
+		{"$special:char", "special-char"},
+		{"-very_long_value_that:is_more@than_63_characters_long_and_should_fail_validation", "very_long_value_that-is_more-than_63_characters_long_and_should"},
+	}
+
+	for _, test := range tests {
+		actual := ToValidLabelValue(test.input)
+		if actual != test.expected {
+			t.Errorf("For input '%s', expected '%s' but got '%s'", test.input, test.expected, actual)
+		}
+	}
+}
+
+func TestToValidDNSSubdomainName(t *testing.T) {
+	tt := []struct {
+		name          string
+		inputName     string
+		want          string
+		expectedError bool
+	}{
+		{
+			name:      "Short alphanumeric name is considered valid",
+			inputName: "nginx",
+			want:      "nginx",
+		},
+		{
+			name:      "Colon character should render the string invalid, and should be replaced with a hyphen",
+			inputName: "n:ginx",
+			want:      "n-ginx",
+		},
+		{
+			name:      "Slash character should render the string invalid, and should be replaced with a hyphen",
+			inputName: "n/ginx",
+			want:      "n-ginx",
+		},
+		{
+			name:      "Caret character should render the string invalid, and should be replaced with a hyphen",
+			inputName: "n^ginx",
+			want:      "n-ginx",
+		},
+		{
+			name:          "Empty string should be considered invalid and should return an error",
+			inputName:     "",
+			want:          "",
+			expectedError: true,
+		},
+		{
+			name:      "Periods should be allowed",
+			inputName: "docker.io",
+			want:      "docker.io",
+		},
+		{
+			name:      "Hyphens should be allowed",
+			inputName: "web-app",
+			want:      "web-app",
+		},
+		{
+			name:      "Numbers should be allowed",
+			inputName: "webapp1",
+			want:      "webapp1",
+		},
+		{
+			name:      "Names starting from an allowed non-alphanumeric character should be invalid and should be truncated",
+			inputName: "-webapp",
+			want:      "webapp",
+		},
+		{
+			name:      "Names ending with an allowed non-alphanumeric character should be invalid and should be truncated",
+			inputName: "webapp-",
+			want:      "webapp",
+		},
+		{
+			name:      "Names over 253 characters should be invalid and should be truncated to limit",
+			inputName: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaX",
+			want:      "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+		},
+		{
+			name:      "An uppercase character is considered invalid and should be converted to lowercase",
+			inputName: "nGinx",
+			want:      "nginx",
+		},
+	}
+
+	for _, tc := range tt {
+		t.Run(tc.name, func(t *testing.T) {
+			got, err := ToValidDNSSubdomainName(tc.inputName)
+			if tc.expectedError {
+				assert.Error(t, err)
+			} else {
+				assert.NoError(t, err)
+				assert.Equal(t, tc.want, got)
+			}
+		})
+	}
+}
