@@ -3,6 +3,7 @@ package names
 import (
 	"testing"
 
+	"github.com/kubescape/k8s-interface/workloadinterface"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -519,6 +520,166 @@ func TestToValidDNSSubdomainName(t *testing.T) {
 				assert.NoError(t, err)
 				assert.Equal(t, tc.want, got)
 			}
+		})
+	}
+}
+
+func TestStringToSlug(t *testing.T) {
+	testCases := []struct {
+		name     string
+		input    string
+		expected string
+		err      error
+	}{
+		{
+			name:     "short input",
+			input:    "n:ginx-xyz1.2.34",
+			expected: "n-ginx-xyz1.2.34-8020-7297",
+			err:      nil,
+		},
+		{
+			name:     "long input",
+			input:    "12345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890",
+			expected: "123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123-60e5-4c7d",
+			err:      nil,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			slug, err := StringToSlug(tc.input)
+			if err != tc.err {
+				t.Errorf("Expected error: %v, got: %v", tc.err, err)
+			}
+			if slug != tc.expected {
+				t.Errorf("Expected %s, got %s", tc.expected, slug)
+			}
+			assert.LessOrEqual(t, len(slug), maxDNSSubdomainLength)
+		})
+	}
+}
+
+type FakeMetadata struct {
+	workloadinterface.IMetadata
+
+	Namespace  string
+	ApiVersion string
+	Kind       string
+	Name       string
+	ID         string
+}
+
+func (f *FakeMetadata) GetID() string {
+	return f.ID
+}
+
+func (f *FakeMetadata) GetNamespace() string {
+	return f.Namespace
+}
+
+func (f *FakeMetadata) GetApiVersion() string {
+	return f.ApiVersion
+}
+
+func (f *FakeMetadata) GetKind() string {
+	return f.Kind
+}
+
+func (f *FakeMetadata) GetName() string {
+	return f.Name
+}
+
+func TestResourceToSlug(t *testing.T) {
+	testCases := []struct {
+		name     string
+		resource workloadinterface.IMetadata
+		expected string
+	}{
+		{
+			name: "",
+			resource: &FakeMetadata{
+				ApiVersion: "v1",
+				Kind:       "Pod",
+				Namespace:  "default",
+				Name:       "mypod",
+			},
+			expected: "v1-pod-default-mypod-b5fd-df1b",
+		},
+		{
+			resource: &FakeMetadata{
+				ApiVersion: "",
+				Kind:       "Pod",
+				Namespace:  "",
+				Name:       "mypod",
+			},
+			expected: "pod--mypod-8282-f27b",
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			result, err := ResourceToSlug(tc.resource)
+			if result != tc.expected {
+				t.Errorf("Expected %s, but got %s", tc.expected, result)
+			}
+			assert.NoError(t, err)
+		})
+	}
+}
+
+func TestRoleBindingResourceToSlug(t *testing.T) {
+	testCases := []struct {
+		name        string
+		subject     workloadinterface.IMetadata
+		role        workloadinterface.IMetadata
+		roleBinding workloadinterface.IMetadata
+		expected    string
+	}{
+		{
+			name: "role, rolebinding",
+			subject: &FakeMetadata{
+				Kind:      "ServiceAccount",
+				Name:      "sa-2",
+				Namespace: "kubescape",
+			},
+			role: &FakeMetadata{
+				Kind:      "Role",
+				Name:      "myrole",
+				Namespace: "namespace-1",
+			},
+			roleBinding: &FakeMetadata{
+				Kind:      "RoleBinding",
+				Name:      "myrolebinding",
+				Namespace: "namespace-2",
+			},
+			expected: "serviceaccount-kubescape-sa-2--role-namespace-1-myrole--rolebinding-namespace-2-myrolebinding-eacf-57fc",
+		},
+		{
+			name: "with related objects (cluster role, cluster rolebinding)",
+			subject: &FakeMetadata{
+				Kind:      "ServiceAccount",
+				Name:      "sa-1",
+				Namespace: "kubescape",
+			},
+			role: &FakeMetadata{
+				Kind: "ClusterRole",
+				Name: "myrole",
+			},
+			roleBinding: &FakeMetadata{
+				Kind: "ClusterRoleBinding",
+				Name: "myrolebinding",
+			},
+			expected: "serviceaccount-kubescape-sa-1--clusterrole--myrole--clusterrolebinding--myrolebinding-af38-ce0e",
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			result, err := RoleBindingResourceToSlug(tc.subject, tc.role, tc.roleBinding)
+			if result != tc.expected {
+				t.Errorf("Expected %s, but got %s", tc.expected, result)
+			}
+			assert.NoError(t, err)
 		})
 	}
 }
