@@ -1,9 +1,13 @@
 package names
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
 	"fmt"
 	"regexp"
 	"strings"
+
+	"github.com/kubescape/k8s-interface/workloadinterface"
 )
 
 const (
@@ -11,8 +15,11 @@ const (
 	instanceIDSlugHashlessFormat = "%s-%s-%s"
 	// instanceIDSlugFormat is a format of the slug string:
 	// "hashlessFormat + hashLeading + hashTrailing"
-	instanceIDSlugFormat     = "%s-%s-%s"
-	instanceIDSlugHashLength = 4
+	slugFormat     = "%s-%s-%s"
+	slugHashLength = 4
+	// slugHashesLength is a length of the hash-based identifiers (-xxxx-xxxx) in the slug string
+	slugHashesLength        = slugHashLength*2 + 2
+	maxHashlessStringLength = maxDNSSubdomainLength - slugHashesLength
 
 	// imageIDSlugFormat is a format of the Image ID slug
 	imageIDSlugFormat     = "%s-%s"
@@ -142,13 +149,13 @@ func sanitizeInstanceIDSlug(instanceIDSlug string) string {
 //
 // If the given inputs would produce an invalid slug, it returns an appropriate error
 func InstanceIDToSlug(name, namespace, kind, hashedID string) (string, error) {
-	leadingDigest, trailingDigest := hashedID[:instanceIDSlugHashLength], hashedID[len(hashedID)-instanceIDSlugHashLength:]
+	leadingDigest, trailingDigest := hashedID[:slugHashLength], hashedID[len(hashedID)-slugHashLength:]
 
 	hashlessInstanceIDSlug := fmt.Sprintf(instanceIDSlugHashlessFormat, namespace, kind, name)
 	hashlessInstanceIDSlug = sanitizeInstanceIDSlug(hashlessInstanceIDSlug)
 
 	var err error
-	slug, err := fmt.Sprintf(instanceIDSlugFormat, hashlessInstanceIDSlug, leadingDigest, trailingDigest), nil
+	slug, err := fmt.Sprintf(slugFormat, hashlessInstanceIDSlug, leadingDigest, trailingDigest), nil
 	slug = strings.ToLower(slug)
 
 	if !IsValidSlug(slug) {
@@ -198,4 +205,52 @@ func SanitizeLabelValues(labels map[string]string) {
 	for k, v := range labels {
 		labels[k] = ToValidLabelValue(v)
 	}
+}
+
+// StringToSlug receives any string and returns a human-friendly representation of it as a slug
+//
+// If the given inputs would produce an invalid slug, it returns an appropriate error
+func StringToSlug(str string) (string, error) {
+	// hash the string, take the first and last 4 characters of the hash
+	hashBytes := sha256.Sum256([]byte(str))
+	hashStr := hex.EncodeToString(hashBytes[:])
+	leadingDigest, trailingDigest := hashStr[:slugHashLength], hashStr[len(hashStr)-slugHashLength:]
+
+	// sanitize the string to be DNS Subdomain compatible
+	sanitizedStr, err := ToValidDNSSubdomainName(str)
+	if err != nil {
+		return "", err
+	}
+
+	if len(sanitizedStr) >= maxHashlessStringLength {
+		sanitizedStr = sanitizedStr[:maxHashlessStringLength]
+	}
+
+	slug := fmt.Sprintf(slugFormat, sanitizedStr, leadingDigest, trailingDigest)
+	slug = strings.ToLower(slug)
+
+	if !IsValidSlug(slug) {
+		return "", ErrInvalidSlug
+	}
+
+	return strings.ToLower(slug), nil
+}
+
+func resourceToFormattedString(resource workloadinterface.IMetadata) string {
+	return fmt.Sprintf("%s-%s-%s-%s", resource.GetApiVersion(), resource.GetKind(), resource.GetNamespace(), resource.GetName())
+}
+
+// ResourceToSlug returns a human-friendly representation for a given resource
+// The slug is generated based on the API version, kind, namespace and name of the resource
+func ResourceToSlug(resource workloadinterface.IMetadata) (string, error) {
+	return StringToSlug(resourceToFormattedString(resource))
+}
+
+// RoleBindingResourceToSlug returns a human-friendly representation for a given role binding resource
+// The slug is generated based on the subject, role and role binding resources of the role binding
+func RoleBindingResourceToSlug(subject workloadinterface.IMetadata, role workloadinterface.IMetadata, roleBinding workloadinterface.IMetadata) (string, error) {
+	subjectName := resourceToFormattedString(subject)
+	roleName := resourceToFormattedString(role)
+	roleBindingName := resourceToFormattedString(roleBinding)
+	return StringToSlug(fmt.Sprintf("%s-%s-%s", subjectName, roleName, roleBindingName))
 }
