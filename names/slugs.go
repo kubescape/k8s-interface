@@ -17,6 +17,9 @@ const (
 	// "hashlessFormat + hashLeading + hashTrailing"
 	slugFormat     = "%s-%s-%s"
 	slugHashLength = 4
+	// slugHashesLength is a length of the hash-based identifiers (-xxxx-xxxx) in the slug string
+	slugHashesLength        = slugHashLength*2 + 2
+	maxHashlessStringLength = maxDNSSubdomainLength - slugHashesLength
 
 	// imageIDSlugFormat is a format of the Image ID slug
 	imageIDSlugFormat     = "%s-%s"
@@ -219,12 +222,8 @@ func StringToSlug(str string) (string, error) {
 		return "", err
 	}
 
-	// limit the length of the string so that the slug is not longer than the maximum DNS Subdomain length characters
-	const slugHashesLength = slugHashLength*2 + 2
-	const maxStrLength = maxDNSSubdomainLength - slugHashesLength
-
-	if len(sanitizedStr) >= maxStrLength {
-		sanitizedStr = sanitizedStr[:maxStrLength]
+	if len(sanitizedStr) >= maxHashlessStringLength {
+		sanitizedStr = sanitizedStr[:maxHashlessStringLength]
 	}
 
 	slug := fmt.Sprintf(slugFormat, sanitizedStr, leadingDigest, trailingDigest)
