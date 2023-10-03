@@ -180,6 +180,18 @@ func TestInstanceIDToDisplayName(t *testing.T) {
 			wantErr: nil,
 		},
 		{
+			name: "valid instanceID produces matching display name",
+			input: &InstanceID{
+				apiVersion:    "apps/v1",
+				namespace:     "default",
+				kind:          "ReplicaSet",
+				name:          "alpine-deployment-6487cfc4c7",
+				containerName: "alpine-container",
+			},
+			want:    "default-replicaset-alpine-deployment-6487cfc4c7-02db-3363",
+			wantErr: nil,
+		},
+		{
 			name: "invalid instanceID produces matching error",
 			input: &InstanceID{
 				apiVersion:    "v1",
