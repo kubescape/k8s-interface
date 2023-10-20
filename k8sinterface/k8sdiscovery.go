@@ -12,8 +12,9 @@ import (
 )
 
 const (
-	ValueNotFound       = -1
-	ResourceNotFoundErr = "resource not found"
+	ValueNotFound        = -1
+	ResourceNotFoundErr  = "resource not found"
+	ResourceForbiddenErr = "is forbidden"
 )
 
 // ResourceGroupMapping mapping of all supported Kubernetes cluster resources to apiVersion
