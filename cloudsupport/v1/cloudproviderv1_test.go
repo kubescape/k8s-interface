@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"testing"
 
+	corev1 "k8s.io/api/core/v1"
+
 	"github.com/kubescape/k8s-interface/cloudsupport/apis"
 	"github.com/kubescape/k8s-interface/k8sinterface"
 	"github.com/stretchr/testify/assert"
@@ -299,8 +301,9 @@ func Test_IsGKE(t *testing.T) {
 	defer tearDown()
 
 	type args struct {
-		config  *clientcmdapi.Config
-		context string
+		config   *clientcmdapi.Config
+		context  string
+		labelMap map[string]string
 	}
 	tests := []struct {
 		name string
@@ -312,17 +315,25 @@ func Test_IsGKE(t *testing.T) {
 			args: args{
 				config:  getKubeConfigMock(),
 				context: "gke_xxx-xx-0000_us-central1-c_xxxx-1",
+				labelMap: map[string]string{
+					"kubernetes.io/hostname": "gke-xxx-xx-0000_us-central1-c_xxxx-1",
+				},
 			},
 			want: true,
 		},
 	}
 	for _, tt := range tests {
-
 		t.Run(tt.name, func(t *testing.T) {
 			// set context
 			k8sinterface.SetClientConfigAPI(tt.args.config)
 			k8sinterface.SetK8SGitServerVersion("gke_xxx-xx-0000_us-central1-c_xxxx-1")
-			if got := IsGKE(); got != tt.want {
+
+			node := corev1.Node{}
+			node.Labels = tt.args.labelMap
+			nodeList := &corev1.NodeList{}
+			nodeList.Items = []corev1.Node{node}
+
+			if got := IsGKE(nodeList); got != tt.want {
 				t.Errorf("IsGKE() = %v, want %v", got, tt.want)
 			}
 		})
@@ -358,41 +369,6 @@ func Test_IsEKS(t *testing.T) {
 			k8sinterface.SetK8SGitServerVersion("arn:aws:eks:eu-west-1:xxx:cluster/xxxx")
 			if got := IsEKS(); got != tt.want {
 				t.Errorf("IsEKS() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
-func Test_IsAKS(t *testing.T) {
-	defer tearDown()
-
-	type args struct {
-		config  *clientcmdapi.Config
-		context string
-	}
-	tests := []struct {
-		name string
-		args args
-		want bool
-	}{
-		{
-			name: "Test_IsAKS",
-			args: args{
-				config:  getKubeConfigMock(),
-				context: "xxxx-2",
-			},
-			want: true,
-		},
-	}
-	for _, tt := range tests {
-
-		t.Run(tt.name, func(t *testing.T) {
-			// set context
-			k8sinterface.SetClientConfigAPI(tt.args.config)
-			k8sinterface.SetClusterContextName(tt.args.context)
-			k8sinterface.SetConfigClusterServerName("https://XXX.XX.XXX.azmk8s.io:443")
-			if got := IsAKS(); got != tt.want {
-				t.Errorf("IsAKS() = %v, want %v", got, tt.want)
 			}
 		})
 	}
@@ -488,6 +464,7 @@ func TestGetCloudProvider(t *testing.T) {
 		context    string
 		expected   string
 		gitVersion string
+		labelMap   map[string]string
 	}{
 		{
 			name:       "AKS",
@@ -495,6 +472,9 @@ func TestGetCloudProvider(t *testing.T) {
 			context:    "0-context",
 			expected:   AKS,
 			gitVersion: "v1",
+			labelMap: map[string]string{
+				"kubernetes.io/hostname": "aks-agentpool-xxxx-0",
+			},
 		},
 		{
 			name:       "EKS",
@@ -509,6 +489,9 @@ func TestGetCloudProvider(t *testing.T) {
 			context:    "2-context",
 			expected:   GKE,
 			gitVersion: "gke",
+			labelMap: map[string]string{
+				"kubernetes.io/hostname": "gke-agentpool-xxxx-0",
+			},
 		},
 		{
 			name:       "Unknown",
@@ -525,7 +508,13 @@ func TestGetCloudProvider(t *testing.T) {
 			k8sinterface.SetClusterContextName(tt.context)
 			k8sinterface.SetK8SGitServerVersion(tt.gitVersion)
 			k8sinterface.SetClientConfigAPI(tt.config)
-			if got := GetCloudProvider(); got != tt.expected {
+
+			node := corev1.Node{}
+			node.Labels = tt.labelMap
+			nodeList := &corev1.NodeList{}
+			nodeList.Items = []corev1.Node{node}
+
+			if got := GetCloudProvider(nodeList); got != tt.expected {
 				t.Errorf("GetCloudProvider() = %v, want %v", got, tt.expected)
 			}
 		})
