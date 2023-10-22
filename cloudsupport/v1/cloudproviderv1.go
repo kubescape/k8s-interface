@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"strings"
 
+	corev1 "k8s.io/api/core/v1"
+
 	"github.com/kubescape/k8s-interface/cloudsupport/apis"
 	"github.com/kubescape/k8s-interface/k8sinterface"
 	"github.com/kubescape/k8s-interface/workloadinterface"
@@ -28,15 +30,15 @@ const (
 	NotSupportedMsg = "Not supported"
 )
 
-// GetCloudProvider get cloud provider name from gitVersion/server URL
-func GetCloudProvider() string {
+// GetCloudProvider get cloud provider name from gitVersion/nodes
+func GetCloudProvider(nodeList *corev1.NodeList) string {
 	if IsEKS() {
 		return EKS
 	}
-	if IsGKE() {
+	if IsGKE(nodeList) {
 		return GKE
 	}
-	if IsAKS() {
+	if IsAKS(nodeList) {
 		return AKS
 	}
 	return ""
@@ -324,10 +326,8 @@ func GetPolicyVersionAKS(aksSupport IAKSSupport, cluster string, subscriptionId 
 }
 
 // check if the server is AKS. e.g. https://XXX.XX.XXX.azmk8s.io:443
-func IsAKS() bool {
-	const serverIdentifierAKS = "azmk8s.io"
-	clusterServerName := k8sinterface.GetK8sConfigClusterServerName()
-	return strings.Contains(clusterServerName, serverIdentifierAKS)
+func IsAKS(nodeList *corev1.NodeList) bool {
+	return labelHasCloudPrefix(nodeList, "aks-")
 }
 
 // check if the server is EKS. e.g. arn:aws:eks:eu-west-1:xxx:cluster/xxxx
@@ -340,10 +340,17 @@ func IsEKS() bool {
 }
 
 // check if the server is GKE. e.g. gke_xxx-xx-0000_us-central1-c_xxxx-1
-func IsGKE() bool {
-	version, err := k8sinterface.GetK8SServerGitVersion()
-	if err != nil {
-		return false
+func IsGKE(nodeList *corev1.NodeList) bool {
+	return labelHasCloudPrefix(nodeList, "gke-")
+}
+
+func labelHasCloudPrefix(nodeList *corev1.NodeList, cloud string) bool {
+	for _, node := range nodeList.Items {
+		if val, ok := node.Labels["kubernetes.io/hostname"]; ok {
+			if strings.HasPrefix(val, cloud) {
+				return true
+			}
+		}
 	}
-	return strings.Contains(version, GKE)
+	return false
 }

@@ -5,6 +5,8 @@ import (
 	"os"
 	"strings"
 
+	corev1 "k8s.io/api/core/v1"
+
 	cloudsupportv1 "github.com/kubescape/k8s-interface/cloudsupport/v1"
 	"github.com/kubescape/k8s-interface/k8sinterface"
 	"github.com/kubescape/k8s-interface/workloadinterface"
@@ -36,8 +38,8 @@ func GetKubeContextName() string {
 }
 
 // GetCloudProvider returns the cloud provider name
-func GetCloudProvider() string {
-	return cloudsupportv1.GetCloudProvider()
+func GetCloudProvider(nodeList *corev1.NodeList) string {
+	return cloudsupportv1.GetCloudProvider(nodeList)
 }
 
 // GetDescriptiveInfoFromCloudProvider returns the cluster description from the cloud provider wrapped in IMetadata obj
