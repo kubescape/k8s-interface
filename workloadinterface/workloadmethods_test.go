@@ -52,8 +52,8 @@ var (
 	//go:embed testdata/workloadmethods/deploymentWithemptyLabels.json
 	deploymentWithemptyLabels string
 
-	// //go:embed testdata/workloadmethods/podmountwithvolume.json
-	// podMountWithVolume string
+	//go:embed testdata/workloadmethods/podmountwithvolume.json
+	podMountWithVolume string
 
 	//go:embed testdata/workloadmethods/podmountnohostvolume.json
 	podMountNoHostVolume string
