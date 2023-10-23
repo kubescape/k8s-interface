@@ -19,12 +19,6 @@ import (
 
 const TypeWorkloadObject ObjectType = "workload"
 
-type VolumeMount struct {
-	ContainerIdx    int
-	VolumeMountIdx  int
-	VolumeMountPath string
-}
-
 type Workload struct {
 	workload map[string]interface{}
 }
@@ -700,52 +694,6 @@ func (w *Workload) GetPodStatus() (*corev1.PodStatus, error) {
 	return &status, nil
 }
 
-// GetVolumeMountsPaths returns all volume mounts paths of the workload
-// if readOnly is nil, returns all volume mounts paths
-// if readOnly is true, returns only readOnly volume mounts paths
-// if readOnly is false, returns only readWrite volume mounts paths
-// if mustHaveHostVolume is true, returns only volume mounts paths that have host volume
-func (w *Workload) GetVolumeMountsPaths(readOnly *bool, mustHaveHostVolume bool) ([]VolumeMount, error) {
-	podSpec, err := w.GetPodSpec()
-	if err != nil {
-		return nil, err
-	}
-
-	var hostVolumeNames []string
-
-	if mustHaveHostVolume {
-		hostVolumes, err := w.GetHostVolumes()
-		if err != nil {
-			return nil, err
-		}
-
-		for _, hostVolume := range hostVolumes {
-			hostVolumeNames = append(hostVolumeNames, hostVolume.Name)
-		}
-	}
-
-	var volumeMounts []VolumeMount
-	for i, container := range podSpec.Containers {
-		if len(container.VolumeMounts) > 0 {
-			for j, volumeMount := range container.VolumeMounts {
-				if readOnly == nil || volumeMount.ReadOnly == *readOnly {
-					if !mustHaveHostVolume || (mustHaveHostVolume && slices.Contains(hostVolumeNames, volumeMount.Name)) {
-						volumeMounts = append(volumeMounts, VolumeMount{
-							ContainerIdx:    i,
-							VolumeMountIdx:  j,
-							VolumeMountPath: volumeMount.MountPath,
-						})
-					}
-				}
-			}
-		}
-
-	}
-
-	return volumeMounts, nil
-
-}
-
 // GetHostVolumes returns all host volumes of the workload
 func (w *Workload) GetHostVolumes() ([]v1.Volume, error) {
 	podSpec, err := w.GetPodSpec()
@@ -764,7 +712,7 @@ func (w *Workload) GetHostVolumes() ([]v1.Volume, error) {
 }
 
 // GetSpecPathPrefix returns the path prefix of the workload spec
-func (w *Workload) GetSpecPathPrefix() (string, error) {
+func (w *Workload) GetSpecPath() (string, error) {
 	switch w.GetKind() {
 	case "Pod":
 		return "spec", nil

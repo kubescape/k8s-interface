@@ -6,7 +6,6 @@ import (
 
 	_ "embed"
 
-	"github.com/armosec/utils-go/boolutils"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -53,8 +52,8 @@ var (
 	//go:embed testdata/workloadmethods/deploymentWithemptyLabels.json
 	deploymentWithemptyLabels string
 
-	//go:embed testdata/workloadmethods/podmountwithvolume.json
-	podMountWithVolume string
+	// //go:embed testdata/workloadmethods/podmountwithvolume.json
+	// podMountWithVolume string
 
 	//go:embed testdata/workloadmethods/podmountnohostvolume.json
 	podMountNoHostVolume string
@@ -537,7 +536,7 @@ func TestGetLabels(t *testing.T) {
 
 }
 
-func TestGetSpecPathPrefix(t *testing.T) {
+func TestGetSpecPath(t *testing.T) {
 
 	tests := []struct {
 		name     string
@@ -568,82 +567,11 @@ func TestGetSpecPathPrefix(t *testing.T) {
 				t.Errorf(err.Error())
 			}
 
-			path, err := workload.GetSpecPathPrefix()
+			path, err := workload.GetSpecPath()
 			if err != nil {
 				t.Errorf(err.Error())
 			}
 			assert.Equal(t, tc.want, path)
-		})
-	}
-
-}
-
-func TestGetVolumeMountsPaths(t *testing.T) {
-
-	tests := []struct {
-		name                 string
-		mockData             string
-		readOnly             *bool
-		mustHaveHostVolume   bool
-		expectedVolumesCount int
-	}{
-		{
-			name:                 "readonly true, mustHaveHostVolume true",
-			mockData:             podMountWithVolume,
-			readOnly:             boolutils.BoolPointer(true),
-			mustHaveHostVolume:   true,
-			expectedVolumesCount: 0,
-		},
-		{
-			name:                 "readonly true, mustHaveHostVolume false",
-			mockData:             podMountWithVolume,
-			readOnly:             boolutils.BoolPointer(true),
-			mustHaveHostVolume:   false,
-			expectedVolumesCount: 1,
-		},
-		{
-			name:                 "readonly false, mustHaveHostVolume true",
-			mockData:             podMountWithVolume,
-			readOnly:             boolutils.BoolPointer(false),
-			mustHaveHostVolume:   true,
-			expectedVolumesCount: 1,
-		},
-		{
-			name:                 "readonly false, mustHaveHostVolume false",
-			mockData:             podMountWithVolume,
-			readOnly:             boolutils.BoolPointer(false),
-			mustHaveHostVolume:   false,
-			expectedVolumesCount: 1,
-		},
-		{
-			name:                 "readonly nil, mustHaveHostVolume false",
-			mockData:             podMountWithVolume,
-			readOnly:             nil,
-			mustHaveHostVolume:   false,
-			expectedVolumesCount: 2,
-		},
-		{
-			name:                 "readonly nil, mustHaveHostVolume true",
-			mockData:             podMountWithVolume,
-			readOnly:             nil,
-			mustHaveHostVolume:   true,
-			expectedVolumesCount: 1,
-		},
-	}
-
-	for _, tc := range tests {
-		t.Run(tc.name, func(t *testing.T) {
-			workload, err := NewWorkload([]byte(tc.mockData))
-			if err != nil {
-				t.Errorf(err.Error())
-			}
-
-			volumeMountPaths, err := workload.GetVolumeMountsPaths(tc.readOnly, tc.mustHaveHostVolume)
-			if err != nil {
-				t.Errorf(err.Error())
-			}
-
-			assert.Equal(t, tc.expectedVolumesCount, len(volumeMountPaths), "test name: %s", tc.name)
 		})
 	}
 
