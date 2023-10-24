@@ -402,23 +402,6 @@ func (w *Workload) GetAnnotations() map[string]string {
 	return nil
 }
 
-// GetVolumes -
-func (w *Workload) GetVolumes() ([]corev1.Volume, error) {
-	volumes := []corev1.Volume{}
-
-	interVolumes, _ := InspectWorkload(w.workload, append(PodSpec(w.GetKind()), "volumes")...)
-	if interVolumes == nil {
-		return volumes, nil
-	}
-	volumesBytes, err := json.Marshal(interVolumes)
-	if err != nil {
-		return volumes, err
-	}
-	err = json.Unmarshal(volumesBytes, &volumes)
-
-	return volumes, err
-}
-
 func (w *Workload) GetServiceAccountName() string {
 
 	if v, ok := InspectWorkload(w.workload, append(PodSpec(w.GetKind()), "serviceAccountName")...); ok && v != nil {
@@ -695,20 +678,13 @@ func (w *Workload) GetPodStatus() (*corev1.PodStatus, error) {
 }
 
 // GetHostVolumes returns all host volumes of the workload
-func (w *Workload) GetHostVolumes() ([]v1.Volume, error) {
+func (w *Workload) GetVolumes() ([]v1.Volume, error) {
 	podSpec, err := w.GetPodSpec()
 	if err != nil {
 		return nil, err
 	}
 
-	var hostVolumes []v1.Volume
-	for _, volume := range podSpec.Volumes {
-		if volume.HostPath != nil {
-			hostVolumes = append(hostVolumes, volume)
-		}
-	}
-
-	return hostVolumes, nil
+	return podSpec.Volumes, nil
 }
 
 // GetSpecPathPrefix returns the path prefix of the workload spec

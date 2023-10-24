@@ -577,29 +577,17 @@ func TestGetSpecPath(t *testing.T) {
 
 }
 
-func TestGetHostVolumes(t *testing.T) {
+func TestGetVolumes(t *testing.T) {
 	workload, err := NewWorkload([]byte(podMountWithVolume))
 	if err != nil {
 		t.Errorf(err.Error())
 	}
 
-	hostVolumes, err := workload.GetHostVolumes()
+	volumes, err := workload.GetVolumes()
 	if err != nil {
 		t.Errorf(err.Error())
 	}
 
-	assert.Equal(t, 1, len(hostVolumes))
-
-	workload, err = NewWorkload([]byte(podMountNoHostVolume))
-	if err != nil {
-		t.Errorf(err.Error())
-	}
-
-	hostVolumes, err = workload.GetHostVolumes()
-	if err != nil {
-		t.Errorf(err.Error())
-	}
-
-	assert.Equal(t, 0, len(hostVolumes))
+	assert.Equal(t, 2, len(volumes))
 
 }
