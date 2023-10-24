@@ -2,6 +2,7 @@ package workloadinterface
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"strconv"
 	"strings"
@@ -10,6 +11,7 @@ import (
 	"github.com/armosec/utils-k8s-go/armometadata"
 	wlidpkg "github.com/armosec/utils-k8s-go/wlid"
 	corev1 "k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/utils/strings/slices"
@@ -400,23 +402,6 @@ func (w *Workload) GetAnnotations() map[string]string {
 	return nil
 }
 
-// GetVolumes -
-func (w *Workload) GetVolumes() ([]corev1.Volume, error) {
-	volumes := []corev1.Volume{}
-
-	interVolumes, _ := InspectWorkload(w.workload, append(PodSpec(w.GetKind()), "volumes")...)
-	if interVolumes == nil {
-		return volumes, nil
-	}
-	volumesBytes, err := json.Marshal(interVolumes)
-	if err != nil {
-		return volumes, err
-	}
-	err = json.Unmarshal(volumesBytes, &volumes)
-
-	return volumes, err
-}
-
 func (w *Workload) GetServiceAccountName() string {
 
 	if v, ok := InspectWorkload(w.workload, append(PodSpec(w.GetKind()), "serviceAccountName")...); ok && v != nil {
@@ -690,4 +675,28 @@ func (w *Workload) GetPodStatus() (*corev1.PodStatus, error) {
 		}
 	}
 	return &status, nil
+}
+
+// GetHostVolumes returns all host volumes of the workload
+func (w *Workload) GetVolumes() ([]v1.Volume, error) {
+	podSpec, err := w.GetPodSpec()
+	if err != nil {
+		return nil, err
+	}
+
+	return podSpec.Volumes, nil
+}
+
+// GetSpecPathPrefix returns the path prefix of the workload spec
+func (w *Workload) GetSpecPath() (string, error) {
+	switch w.GetKind() {
+	case "Pod":
+		return "spec", nil
+	case "Deployment", "ReplicaSet", "DaemonSet", "StatefulSet", "Job":
+		return "spec.template.spec", nil
+	case "CronJob":
+		return "spec.jobTemplate.spec.template.spec", nil
+	default:
+		return "", errors.New("unsupported workload kind")
+	}
 }

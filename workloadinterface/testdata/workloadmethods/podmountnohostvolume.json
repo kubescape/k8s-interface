@@ -1,0 +1,134 @@
+{
+        "apiVersion": "v1",
+        "kind": "Pod",
+        "metadata": {
+            "creationTimestamp": "2023-08-08T13:15:52Z",
+            "generateName": "mysql-8664b6d846-",
+            "labels": {
+                "app": "mysql",
+                "pod-template-hash": "8664b6d846"
+            },
+            "name": "mysql-8664b6d846-zfwhm",
+            "namespace": "default",
+            "ownerReferences": [
+                {
+                    "apiVersion": "apps/v1",
+                    "blockOwnerDeletion": true,
+                    "controller": true,
+                    "kind": "ReplicaSet",
+                    "name": "mysql-8664b6d846",
+                    "uid": "617a9d8f-4344-4db7-a92d-1938091f0eb4"
+                }
+            ],
+            "resourceVersion": "973",
+            "uid": "f8d132f1-7fc0-44ff-ae3f-39bf5622876e"
+        },
+        "spec": {
+            "containers": [
+                {
+                    "name": "mysql",
+                    "image": "mysql:5.6",
+                    "ports": [
+                        {
+                            "name": "mysql",
+                            "containerPort": 3306,
+                            "protocol": "TCP"
+                        }
+                    ],
+                    "env": [
+                        {
+                            "name": "MYSQL_ROOT_PASSWORD",
+                            "value": "XXXXXX"
+                        }
+                    ],
+                    "resources": {},
+                    "volumeMounts": [
+                        {
+                            "name": "mysql-persistent-storage",
+                            "mountPath": "/var/lib/mysql"
+                        },
+                        {
+                            "name": "kube-api-access-f9l29",
+                            "readOnly": true,
+                            "mountPath": "/var/run/secrets/kubernetes.io/serviceaccount"
+                        }
+                    ],
+                    "terminationMessagePath": "/dev/termination-log",
+                    "terminationMessagePolicy": "File",
+                    "imagePullPolicy": "IfNotPresent"
+                }
+            ],
+            "dnsPolicy": "ClusterFirst",
+            "enableServiceLinks": true,
+            "nodeName": "minikube",
+            "preemptionPolicy": "PreemptLowerPriority",
+            "priority": 0,
+            "restartPolicy": "Always",
+            "schedulerName": "default-scheduler",
+            "securityContext": {},
+            "serviceAccount": "default",
+            "serviceAccountName": "default",
+            "terminationGracePeriodSeconds": 30,
+            "tolerations": [
+                {
+                    "effect": "NoExecute",
+                    "key": "node.kubernetes.io/not-ready",
+                    "operator": "Exists",
+                    "tolerationSeconds": 300
+                },
+                {
+                    "effect": "NoExecute",
+                    "key": "node.kubernetes.io/unreachable",
+                    "operator": "Exists",
+                    "tolerationSeconds": 300
+                }
+            ],
+            "volumes": [
+                {
+                    "emptyDir": {
+                        "sizeLimit": "1Gi"
+                    },
+                    "name": "mysql-persistent-storage"
+                },
+                {
+                    "name": "kube-api-access-f9l29",
+                    "projected": {
+                        "defaultMode": 420,
+                        "sources": [
+                            {
+                                "serviceAccountToken": {
+                                    "expirationSeconds": 3607,
+                                    "path": "token"
+                                }
+                            },
+                            {
+                                "configMap": {
+                                    "items": [
+                                        {
+                                            "key": "ca.crt",
+                                            "path": "ca.crt"
+                                        }
+                                    ],
+                                    "name": "kube-root-ca.crt"
+                                }
+                            },
+                            {
+                                "downwardAPI": {
+                                    "items": [
+                                        {
+                                            "fieldRef": {
+                                                "apiVersion": "v1",
+                                                "fieldPath": "metadata.namespace"
+                                            },
+                                            "path": "namespace"
+                                        }
+                                    ]
+                                }
+                            }
+                        ]
+                    }
+                }
+            ]
+        }
+
+}
