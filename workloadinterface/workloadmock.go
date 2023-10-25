@@ -170,6 +170,10 @@ func (wm *WorkloadMock) GetSelector() (*metav1.LabelSelector, error) {
 	return wm.workload.GetSelector()
 }
 
+func (wm *WorkloadMock) GetServiceSelector() map[string]string {
+	return wm.workload.GetServiceSelector()
+}
+
 func (wm *WorkloadMock) GetAnnotation(annotation string) (string, bool) {
 	return wm.workload.GetAnnotation(annotation)
 }

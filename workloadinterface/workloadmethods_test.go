@@ -90,6 +90,22 @@ func TestGetSelector(t *testing.T) {
 	assert.Equal(t, 1, len(l.MatchLabels))
 	assert.Equal(t, 0, len(l.MatchExpressions))
 }
+
+func TestGetServiceSelector(t *testing.T) {
+	workload, err := NewWorkload([]byte(mockService))
+	if err != nil {
+		t.Errorf(err.Error())
+	}
+
+	s := workload.GetServiceSelector()
+	expected := map[string]string{
+		"app": "armo-vuln-scan",
+	}
+
+	assert.Equal(t, expected, s)
+
+}
+
 func TestSetNamespace(t *testing.T) {
 	w := `{"apiVersion":"apps/v1","kind":"Deployment","metadata":{"name":"demoservice-server"},"spec":{"replicas":1,"selector":{"matchLabels":{"app":"demoservice-server"}},"template":{"metadata":{"creationTimestamp":null,"labels":{"app":"demoservice-server"}},"spec":{"containers":[{"env":[{"name":"SERVER_PORT","value":"8089"},{"name":"SLEEP_DURATION","value":"1"},{"name":"DEMO_FOLDERS","value":"/app"},{"name":"ARMO_TEST_NAME","value":"auto_attach_deployment"},{"name":"CAA_ENABLE_CRASH_REPORTER","value":"1"}],"image":"quay.io/armosec/demoservice:v25","imagePullPolicy":"IfNotPresent","name":"demoservice","ports":[{"containerPort":8089,"protocol":"TCP"}],"resources":{},"terminationMessagePath":"/dev/termination-log","terminationMessagePolicy":"File"}],"dnsPolicy":"ClusterFirst","restartPolicy":"Always","schedulerName":"default-scheduler","securityContext":{},"terminationGracePeriodSeconds":30}}}}`
 	workload, err := NewWorkload([]byte(w))
