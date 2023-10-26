@@ -61,6 +61,7 @@ type IBasicWorkload interface {
 	GetImagePullSecret() ([]corev1.LocalObjectReference, error)
 	GetServiceAccountName() string
 	GetSelector() (*metav1.LabelSelector, error)
+	GetServiceSelector() map[string]string
 	GetResourceVersion() string
 	GetUID() string
 	GetPodSpec() (*corev1.PodSpec, error)

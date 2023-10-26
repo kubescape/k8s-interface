@@ -288,6 +288,18 @@ func (w *Workload) GetKind() string {
 	}
 	return ""
 }
+
+func (w *Workload) GetServiceSelector() map[string]string {
+	if v, ok := InspectWorkload(w.workload, "spec", "selector"); ok && v != nil {
+		selector := make(map[string]string)
+		for k, i := range v.(map[string]interface{}) {
+			selector[k] = fmt.Sprintf("%v", i)
+		}
+		return selector
+	}
+	return nil
+}
+
 func (w *Workload) GetSelector() (*metav1.LabelSelector, error) {
 	selector := &metav1.LabelSelector{}
 	if matchLabels, ok := InspectWorkload(w.workload, "spec", "selector", "matchLabels"); ok && matchLabels != nil {
