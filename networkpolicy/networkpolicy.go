@@ -15,7 +15,7 @@ const (
 	storageV1Beta1ApiVersion = "spdx.softwarecomposition.kubescape.io/v1beta1"
 )
 
-func GenerateNetworkPolicy(networkNeighbors softwarecomposition.NetworkNeighbors, knownServers []softwarecomposition.KnownServers) (softwarecomposition.GeneratedNetworkPolicy, error) {
+func GenerateNetworkPolicy(networkNeighbors softwarecomposition.NetworkNeighbors, knownServers []softwarecomposition.KnownServers, timeProvider metav1.Time) (softwarecomposition.GeneratedNetworkPolicy, error) {
 	networkPolicy := softwarecomposition.NetworkPolicy{
 		Kind:       "NetworkPolicy",
 		APIVersion: "networking.k8s.io/v1",
@@ -25,6 +25,7 @@ func GenerateNetworkPolicy(networkNeighbors softwarecomposition.NetworkNeighbors
 			Annotations: map[string]string{
 				"generated-by": "kubescape",
 			},
+			CreationTimestamp: timeProvider,
 		},
 	}
 
@@ -50,10 +51,12 @@ func GenerateNetworkPolicy(networkNeighbors softwarecomposition.NetworkNeighbors
 			APIVersion: storageV1Beta1ApiVersion,
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      networkNeighbors.Name,
-			Namespace: networkNeighbors.Namespace,
-			Labels:    networkNeighbors.Labels,
+			Name:              networkNeighbors.Name,
+			Namespace:         networkNeighbors.Namespace,
+			Labels:            networkNeighbors.Labels,
+			CreationTimestamp: timeProvider,
 		},
+		PoliciesRef: []softwarecomposition.PolicyRef{},
 	}
 
 	for _, neighbor := range networkNeighbors.Spec.Ingress {
