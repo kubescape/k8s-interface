@@ -23,6 +23,7 @@ const (
 	KindMetadataKey                   = metadataPrefix + "/workload-kind"
 	NameMetadataKey                   = metadataPrefix + "/workload-name"
 	NamespaceMetadataKey              = metadataPrefix + "/workload-namespace"
+	ResourceVersionMetadataKey        = metadataPrefix + "/workload-resource-version"
 	StatusMetadataKey                 = metadataPrefix + "/status"
 	WlidMetadataKey                   = metadataPrefix + "/wlid"
 	ContextMetadataKey                = metadataPrefix + "/context"
