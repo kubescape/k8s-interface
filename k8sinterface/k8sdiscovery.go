@@ -346,6 +346,8 @@ func updateResourceKind(resource string) string {
 
 	if resource == "ingress" {
 		return "ingresses"
+	} else if resource == "storageclass" {
+		return "storageclasses"
 	}
 
 	if resource != "" && !strings.HasSuffix(resource, "s") {
