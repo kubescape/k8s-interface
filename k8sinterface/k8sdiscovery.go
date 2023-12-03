@@ -340,12 +340,14 @@ func StringToResourceGroup(str string) (string, string, string) {
 	return "", "", ""
 }
 
-// updateResourceKind update kind from single to parallel
+// updateResourceKind update kind from singular to plural
 func updateResourceKind(resource string) string {
 	resource = strings.ToLower(resource)
 
 	if resource == "ingress" {
 		return "ingresses"
+	} else if resource == "storageclass" {
+		return "storageclasses"
 	}
 
 	if resource != "" && !strings.HasSuffix(resource, "s") {
