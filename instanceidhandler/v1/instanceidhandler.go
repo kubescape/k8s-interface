@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	"github.com/kubescape/k8s-interface/instanceidhandler"
+	"github.com/kubescape/k8s-interface/k8sinterface"
 	"github.com/kubescape/k8s-interface/names"
 )
 
@@ -119,8 +120,10 @@ func (id *InstanceID) GetHashed() string {
 }
 
 func (id *InstanceID) GetLabels() map[string]string {
+	group, version := k8sinterface.SplitApiVersion(id.GetAPIVersion())
 	return map[string]string{
-		ApiVersionMetadataKey:    id.GetAPIVersion(),
+		ApiGroupMetadataKey:      group,
+		ApiVersionMetadataKey:    version,
 		NamespaceMetadataKey:     id.GetNamespace(),
 		KindMetadataKey:          id.GetKind(),
 		NameMetadataKey:          id.GetName(),

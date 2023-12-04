@@ -107,7 +107,8 @@ func TestInstanceID(t *testing.T) {
 		t.Errorf("can't create instance ID from service")
 	}
 	expectedLabels := map[string]string{
-		ApiVersionMetadataKey:    "apps/v1",
+		ApiGroupMetadataKey:      "apps",
+		ApiVersionMetadataKey:    "v1",
 		NamespaceMetadataKey:     "default",
 		KindMetadataKey:          "ReplicaSet",
 		NameMetadataKey:          "nginx-84f5585d68",
@@ -120,7 +121,8 @@ func TestInstanceID(t *testing.T) {
 	}
 
 	expectedLabels = map[string]string{
-		ApiVersionMetadataKey:    "batch/v1",
+		ApiGroupMetadataKey:      "batch",
+		ApiVersionMetadataKey:    "v1",
 		NamespaceMetadataKey:     "default",
 		KindMetadataKey:          "Job",
 		NameMetadataKey:          "nginx-job",
@@ -132,6 +134,7 @@ func TestInstanceID(t *testing.T) {
 	}
 
 	expectedLabels = map[string]string{
+		ApiGroupMetadataKey:      "",
 		ApiVersionMetadataKey:    "v1",
 		NamespaceMetadataKey:     "default",
 		KindMetadataKey:          "Pod",
