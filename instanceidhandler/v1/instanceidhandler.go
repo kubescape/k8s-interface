@@ -20,6 +20,7 @@ const (
 	ImageTagMetadataKey               = metadataPrefix + "/image-tag"
 	ImageIDMetadataKey                = metadataPrefix + "/image-id"
 	InstanceIDMetadataKey             = metadataPrefix + "/instance-id"
+	TemplateHashKey                   = metadataPrefix + "/instance-template-hash"
 	KindMetadataKey                   = metadataPrefix + "/workload-kind"
 	NameMetadataKey                   = metadataPrefix + "/workload-name"
 	NamespaceMetadataKey              = metadataPrefix + "/workload-namespace"
