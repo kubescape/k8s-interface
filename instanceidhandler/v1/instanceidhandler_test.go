@@ -164,7 +164,7 @@ func TestInstanceIDToDisplayName(t *testing.T) {
 				name:          "reverse-proxy",
 				containerName: "nginx",
 			},
-			want:    "default-pod-reverse-proxy-2f07-68bd",
+			want:    "pod-reverse-proxy",
 			wantErr: nil,
 		},
 		{
@@ -176,7 +176,7 @@ func TestInstanceIDToDisplayName(t *testing.T) {
 				name:          "webapp",
 				containerName: "leader",
 			},
-			want:    "default-service-webapp-cca3-8ea7",
+			want:    "service-webapp",
 			wantErr: nil,
 		},
 		{

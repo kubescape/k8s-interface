@@ -12,10 +12,10 @@ import (
 
 const (
 	// instanceIDSlugHashlessFormat is a format of the Instance ID slug string without hash-based identifiers
-	instanceIDSlugHashlessFormat = "%s-%s-%s"
+	instanceIDSlugHashlessFormat = "%s-%s"
 	// instanceIDSlugFormat is a format of the slug string:
 	// "hashlessFormat + hashLeading + hashTrailing"
-	slugFormat     = "%s-%s-%s"
+	slugFormat     = "%s-%s"
 	slugHashLength = 4
 	// slugHashesLength is a length of the hash-based identifiers (-xxxx-xxxx) in the slug string
 	slugHashesLength        = slugHashLength*2 + 2
@@ -136,26 +136,23 @@ func sanitizeImage(image string) string {
 }
 
 // sanitizeInstanceIDSlug returns a sanitized instance ID slug
-func sanitizeInstanceIDSlug(instanceIDSlug string) string {
-	if len(instanceIDSlug) > 243 {
-		return instanceIDSlug[:243]
-	} else {
+func sanitizeInstanceIDSlug(instanceIDSlug, hashedID string) string {
+	if len(instanceIDSlug) < maxHashlessStringLength {
 		return instanceIDSlug
 	}
+	leadingDigest, trailingDigest := hashedID[:slugHashLength], hashedID[len(hashedID)-slugHashLength:]
+	return fmt.Sprintf("%s-%s-%s", instanceIDSlug[:maxHashlessStringLength], leadingDigest, trailingDigest)
 
 }
 
 // InstanceIDToSlug retuns a human-friendly representation given a description of an instance ID
 //
 // If the given inputs would produce an invalid slug, it returns an appropriate error
-func InstanceIDToSlug(name, namespace, kind, hashedID string) (string, error) {
-	leadingDigest, trailingDigest := hashedID[:slugHashLength], hashedID[len(hashedID)-slugHashLength:]
+func InstanceIDToSlug(name, kind, hashedID string) (string, error) {
 
-	hashlessInstanceIDSlug := fmt.Sprintf(instanceIDSlugHashlessFormat, namespace, kind, name)
-	hashlessInstanceIDSlug = sanitizeInstanceIDSlug(hashlessInstanceIDSlug)
+	slug := sanitizeInstanceIDSlug(fmt.Sprintf(instanceIDSlugHashlessFormat, kind, name), hashedID)
 
 	var err error
-	slug, err := fmt.Sprintf(slugFormat, hashlessInstanceIDSlug, leadingDigest, trailingDigest), nil
 	slug = strings.ToLower(slug)
 
 	if !IsValidSlug(slug) {
@@ -186,21 +183,6 @@ func ImageInfoToSlug(image, imageHash string) (string, error) {
 	return slug, err
 }
 
-func GetNamespaceLessSlug(slug, namespace string) (string, error) {
-	if !IsValidSlug(slug) {
-		return "", ErrInvalidSlug
-	}
-	namespaceLessSlug := strings.TrimPrefix(slug, namespace+"-")
-	if slug == namespaceLessSlug {
-		return "", ErrInvalidSlug
-	}
-	if !IsValidSlug(namespaceLessSlug) {
-		return "", ErrInvalidSlug
-	}
-
-	return namespaceLessSlug, nil
-}
-
 func SanitizeLabelValues(labels map[string]string) {
 	for k, v := range labels {
 		labels[k] = ToValidLabelValue(v)
@@ -211,10 +193,6 @@ func SanitizeLabelValues(labels map[string]string) {
 //
 // If the given inputs would produce an invalid slug, it returns an appropriate error
 func StringToSlug(str string) (string, error) {
-	// hash the string, take the first and last 4 characters of the hash
-	hashBytes := sha256.Sum256([]byte(str))
-	hashStr := hex.EncodeToString(hashBytes[:])
-	leadingDigest, trailingDigest := hashStr[:slugHashLength], hashStr[len(hashStr)-slugHashLength:]
 
 	// sanitize the string to be DNS Subdomain compatible
 	sanitizedStr, err := ToValidDNSSubdomainName(str)
@@ -222,11 +200,10 @@ func StringToSlug(str string) (string, error) {
 		return "", err
 	}
 
-	if len(sanitizedStr) >= maxHashlessStringLength {
-		sanitizedStr = sanitizedStr[:maxHashlessStringLength]
-	}
+	hashBytes := sha256.Sum256([]byte(str))
+	hashStr := hex.EncodeToString(hashBytes[:])
+	slug := sanitizeInstanceIDSlug(sanitizedStr, hashStr)
 
-	slug := fmt.Sprintf(slugFormat, sanitizedStr, leadingDigest, trailingDigest)
 	slug = strings.ToLower(slug)
 
 	if !IsValidSlug(slug) {
@@ -237,7 +214,7 @@ func StringToSlug(str string) (string, error) {
 }
 
 func resourceToFormattedString(resource workloadinterface.IMetadata) string {
-	return fmt.Sprintf("%s-%s-%s-%s", resource.GetApiVersion(), resource.GetKind(), resource.GetNamespace(), resource.GetName())
+	return fmt.Sprintf("%s-%s", resource.GetKind(), resource.GetName())
 }
 
 // ResourceToSlug returns a human-friendly representation for a given resource

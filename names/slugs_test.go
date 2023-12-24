@@ -134,7 +134,7 @@ func TestInstanceIDToFriendlyName(t *testing.T) {
 			inputKind:      "Pod",
 			inputName:      "reverse-proxy",
 			inputHashedID:  "1ba506b28f9ee9c7e8a0c98840fe5a1fe21142d225ecc526fbb535d0d6344aaf",
-			want:           "default-pod-reverse-proxy-1ba5-4aaf",
+			want:           "pod-reverse-proxy",
 			wantErr:        nil,
 		},
 		{
@@ -143,16 +143,16 @@ func TestInstanceIDToFriendlyName(t *testing.T) {
 			inputKind:      "Service",
 			inputName:      "webapp",
 			inputHashedID:  "1ba506b28f9ee9c7e8a0c98840fe5a1fe21142d225ecc526fbb535d0d6344aaf",
-			want:           "default-service-webapp-1ba5-4aaf",
+			want:           "service-webapp",
 			wantErr:        nil,
 		},
 		{
 			name:           "instanceID that produces overflowing slugs gets truncated to limit",
-			inputNamespace: "0123456789",
-			inputKind:      "0123456789",
-			inputName:      "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaab",
+			inputNamespace: "default",
+			inputKind:      "Service",
+			inputName:      "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaab",
 			inputHashedID:  "1ba506b28f9ee9c7e8a0c98840fe5a1fe21142d225ecc526fbb535d0d6344aaf",
-			want:           "0123456789-0123456789-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa-1ba5-4aaf",
+			want:           "service-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa-1ba5-4aaf",
 			wantErr:        nil,
 		},
 		{
@@ -168,7 +168,7 @@ func TestInstanceIDToFriendlyName(t *testing.T) {
 
 	for _, tc := range tt {
 		t.Run(tc.name, func(t *testing.T) {
-			got, err := InstanceIDToSlug(tc.inputName, tc.inputNamespace, tc.inputKind, tc.inputHashedID)
+			got, err := InstanceIDToSlug(tc.inputName, tc.inputKind, tc.inputHashedID)
 
 			assert.Equal(t, tc.want, got)
 			assert.ErrorIs(t, err, tc.wantErr)
@@ -328,73 +328,6 @@ func TestIsValidDSNLabelName(t *testing.T) {
 	}
 }
 
-func TestGetNamespaceLessSlug(t *testing.T) {
-	tt := []struct {
-		inputName string
-		want      string
-		namespace string
-	}{
-		{
-			inputName: "default-replicaset-nginx-77b4fdf86c-6e03-a89e",
-			want:      "replicaset-nginx-77b4fdf86c-6e03-a89e",
-			namespace: "default",
-		},
-		{
-			inputName: "kubescape-statefulset-kollector-c1be-77d8",
-			want:      "statefulset-kollector-c1be-77d8",
-			namespace: "kubescape",
-		},
-		{
-			inputName: "kubescape-replicaset-kubevuln-7d894c4494-3b54-2a81",
-			want:      "replicaset-kubevuln-7d894c4494-3b54-2a81",
-			namespace: "kubescape",
-		},
-		{
-			inputName: "kubescape-replicaset-otel-collector-5674d77b9f-3eeb-8ca1",
-			want:      "replicaset-otel-collector-5674d77b9f-3eeb-8ca1",
-			namespace: "kubescape",
-		},
-		{
-			inputName: "kube-system-daemonset-kube-proxy-4e8b-ad45",
-			want:      "daemonset-kube-proxy-4e8b-ad45",
-			namespace: "kube-system",
-		},
-		{
-			inputName: "kubescape-replicaset-gateway-6d4fddc958-54db-85c8",
-			want:      "replicaset-gateway-6d4fddc958-54db-85c8",
-			namespace: "kubescape",
-		},
-	}
-
-	ttError := []struct {
-		inputName string
-		namespace string
-	}{
-		{
-			inputName: "kubescape-replicaset-gateway-6d4fddc958-54db-85c8",
-			namespace: "notexistone",
-		},
-		{
-			inputName: "notValidSlug",
-		},
-	}
-
-	for _, tc := range tt {
-		t.Run(tc.inputName, func(t *testing.T) {
-			got, err := GetNamespaceLessSlug(tc.inputName, tc.namespace)
-			assert.Equal(t, err, nil)
-			assert.Equal(t, tc.want, got)
-		})
-	}
-
-	for _, tc := range ttError {
-		t.Run(tc.inputName, func(t *testing.T) {
-			_, err := GetNamespaceLessSlug(tc.inputName, tc.namespace)
-			assert.NotEqual(t, err, nil)
-		})
-	}
-}
-
 func TestIsValidLabelValue(t *testing.T) {
 	tests := []struct {
 		value    string
@@ -534,7 +467,7 @@ func TestStringToSlug(t *testing.T) {
 		{
 			name:     "short input",
 			input:    "n:ginx-xyz1.2.34",
-			expected: "n-ginx-xyz1.2.34-8020-7297",
+			expected: "n-ginx-xyz1.2.34",
 			err:      nil,
 		},
 		{
@@ -603,7 +536,7 @@ func TestResourceToSlug(t *testing.T) {
 				Namespace:  "default",
 				Name:       "mypod",
 			},
-			expected: "v1-pod-default-mypod-b5fd-df1b",
+			expected: "pod-mypod",
 		},
 		{
 			resource: &FakeMetadata{
@@ -612,7 +545,7 @@ func TestResourceToSlug(t *testing.T) {
 				Namespace:  "",
 				Name:       "mypod",
 			},
-			expected: "pod--mypod-8282-f27b",
+			expected: "pod-mypod",
 		},
 	}
 
@@ -652,7 +585,7 @@ func TestRoleBindingResourceToSlug(t *testing.T) {
 				Name:      "myrolebinding",
 				Namespace: "namespace-2",
 			},
-			expected: "serviceaccount-kubescape-sa-2--role-namespace-1-myrole--rolebinding-namespace-2-myrolebinding-eacf-57fc",
+			expected: "serviceaccount-sa-2-role-myrole-rolebinding-myrolebinding",
 		},
 		{
 			name: "with related objects (cluster role, cluster rolebinding)",
@@ -669,7 +602,7 @@ func TestRoleBindingResourceToSlug(t *testing.T) {
 				Kind: "ClusterRoleBinding",
 				Name: "myrolebinding",
 			},
-			expected: "serviceaccount-kubescape-sa-1--clusterrole--myrole--clusterrolebinding--myrolebinding-af38-ce0e",
+			expected: "serviceaccount-sa-1-clusterrole-myrole-clusterrolebinding-myrolebinding",
 		},
 	}
 
