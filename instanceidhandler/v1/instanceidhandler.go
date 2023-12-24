@@ -132,5 +132,5 @@ func (id *InstanceID) GetLabels() map[string]string {
 }
 
 func (id *InstanceID) GetSlug() (string, error) {
-	return names.InstanceIDToSlug(id.GetName(), id.GetNamespace(), id.GetKind(), id.GetHashed())
+	return names.InstanceIDToSlug(id.GetName(), id.GetKind(), id.GetHashed())
 }
