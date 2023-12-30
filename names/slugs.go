@@ -136,11 +136,18 @@ func sanitizeImage(image string) string {
 }
 
 // sanitizeInstanceIDSlug returns a sanitized instance ID slug
-func sanitizeInstanceIDSlug(instanceIDSlug, hashedID string) string {
+func sanitizeInstanceIDSlug(instanceIDSlug, containerName, hashedID string) string {
+	leadingDigest, trailingDigest := hashedID[:slugHashLength], hashedID[len(hashedID)-slugHashLength:]
+
+	// if container name is not empty, add it to the slug, and add the hash as well
+	// adding the hash is necessary to avoid collisions between different workloads in different namespaces. This is a workaround until we store the vulnerabilitymanifests objects in a separate namespace
+	if containerName != "" {
+		instanceIDSlug = fmt.Sprintf("%s-%s", instanceIDSlug, containerName)
+		instanceIDSlug = fmt.Sprintf("%s-%s-%s", instanceIDSlug, leadingDigest, trailingDigest)
+	}
 	if len(instanceIDSlug) < maxHashlessStringLength {
 		return instanceIDSlug
 	}
-	leadingDigest, trailingDigest := hashedID[:slugHashLength], hashedID[len(hashedID)-slugHashLength:]
 	return fmt.Sprintf("%s-%s-%s", instanceIDSlug[:maxHashlessStringLength], leadingDigest, trailingDigest)
 
 }
@@ -148,9 +155,9 @@ func sanitizeInstanceIDSlug(instanceIDSlug, hashedID string) string {
 // InstanceIDToSlug retuns a human-friendly representation given a description of an instance ID
 //
 // If the given inputs would produce an invalid slug, it returns an appropriate error
-func InstanceIDToSlug(name, kind, hashedID string) (string, error) {
+func InstanceIDToSlug(name, kind, containerName, hashedID string) (string, error) {
 
-	slug := sanitizeInstanceIDSlug(fmt.Sprintf(instanceIDSlugHashlessFormat, kind, name), hashedID)
+	slug := sanitizeInstanceIDSlug(fmt.Sprintf(instanceIDSlugHashlessFormat, kind, name), containerName, hashedID)
 
 	var err error
 	slug = strings.ToLower(slug)
@@ -202,7 +209,7 @@ func StringToSlug(str string) (string, error) {
 
 	hashBytes := sha256.Sum256([]byte(str))
 	hashStr := hex.EncodeToString(hashBytes[:])
-	slug := sanitizeInstanceIDSlug(sanitizedStr, hashStr)
+	slug := sanitizeInstanceIDSlug(sanitizedStr, "", hashStr)
 
 	slug = strings.ToLower(slug)
 
@@ -218,7 +225,7 @@ func resourceToFormattedString(resource workloadinterface.IMetadata) string {
 }
 
 // ResourceToSlug returns a human-friendly representation for a given resource
-// The slug is generated based on the API version, kind, namespace and name of the resource
+// The slug is generated based on the kind and name of the resource
 func ResourceToSlug(resource workloadinterface.IMetadata) (string, error) {
 	return StringToSlug(resourceToFormattedString(resource))
 }
@@ -230,4 +237,9 @@ func RoleBindingResourceToSlug(subject workloadinterface.IMetadata, role workloa
 	roleName := resourceToFormattedString(role)
 	roleBindingName := resourceToFormattedString(roleBinding)
 	return StringToSlug(fmt.Sprintf("%s-%s-%s", subjectName, roleName, roleBindingName))
+}
+
+// Add namespace to slug
+func AddNamespaceToSlug(slug, namespace string) string {
+	return fmt.Sprintf("%s-%s", namespace, slug)
 }

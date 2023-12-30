@@ -123,6 +123,7 @@ func TestInstanceIDToFriendlyName(t *testing.T) {
 		name           string
 		inputName      string
 		inputNamespace string
+		inputContainer string
 		inputKind      string
 		inputHashedID  string
 		want           string
@@ -147,6 +148,26 @@ func TestInstanceIDToFriendlyName(t *testing.T) {
 			wantErr:        nil,
 		},
 		{
+			name:           "valid instanceID with container name produces matching display name",
+			inputNamespace: "default",
+			inputContainer: "webapp",
+			inputKind:      "Service",
+			inputName:      "webapp",
+			inputHashedID:  "1ba506b28f9ee9c7e8a0c98840fe5a1fe21142d225ecc526fbb535d0d6344aaf",
+			want:           "service-webapp-webapp-1ba5-4aaf",
+			wantErr:        nil,
+		},
+		{
+			name:           "valid instanceID with different namespace name produces different hash",
+			inputNamespace: "blabla",
+			inputContainer: "webapp",
+			inputKind:      "Service",
+			inputName:      "webapp",
+			inputHashedID:  "000006b28f9ee9c7e8a0c98840fe5a1fe21142d225ecc526fbb535d0d6340000",
+			want:           "service-webapp-webapp-0000-0000",
+			wantErr:        nil,
+		},
+		{
 			name:           "instanceID that produces overflowing slugs gets truncated to limit",
 			inputNamespace: "default",
 			inputKind:      "Service",
@@ -168,7 +189,7 @@ func TestInstanceIDToFriendlyName(t *testing.T) {
 
 	for _, tc := range tt {
 		t.Run(tc.name, func(t *testing.T) {
-			got, err := InstanceIDToSlug(tc.inputName, tc.inputKind, tc.inputHashedID)
+			got, err := InstanceIDToSlug(tc.inputName, tc.inputKind, tc.inputContainer, tc.inputHashedID)
 
 			assert.Equal(t, tc.want, got)
 			assert.ErrorIs(t, err, tc.wantErr)
