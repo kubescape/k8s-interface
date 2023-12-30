@@ -164,7 +164,7 @@ func TestInstanceIDToDisplayName(t *testing.T) {
 				name:          "reverse-proxy",
 				containerName: "nginx",
 			},
-			want:    "pod-reverse-proxy",
+			want:    "pod-reverse-proxy-nginx-2f07-68bd",
 			wantErr: nil,
 		},
 		{
@@ -175,6 +175,17 @@ func TestInstanceIDToDisplayName(t *testing.T) {
 				kind:          "Service",
 				name:          "webapp",
 				containerName: "leader",
+			},
+			want:    "service-webapp-leader-cca3-8ea7",
+			wantErr: nil,
+		},
+		{
+			name: "valid instanceID without container name produces matching display name",
+			input: &InstanceID{
+				apiVersion: "v1",
+				namespace:  "default",
+				kind:       "Service",
+				name:       "webapp",
 			},
 			want:    "service-webapp",
 			wantErr: nil,
