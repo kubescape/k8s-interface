@@ -489,6 +489,18 @@ func (w *Workload) GetOwnerReferences() ([]metav1.OwnerReference, error) {
 	ownerReferences := []metav1.OwnerReference{}
 	interOwnerReferences, ok := InspectWorkload(w.workload, "metadata", "ownerReferences")
 	if !ok {
+		// check if workload is Pod with pod-template-hash label
+		if w.GetKind() == "Pod" {
+			if podHash, ok := w.GetLabel("pod-template-hash"); ok && podHash != "" {
+				if name, err := getReplicasetNameFromPod(w.GetName(), podHash); err == nil {
+					ownerReferences = append(ownerReferences, metav1.OwnerReference{
+						APIVersion: "apps/v1",
+						Kind:       "ReplicaSet",
+						Name:       name,
+					})
+				}
+			}
+		}
 		return ownerReferences, nil
 	}
 
