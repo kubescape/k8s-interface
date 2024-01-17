@@ -45,9 +45,13 @@ const (
 	PrefixName            = "name-"
 )
 
-// SBOM/VULN object statuses
+// Statuses
 const (
-	Incomplete = "incomplete"
+	Initializing = "initializing"
+	Ready        = "ready"
+	Completed    = "completed"
+	Incomplete   = "incomplete"
+	Unauthorize  = "unauthorize"
 )
 
 func IgnoreOwnerReference(ownerKind string) bool {
