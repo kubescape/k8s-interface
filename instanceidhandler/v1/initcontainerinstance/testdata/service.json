@@ -1,0 +1,40 @@
+{
+  "apiVersion": "v1",
+  "kind": "Service",
+  "metadata": {
+    "creationTimestamp": "2021-12-06T14:01:16Z",
+    "labels": {
+      "app": "armo-vuln-scan",
+      "app.kubernetes.io\/managed-by": "Helm"
+    },
+    "name": "armo-vuln-scan",
+    "resourceVersion": "351796",
+    "uid": "12bd4f9f-3ec6-4113-8ec6-0b8a1c772deb"
+  },
+  "spec": {
+    "clusterIP": "10.107.7.78",
+    "clusterIPs": [
+      "10.107.7.78"
+    ],
+    "internalTrafficPolicy": "Cluster",
+    "ipFamilies": [
+      "IPv4"
+    ],
+    "ipFamilyPolicy": "SingleStack",
+    "ports": [
+      {
+        "port": 8080,
+        "protocol": "TCP",
+        "targetPort": 8080
+      }
+    ],
+    "selector": {
+      "app": "armo-vuln-scan"
+    },
+    "sessionAffinity": "None",
+    "type": "ClusterIP"
+  },
+  "status": {
+    "loadBalancer": {}
+  }
+}
