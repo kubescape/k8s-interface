@@ -59,14 +59,16 @@ func GenerateInstanceIDFromString(input string) (instanceidhandler.IInstanceID, 
 func convertContainersToIInstanceID(l []containerinstance.InstanceID) []instanceidhandler.IInstanceID {
 	li := []instanceidhandler.IInstanceID{}
 	for _, i := range l {
-		li = append(li, &i)
+		c := i
+		li = append(li, &c)
 	}
 	return li
 }
 func convertInitContainersToIInstanceID(l []initcontainerinstance.InstanceID) []instanceidhandler.IInstanceID {
 	li := []instanceidhandler.IInstanceID{}
 	for _, i := range l {
-		li = append(li, &i)
+		c := i
+		li = append(li, &c)
 	}
 	return li
 }
