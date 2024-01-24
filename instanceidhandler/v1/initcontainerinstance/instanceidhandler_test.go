@@ -1,4 +1,4 @@
-package instanceidhandler
+package initcontainerinstance
 
 import (
 	_ "embed"
@@ -7,6 +7,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/kubescape/k8s-interface/instanceidhandler/v1/helpers"
 	"github.com/kubescape/k8s-interface/names"
 	"github.com/kubescape/k8s-interface/workloadinterface"
 	"github.com/stretchr/testify/assert"
@@ -107,41 +108,41 @@ func TestInstanceID(t *testing.T) {
 		t.Errorf("can't create instance ID from service")
 	}
 	expectedLabels := map[string]string{
-		ApiGroupMetadataKey:      "apps",
-		ApiVersionMetadataKey:    "v1",
-		NamespaceMetadataKey:     "default",
-		KindMetadataKey:          "ReplicaSet",
-		NameMetadataKey:          "nginx-84f5585d68",
-		ContainerNameMetadataKey: "nginx",
+		helpers.ApiGroupMetadataKey:          "apps",
+		helpers.ApiVersionMetadataKey:        "v1",
+		helpers.NamespaceMetadataKey:         "default",
+		helpers.KindMetadataKey:              "ReplicaSet",
+		helpers.NameMetadataKey:              "nginx-84f5585d68",
+		helpers.InitContainerNameMetadataKey: "nginx",
 	}
 
-	err = checkAllsFunctions(deployment, "apps/v1", "default", "ReplicaSet", "nginx-84f5585d68", "nginx", "apiVersion-apps/v1/namespace-default/kind-ReplicaSet/name-nginx-84f5585d68/containerName-nginx", "57366ade3da2e7ba01f8b78251cb57bd70840939f4f207da91cb092b30c06feb", expectedLabels)
+	err = checkAllsFunctions(deployment, "apps/v1", "default", "ReplicaSet", "nginx-84f5585d68", "nginx", "apiVersion-apps/v1/namespace-default/kind-ReplicaSet/name-nginx-84f5585d68/initContainerName-nginx", "40e99ccb533d6287efc8950b3259e4f64fb3161555f3f83064d0ecff039a9fb4", expectedLabels)
 	if err != nil {
 		t.Error(err)
 	}
 
 	expectedLabels = map[string]string{
-		ApiGroupMetadataKey:      "batch",
-		ApiVersionMetadataKey:    "v1",
-		NamespaceMetadataKey:     "default",
-		KindMetadataKey:          "Job",
-		NameMetadataKey:          "nginx-job",
-		ContainerNameMetadataKey: "nginx-job",
+		helpers.ApiGroupMetadataKey:          "batch",
+		helpers.ApiVersionMetadataKey:        "v1",
+		helpers.NamespaceMetadataKey:         "default",
+		helpers.KindMetadataKey:              "Job",
+		helpers.NameMetadataKey:              "nginx-job",
+		helpers.InitContainerNameMetadataKey: "nginx-job",
 	}
-	err = checkAllsFunctions(jobPod, "batch/v1", "default", "Job", "nginx", "nginx-job", "apiVersion-batch/v1/namespace-default/kind-Job/name-nginx-job/containerName-nginx-job", "1fdef304b3383588f0e8a267914746de2bf03e1652908d57232cd543a87541c5", expectedLabels)
+	err = checkAllsFunctions(jobPod, "batch/v1", "default", "Job", "nginx", "nginx-job", "apiVersion-batch/v1/namespace-default/kind-Job/name-nginx-job/initContainerName-nginx-job", "d2fadc0d6b2b0b91e5910a528d52ed2762b38d8a68835a78f2988678e4f5a2ae", expectedLabels)
 	if err != nil {
 		t.Error(err)
 	}
 
 	expectedLabels = map[string]string{
-		ApiGroupMetadataKey:      "",
-		ApiVersionMetadataKey:    "v1",
-		NamespaceMetadataKey:     "default",
-		KindMetadataKey:          "Pod",
-		NameMetadataKey:          "nginx",
-		ContainerNameMetadataKey: "nginx",
+		helpers.ApiGroupMetadataKey:          "",
+		helpers.ApiVersionMetadataKey:        "v1",
+		helpers.NamespaceMetadataKey:         "default",
+		helpers.KindMetadataKey:              "Pod",
+		helpers.NameMetadataKey:              "nginx",
+		helpers.InitContainerNameMetadataKey: "nginx",
 	}
-	err = checkAllsFunctions(mockPod, "v1", "default", "Pod", "nginx", "nginx", "apiVersion-v1/namespace-default/kind-Pod/name-nginx/containerName-nginx", "1ba506b28f9ee9c7e8a0c98840fe5a1fe21142d225ecc526fbb535d0d6344aaf", expectedLabels)
+	err = checkAllsFunctions(mockPod, "v1", "default", "Pod", "nginx", "nginx", "apiVersion-v1/namespace-default/kind-Pod/name-nginx/initContainerName-nginx", "068cfa194f3be808ca49838cc3ecf4dd0af04586aaf640a98ea1ed2ac78ee328", expectedLabels)
 	if err != nil {
 		t.Error(err)
 	}
@@ -158,25 +159,25 @@ func TestInstanceIDToDisplayName(t *testing.T) {
 		{
 			name: "valid instanceID produces matching display name",
 			input: &InstanceID{
-				apiVersion:    "v1",
-				namespace:     "default",
-				kind:          "Pod",
-				name:          "reverse-proxy",
-				containerName: "nginx",
+				apiVersion:        "v1",
+				namespace:         "default",
+				kind:              "Pod",
+				name:              "reverse-proxy",
+				initContainerName: "nginx",
 			},
-			want:    "pod-reverse-proxy-nginx-2f07-68bd",
+			want:    "pod-reverse-proxy-nginx-441b-9992",
 			wantErr: nil,
 		},
 		{
 			name: "valid instanceID produces matching display name",
 			input: &InstanceID{
-				apiVersion:    "v1",
-				namespace:     "default",
-				kind:          "Service",
-				name:          "webapp",
-				containerName: "leader",
+				apiVersion:        "v1",
+				namespace:         "default",
+				kind:              "Service",
+				name:              "webapp",
+				initContainerName: "leader",
 			},
-			want:    "service-webapp-leader-cca3-8ea7",
+			want:    "service-webapp-leader-f0b1-9517",
 			wantErr: nil,
 		},
 		{
@@ -193,11 +194,11 @@ func TestInstanceIDToDisplayName(t *testing.T) {
 		{
 			name: "invalid instanceID produces matching error",
 			input: &InstanceID{
-				apiVersion:    "v1",
-				namespace:     "default",
-				kind:          "Service",
-				name:          "web/app",
-				containerName: "leader",
+				apiVersion:        "v1",
+				namespace:         "default",
+				kind:              "Service",
+				name:              "web/app",
+				initContainerName: "leader",
 			},
 			want:    "",
 			wantErr: names.ErrInvalidSlug,

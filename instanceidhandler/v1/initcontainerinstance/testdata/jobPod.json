@@ -2,53 +2,43 @@
     "apiVersion": "v1",
     "kind": "Pod",
     "metadata": {
-        "creationTimestamp": "2023-03-26T09:10:32Z",
-        "generateName": "nginx-84f5585d68-",
+        "creationTimestamp": "2023-03-26T12:17:45Z",
+        "finalizers": [
+            "batch.kubernetes.io/job-tracking"
+        ],
+        "generateName": "nginx-job-",
         "labels": {
-            "app": "nginx",
-            "pod-template-hash": "84f5585d68"
+            "controller-uid": "1ca79890-1432-48fd-8e04-bd6189c194b7",
+            "job-name": "nginx-job"
         },
-        "name": "nginx-84f5585d68-42mxd",
+        "name": "nginx-job-88b9z",
         "namespace": "default",
         "ownerReferences": [
             {
-                "apiVersion": "apps/v1",
+                "apiVersion": "batch/v1",
                 "blockOwnerDeletion": true,
                 "controller": true,
-                "kind": "ReplicaSet",
-                "name": "nginx-84f5585d68",
-                "uid": "1747930a-61ba-4ee1-b1a9-838af6cb094d"
+                "kind": "Job",
+                "name": "nginx-job",
+                "uid": "1ca79890-1432-48fd-8e04-bd6189c194b7"
             }
         ],
-        "resourceVersion": "8051",
-        "uid": "fa771236-d117-453c-b5dc-af14127cc648"
+        "resourceVersion": "17001",
+        "uid": "324de883-e0cc-4c8e-b0fb-1ed6aa070c88"
     },
     "spec": {
         "initContainers": [
             {
-                "image": "nginx@sha256:f7988fb6c02e0ce69257d9bd9cf37ae20a60f1df7563c3a2a6abe24160306b8d",
-                "imagePullPolicy": "IfNotPresent",
-                "name": "bla"
-            }
-        ],
-        "containers": [
-            {
-                "env": [
-                    {
-                        "name": "DEMO_GREETING",
-                        "value": "Hellofromtheenvironment"
-                    }
-                ],
-                "image": "nginx@sha256:f7988fb6c02e0ce69257d9bd9cf37ae20a60f1df7563c3a2a6abe24160306b8d",
-                "imagePullPolicy": "IfNotPresent",
-                "name": "nginx",
+                "image": "nginx",
+                "imagePullPolicy": "Always",
+                "name": "nginx-job",
                 "resources": {},
                 "terminationMessagePath": "/dev/termination-log",
                 "terminationMessagePolicy": "File",
                 "volumeMounts": [
                     {
                         "mountPath": "/var/run/secrets/kubernetes.io/serviceaccount",
-                        "name": "kube-api-access-g42z4",
+                        "name": "kube-api-access-8b7q6",
                         "readOnly": true
                     }
                 ]
@@ -59,7 +49,7 @@
         "nodeName": "minikube",
         "preemptionPolicy": "PreemptLowerPriority",
         "priority": 0,
-        "restartPolicy": "Always",
+        "restartPolicy": "Never",
         "schedulerName": "default-scheduler",
         "securityContext": {},
         "serviceAccount": "default",
@@ -81,7 +71,7 @@
         ],
         "volumes": [
             {
-                "name": "kube-api-access-g42z4",
+                "name": "kube-api-access-8b7q6",
                 "projected": {
                     "defaultMode": 420,
                     "sources": [
@@ -124,55 +114,55 @@
         "conditions": [
             {
                 "lastProbeTime": null,
-                "lastTransitionTime": "2023-03-26T09:10:32Z",
+                "lastTransitionTime": "2023-03-26T12:17:45Z",
                 "status": "True",
                 "type": "Initialized"
             },
             {
                 "lastProbeTime": null,
-                "lastTransitionTime": "2023-03-26T09:10:35Z",
+                "lastTransitionTime": "2023-03-26T12:18:05Z",
                 "status": "True",
                 "type": "Ready"
             },
             {
                 "lastProbeTime": null,
-                "lastTransitionTime": "2023-03-26T09:10:35Z",
+                "lastTransitionTime": "2023-03-26T12:18:05Z",
                 "status": "True",
                 "type": "ContainersReady"
             },
             {
                 "lastProbeTime": null,
-                "lastTransitionTime": "2023-03-26T09:10:32Z",
+                "lastTransitionTime": "2023-03-26T12:17:45Z",
                 "status": "True",
                 "type": "PodScheduled"
             }
         ],
         "containerStatuses": [
             {
-                "containerID": "docker://f41bb9e0b603517517603bab82762e33a95fb5f8fad62c9152089875e08e0b38",
-                "image": "sha256:295c7be079025306c4f1d65997fcf7adb411c88f139ad1d34b537164aa060369",
-                "imageID": "docker-pullable://nginx@sha256:f7988fb6c02e0ce69257d9bd9cf37ae20a60f1df7563c3a2a6abe24160306b8d",
+                "containerID": "docker://3b15c1346e9054ba3da3f87159cc22ede0f0cce8e309f28022055bb3860b500b",
+                "image": "nginx:latest",
+                "imageID": "docker-pullable://nginx@sha256:f4e3b6489888647ce1834b601c6c06b9f8c03dee6e097e13ed3e28c01ea3ac8c",
                 "lastState": {},
-                "name": "nginx",
+                "name": "nginx-job",
                 "ready": true,
                 "restartCount": 0,
                 "started": true,
                 "state": {
                     "running": {
-                        "startedAt": "2023-03-26T09:10:35Z"
+                        "startedAt": "2023-03-26T12:18:03Z"
                     }
                 }
             }
         ],
         "hostIP": "192.168.49.2",
         "phase": "Running",
-        "podIP": "10.244.0.37",
+        "podIP": "10.244.0.38",
         "podIPs": [
             {
-                "ip": "10.244.0.37"
+                "ip": "10.244.0.38"
             }
         ],
         "qosClass": "BestEffort",
-        "startTime": "2023-03-26T09:10:32Z"
+        "startTime": "2023-03-26T12:17:45Z"
     }
 }
