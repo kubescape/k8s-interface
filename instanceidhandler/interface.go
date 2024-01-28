@@ -1,6 +1,11 @@
 package instanceidhandler
 
+import "github.com/kubescape/k8s-interface/instanceidhandler/v1/helpers"
+
 type IInstanceID interface {
+	// GetInstanceType returns the type of the instance ID
+	GetInstanceType() helpers.InstanceType
+
 	GetAPIVersion() string
 	GetNamespace() string
 	GetKind() string

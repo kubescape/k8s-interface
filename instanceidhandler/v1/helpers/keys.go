@@ -2,6 +2,8 @@ package helpers
 
 import "github.com/kubescape/k8s-interface/k8sinterface"
 
+type InstanceType string
+
 // metadata keys
 const (
 	metadataPrefix                    = "kubescape.io"

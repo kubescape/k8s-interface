@@ -17,6 +17,8 @@ const (
 	stringFormat    = helpers.PrefixApiVersion + "%s" + helpers.StringFormatSeparator + helpers.PrefixNamespace + "%s" + helpers.StringFormatSeparator + helpers.PrefixKind + "%s" + helpers.StringFormatSeparator + helpers.PrefixName + "%s" + helpers.StringFormatSeparator + prefixContainer + "%s"
 )
 
+const InstanceType helpers.InstanceType = "container"
+
 // ensure that InstanceID implements IInstanceID
 var _ instanceidhandler.IInstanceID = &InstanceID{}
 
@@ -28,6 +30,9 @@ type InstanceID struct {
 	containerName string
 }
 
+func (id *InstanceID) GetInstanceType() helpers.InstanceType {
+	return InstanceType
+}
 func (id *InstanceID) GetAPIVersion() string {
 	return id.apiVersion
 }
