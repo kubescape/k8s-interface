@@ -8,7 +8,7 @@ import (
 	"github.com/kubescape/go-logger/helpers"
 
 	"github.com/armosec/utils-k8s-go/secrethandling"
-	"github.com/docker/docker/api/types"
+	"github.com/docker/docker/api/types/registry"
 	"github.com/kubescape/k8s-interface/k8sinterface"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -41,9 +41,9 @@ func listServiceAccountImagePullSecrets(k8sAPI *k8sinterface.KubernetesApi, name
 	return secrets, nil
 }
 
-func getImagePullSecret(k8sAPI *k8sinterface.KubernetesApi, secrets []string, namespace string) map[string]types.AuthConfig {
+func getImagePullSecret(k8sAPI *k8sinterface.KubernetesApi, secrets []string, namespace string) map[string]registry.AuthConfig {
 
-	secretsAuthConfig := make(map[string]types.AuthConfig)
+	secretsAuthConfig := make(map[string]registry.AuthConfig)
 
 	for i := range secrets {
 		res, err := k8sAPI.KubernetesClient.CoreV1().Secrets(namespace).Get(context.Background(), secrets[i], metav1.GetOptions{})
@@ -66,7 +66,7 @@ func getImagePullSecret(k8sAPI *k8sinterface.KubernetesApi, secrets []string, na
 // GetImageRegistryCredentials returns various credentials for images in the pod
 // imageTag empty means returns all of the credentials for all images in pod spec containers
 // pod.ObjectMeta.Namespace must be well setted
-func GetImageRegistryCredentials(imageTag string, pod *corev1.Pod) (map[string]types.AuthConfig, error) {
+func GetImageRegistryCredentials(imageTag string, pod *corev1.Pod) (map[string]registry.AuthConfig, error) {
 	k8sAPI := k8sinterface.NewKubernetesApi()
 	listSecret, _ := listPodImagePullSecrets(&pod.Spec)
 	listServiceSecret, _ := listServiceAccountImagePullSecrets(k8sAPI, pod.GetNamespace(), pod.Spec.ServiceAccountName)
@@ -74,7 +74,7 @@ func GetImageRegistryCredentials(imageTag string, pod *corev1.Pod) (map[string]t
 	secrets := getImagePullSecret(k8sAPI, listSecret, pod.ObjectMeta.Namespace)
 
 	if len(secrets) == 0 {
-		secrets = make(map[string]types.AuthConfig)
+		secrets = make(map[string]registry.AuthConfig)
 	}
 
 	if imageTag != "" {
@@ -107,7 +107,7 @@ func GetImageRegistryCredentials(imageTag string, pod *corev1.Pod) (map[string]t
 // GetImageRegistryCredentials returns various credentials for images in the pod
 // imageTag empty means returns all of the credentials for all images in pod spec containers
 // pod.ObjectMeta.Namespace must be well setted
-func GetWorkloadImageRegistryCredentials(imageTag string, workload k8sinterface.IWorkload) (map[string]types.AuthConfig, error) {
+func GetWorkloadImageRegistryCredentials(imageTag string, workload k8sinterface.IWorkload) (map[string]registry.AuthConfig, error) {
 	podSpec, err := workload.GetPodSpec()
 	if err != nil {
 		return nil, err
@@ -119,7 +119,7 @@ func GetWorkloadImageRegistryCredentials(imageTag string, workload k8sinterface.
 	secrets := getImagePullSecret(k8sAPI, listSecret, workload.GetNamespace())
 
 	if len(secrets) == 0 {
-		secrets = make(map[string]types.AuthConfig)
+		secrets = make(map[string]registry.AuthConfig)
 	}
 
 	if imageTag != "" {
