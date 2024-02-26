@@ -15,7 +15,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/ecr"
-	"github.com/docker/docker/api/types"
+	"github.com/docker/docker/api/types/registry"
 	cloudsupportv1 "github.com/kubescape/k8s-interface/cloudsupport/v1"
 )
 
@@ -209,15 +209,15 @@ func GetLoginDetailsForGCR(imageTag string) (string, string, error) {
 	return "", "", err
 }
 
-func GetCloudVendorRegistryCredentials(imageTag string) (map[string]types.AuthConfig, error) {
-	secrets := map[string]types.AuthConfig{}
+func GetCloudVendorRegistryCredentials(imageTag string) (map[string]registry.AuthConfig, error) {
+	secrets := map[string]registry.AuthConfig{}
 	var errRes error
 	if CheckIsACRImage(imageTag) {
 		userName, password, err := GetLoginDetailsForAzurCR(imageTag)
 		if err != nil {
 			errRes = fmt.Errorf("failed to GetLoginDetailsForACR(%s): %v", imageTag, err)
 		} else {
-			secrets[imageTag] = types.AuthConfig{
+			secrets[imageTag] = registry.AuthConfig{
 				Username: userName,
 				Password: password,
 			}
@@ -229,7 +229,7 @@ func GetCloudVendorRegistryCredentials(imageTag string) (map[string]types.AuthCo
 		if err != nil {
 			errRes = fmt.Errorf("failed to GetLoginDetailsForECR(%s): %v", imageTag, err)
 		} else {
-			secrets[imageTag] = types.AuthConfig{
+			secrets[imageTag] = registry.AuthConfig{
 				Username: userName,
 				Password: password,
 			}
@@ -241,7 +241,7 @@ func GetCloudVendorRegistryCredentials(imageTag string) (map[string]types.AuthCo
 		if err != nil {
 			errRes = fmt.Errorf("failed to GetLoginDetailsForGCR(%s): %v", imageTag, err)
 		} else {
-			secrets[imageTag] = types.AuthConfig{
+			secrets[imageTag] = registry.AuthConfig{
 				Username: userName,
 				Password: password,
 			}
