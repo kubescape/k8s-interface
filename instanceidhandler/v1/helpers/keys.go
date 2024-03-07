@@ -30,6 +30,8 @@ const (
 	RoleBindingNamespaceMetadataKey   = metadataPrefix + "/rolebinding-namespace"
 	ClusterRoleNameMetadataKey        = metadataPrefix + "/clusterrole-name"
 	ClusterRoleBindingNameMetadataKey = metadataPrefix + "/clusterrolebinding-name"
+	ResourceSizeMetadataKey           = metadataPrefix + "/resource-size"
+	CompletionMetadataKey             = metadataPrefix + "/completion"
 )
 
 // metadata values
@@ -49,11 +51,19 @@ const (
 
 // Statuses
 const (
-	Initializing = "initializing"
-	Ready        = "ready"
-	Completed    = "completed"
-	Incomplete   = "incomplete"
-	Unauthorize  = "unauthorize"
+	Initializing   = "initializing"
+	Ready          = "ready"
+	Completed      = "completed"
+	Incomplete     = "incomplete"
+	Unauthorize    = "unauthorize"
+	MissingRuntime = "missing-runtime"
+	TooLarge       = "too-large"
+)
+
+// Completion
+const (
+	Partial  = "partial"
+	Complete = "complete"
 )
 
 func IgnoreOwnerReference(ownerKind string) bool {
