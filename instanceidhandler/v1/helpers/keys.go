@@ -32,6 +32,7 @@ const (
 	ClusterRoleBindingNameMetadataKey = metadataPrefix + "/clusterrolebinding-name"
 	ResourceSizeMetadataKey           = metadataPrefix + "/resource-size"
 	CompletionMetadataKey             = metadataPrefix + "/completion"
+	TierMetadataKey                   = metadataPrefix + "/tier"
 )
 
 // metadata values
@@ -64,6 +65,11 @@ const (
 const (
 	Partial  = "partial"
 	Complete = "complete"
+)
+
+// Tier values
+const (
+	CoreTier = "core"
 )
 
 func IgnoreOwnerReference(ownerKind string) bool {
