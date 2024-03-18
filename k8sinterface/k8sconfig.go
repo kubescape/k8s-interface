@@ -73,6 +73,15 @@ func NewKubernetesApi() *KubernetesApi {
 		K8SConfig:        k8sConfig,
 	}
 }
+func (k8sAPI *KubernetesApi) GetKubernetesClient() kubernetes.Interface {
+	return k8sAPI.KubernetesClient
+}
+func (k8sAPI *KubernetesApi) GetDynamicClient() dynamic.Interface {
+	return k8sAPI.DynamicClient
+}
+func (k8sAPI *KubernetesApi) GetDiscoveryClient() discovery.DiscoveryInterface {
+	return k8sAPI.DiscoveryClient
+}
 
 // RunningIncluster whether running in cluster
 var RunningIncluster bool

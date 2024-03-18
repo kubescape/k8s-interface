@@ -1,15 +1,11 @@
 package k8sinterface
 
 import (
-	"context"
 	"testing"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/kubescape/k8s-interface/workloadinterface"
-	"k8s.io/apimachinery/pkg/runtime"
-	dynamicfake "k8s.io/client-go/dynamic/fake"
-	kubernetesfake "k8s.io/client-go/kubernetes/fake"
 	//
 	// metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	// Uncomment to load all auth plugins
@@ -21,16 +17,6 @@ import (
 	// _ "k8s.io/client-go/plugin/pkg/client/auth/oidc"
 	// _ "k8s.io/client-go/plugin/pkg/client/auth/openstack"
 )
-
-// NewKubernetesApi -
-func NewKubernetesApiMock() *KubernetesApi {
-	InitializeMapResourcesMock()
-	return &KubernetesApi{
-		KubernetesClient: kubernetesfake.NewSimpleClientset(),
-		DynamicClient:    dynamicfake.NewSimpleDynamicClient(&runtime.Scheme{}),
-		Context:          context.Background(),
-	}
-}
 
 func TestListDynamic(t *testing.T) {
 	if !IsConnectedToCluster() {
