@@ -484,6 +484,23 @@ func (w *Workload) GetInitContainers() ([]corev1.Container, error) {
 	return containers, err
 }
 
+// GetEphemeralContainers -
+func (w *Workload) GetEphemeralContainers() ([]corev1.EphemeralContainer, error) {
+	containers := []corev1.EphemeralContainer{}
+
+	ephmeralContainers, _ := InspectWorkload(w.workload, append(PodSpec(w.GetKind()), "ephemeralContainers")...)
+	if ephmeralContainers == nil {
+		return containers, nil
+	}
+	containersBytes, err := json.Marshal(ephmeralContainers)
+	if err != nil {
+		return containers, err
+	}
+	err = json.Unmarshal(containersBytes, &containers)
+
+	return containers, err
+}
+
 // GetOwnerReferences -
 func (w *Workload) GetOwnerReferences() ([]metav1.OwnerReference, error) {
 	ownerReferences := []metav1.OwnerReference{}

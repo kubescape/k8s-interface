@@ -57,6 +57,7 @@ type IBasicWorkload interface {
 	GetReplicas() int
 	GetContainers() ([]corev1.Container, error)
 	GetInitContainers() ([]corev1.Container, error)
+	GetEphemeralContainers() ([]corev1.EphemeralContainer, error)
 	GetOwnerReferences() ([]metav1.OwnerReference, error)
 	GetImagePullSecret() ([]corev1.LocalObjectReference, error)
 	GetServiceAccountName() string
