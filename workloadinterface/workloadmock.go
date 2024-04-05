@@ -248,6 +248,11 @@ func (wm *WorkloadMock) GetInitContainers() ([]corev1.Container, error) {
 	return wm.workload.GetInitContainers()
 }
 
+// GetEphemeralContainers -
+func (wm *WorkloadMock) GetEphemeralContainers() ([]corev1.EphemeralContainer, error) {
+	return wm.workload.GetEphemeralContainers()
+}
+
 // GetOwnerReferences -
 func (wm *WorkloadMock) GetOwnerReferences() ([]metav1.OwnerReference, error) {
 	return wm.workload.GetOwnerReferences()

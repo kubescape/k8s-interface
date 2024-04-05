@@ -11,6 +11,7 @@ const (
 	ApiVersionMetadataKey             = metadataPrefix + "/workload-api-version"
 	ContainerNameMetadataKey          = metadataPrefix + "/workload-container-name"
 	InitContainerNameMetadataKey      = metadataPrefix + "/workload-init-container-name"
+	EphemeralContainerNameMetadataKey = metadataPrefix + "/workload-ephemeral-container-name"
 	ImageNameMetadataKey              = metadataPrefix + "/image-name"
 	ImageTagMetadataKey               = metadataPrefix + "/image-tag"
 	ImageIDMetadataKey                = metadataPrefix + "/image-id"

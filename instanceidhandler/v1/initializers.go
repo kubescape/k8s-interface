@@ -3,6 +3,7 @@ package instanceidhandler
 import (
 	"github.com/kubescape/k8s-interface/instanceidhandler"
 	"github.com/kubescape/k8s-interface/instanceidhandler/v1/containerinstance"
+	"github.com/kubescape/k8s-interface/instanceidhandler/v1/ephemeralcontainerinstance"
 	"github.com/kubescape/k8s-interface/instanceidhandler/v1/initcontainerinstance"
 	"github.com/kubescape/k8s-interface/workloadinterface"
 
@@ -24,6 +25,13 @@ func GenerateInstanceID(w workloadinterface.IWorkload) ([]instanceidhandler.IIns
 
 	l = append(l, convertInitContainersToIInstanceID(initC)...)
 
+	ephemeralC, err := ephemeralcontainerinstance.GenerateInstanceID(w)
+	if err != nil {
+		return l, err
+	}
+
+	l = append(l, convertEphemeralContainersToIInstanceID(ephemeralC)...)
+
 	return l, nil
 }
 
@@ -43,6 +51,13 @@ func GenerateInstanceIDFromPod(pod *core1.Pod) ([]instanceidhandler.IInstanceID,
 
 	l = append(l, convertInitContainersToIInstanceID(initC)...)
 
+	ephemeralC, err := ephemeralcontainerinstance.GenerateInstanceIDFromPod(pod)
+	if err != nil {
+		return l, err
+	}
+
+	l = append(l, convertEphemeralContainersToIInstanceID(ephemeralC)...)
+
 	return l, nil
 }
 
@@ -52,7 +67,11 @@ func GenerateInstanceIDFromString(input string) (instanceidhandler.IInstanceID, 
 	if instID, err := containerinstance.GenerateInstanceIDFromString(input); err == nil && instID != nil {
 		return instID, nil
 	}
-	return initcontainerinstance.GenerateInstanceIDFromString(input)
+	if instID, err := initcontainerinstance.GenerateInstanceIDFromString(input); err == nil && instID != nil {
+		return instID, nil
+	}
+
+	return ephemeralcontainerinstance.GenerateInstanceIDFromString(input)
 }
 
 // convert list containerinstance.InstanceID to instanceidhandler.IInstanceID
@@ -65,6 +84,15 @@ func convertContainersToIInstanceID(l []containerinstance.InstanceID) []instance
 	return li
 }
 func convertInitContainersToIInstanceID(l []initcontainerinstance.InstanceID) []instanceidhandler.IInstanceID {
+	li := []instanceidhandler.IInstanceID{}
+	for _, i := range l {
+		c := i
+		li = append(li, &c)
+	}
+	return li
+}
+
+func convertEphemeralContainersToIInstanceID(l []ephemeralcontainerinstance.InstanceID) []instanceidhandler.IInstanceID {
 	li := []instanceidhandler.IInstanceID{}
 	for _, i := range l {
 		c := i
