@@ -297,83 +297,6 @@ func assertMap(t *testing.T, expected, actual map[string]interface{}) {
 	}
 }
 
-func Test_IsGKE(t *testing.T) {
-	defer tearDown()
-
-	type args struct {
-		config   *clientcmdapi.Config
-		context  string
-		labelMap map[string]string
-	}
-	tests := []struct {
-		name string
-		args args
-		want bool
-	}{
-		{
-			name: "Test_IsGKE",
-			args: args{
-				config:  getKubeConfigMock(),
-				context: "gke_xxx-xx-0000_us-central1-c_xxxx-1",
-				labelMap: map[string]string{
-					"kubernetes.io/hostname": "gke-xxx-xx-0000_us-central1-c_xxxx-1",
-				},
-			},
-			want: true,
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			// set context
-			k8sinterface.SetClientConfigAPI(tt.args.config)
-			k8sinterface.SetK8SGitServerVersion("gke_xxx-xx-0000_us-central1-c_xxxx-1")
-
-			node := corev1.Node{}
-			node.Labels = tt.args.labelMap
-			nodeList := &corev1.NodeList{}
-			nodeList.Items = []corev1.Node{node}
-
-			if got := IsGKE(nodeList); got != tt.want {
-				t.Errorf("IsGKE() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
-func Test_IsEKS(t *testing.T) {
-	defer tearDown()
-
-	type args struct {
-		config  *clientcmdapi.Config
-		context string
-	}
-	tests := []struct {
-		name string
-		args args
-		want bool
-	}{
-		{
-			name: "Test_IsEKS",
-			args: args{
-				config:  getKubeConfigMock(),
-				context: "arn:aws:eks:eu-west-1:xxx:cluster/xxxx",
-			},
-			want: true,
-		},
-	}
-	for _, tt := range tests {
-
-		t.Run(tt.name, func(t *testing.T) {
-			// set context
-			k8sinterface.SetClientConfigAPI(tt.args.config)
-			k8sinterface.SetK8SGitServerVersion("arn:aws:eks:eu-west-1:xxx:cluster/xxxx")
-			if got := IsEKS(); got != tt.want {
-				t.Errorf("IsEKS() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
 func Test_GetK8sConfigClusterServerName2(t *testing.T) {
 	defer tearDown()
 
@@ -424,98 +347,68 @@ func Test_GetK8SServerGitVersionNotConnectedToCluster(t *testing.T) {
 	assert.Equal(t, "", K8SGitServerVersion)
 }
 
-func TestGetCloudProvider(t *testing.T) {
-	tearDown()
-	defer tearDown()
-	configMock := &clientcmdapi.Config{
-		Clusters: map[string]*clientcmdapi.Cluster{
-			"0-context": {
-				Server: "https://XXX.XX.XXX.azmk8s.io:443",
-			},
-			"1-context": {
-				Server: "arn:aws:eks:eu-west-2:0:cluster/0",
-			},
-			"2-context": {
-				Server: "https://0.0.0.0",
-			},
-			"3-context": {
-				Server: "https://0.0.0.0",
-			},
-		},
-		Contexts: map[string]*clientcmdapi.Context{
-			"0-context": {
-				Cluster: "0-context",
-			},
-			"1-context": {
-				Cluster: "1-context",
-			},
-			"2-context": {
-				Cluster: "2-context",
-			},
-			"3-context": {
-				Cluster: "3-context",
-			},
-		},
-	}
-
+func TestGetCloudProviderFromNode(t *testing.T) {
 	tests := []struct {
 		name       string
-		config     *clientcmdapi.Config
-		context    string
-		expected   string
-		gitVersion string
-		labelMap   map[string]string
+		providerID string
+		want       string
 	}{
 		{
-			name:       "AKS",
-			config:     configMock,
-			context:    "0-context",
-			expected:   AKS,
-			gitVersion: "v1",
-			labelMap: map[string]string{
-				"kubernetes.io/hostname": "aks-agentpool-xxxx-0",
-			},
+			name:       "Test AWS",
+			providerID: "aws://instance-id",
+			want:       EKS,
 		},
 		{
-			name:       "EKS",
-			config:     configMock,
-			context:    "1-context",
-			expected:   EKS,
-			gitVersion: "eks",
+			name:       "Test GCE",
+			providerID: "gce://instance-id",
+			want:       GKE,
 		},
 		{
-			name:       "GKE",
-			config:     configMock,
-			context:    "2-context",
-			expected:   GKE,
-			gitVersion: "gke",
-			labelMap: map[string]string{
-				"kubernetes.io/hostname": "gke-agentpool-xxxx-0",
-			},
+			name:       "Test Azure",
+			providerID: "azure://instance-id",
+			want:       AKS,
 		},
 		{
-			name:       "Unknown",
-			config:     configMock,
-			context:    "3-context",
-			expected:   "",
-			gitVersion: "",
+			name:       "Test DigitalOcean",
+			providerID: "digitalocean://instance-id",
+			want:       DigitalOcean,
+		},
+		{
+			name:       "Test OpenStack",
+			providerID: "openstack://instance-id",
+			want:       OpenStack,
+		},
+		{
+			name:       "Test vSphere",
+			providerID: "vsphere://instance-id",
+			want:       vSphere,
+		},
+		{
+			name:       "Test Oracle",
+			providerID: "oci://instance-id",
+			want:       Oracle,
+		},
+		{
+			name:       "Test IBM",
+			providerID: "ibm://instance-id",
+			want:       IBM,
+		},
+		{
+			name:       "Test Unknown Provider",
+			providerID: "unknown://instance-id",
+			want:       "",
 		},
 	}
-	k8sinterface.SetConnectedToCluster(true)
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			k8sinterface.SetClusterContextName(tt.context)
-			k8sinterface.SetK8SGitServerVersion(tt.gitVersion)
-			k8sinterface.SetClientConfigAPI(tt.config)
-
-			node := corev1.Node{}
-			node.Labels = tt.labelMap
-			nodeList := &corev1.NodeList{}
-			nodeList.Items = []corev1.Node{node}
-
-			if got := GetCloudProvider(nodeList); got != tt.expected {
-				t.Errorf("GetCloudProvider() = %v, want %v", got, tt.expected)
+			node := &corev1.Node{
+				Spec: corev1.NodeSpec{
+					ProviderID: tt.providerID,
+				},
+			}
+			if got := GetCloudProviderFromNode(node); got != tt.want {
+				t.Errorf("GetCloudProviderFromNode() = %v, want %v", got, tt.want)
 			}
 		})
 	}
