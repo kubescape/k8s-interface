@@ -20,9 +20,14 @@ const (
 )
 
 const (
-	AKS string = "aks"
-	GKE string = "gke"
-	EKS string = "eks"
+	AKS          string = "aks"
+	GKE          string = "gke"
+	EKS          string = "eks"
+	DigitalOcean string = "digitalocean"
+	OpenStack    string = "openstack"
+	vSphere      string = "vsphere"
+	Oracle       string = "oracle"
+	IBM          string = "ibm"
 )
 
 const (
@@ -31,15 +36,36 @@ const (
 )
 
 // GetCloudProvider get cloud provider name from gitVersion/nodes
-func GetCloudProvider(nodeList *corev1.NodeList) string {
-	if IsEKS() {
-		return EKS
+func GetCloudProvider(nodes *corev1.NodeList) string {
+	if len(nodes.Items) == 0 {
+		return ""
 	}
-	if IsGKE(nodeList) {
-		return GKE
-	}
-	if IsAKS(nodeList) {
-		return AKS
+	return GetCloudProviderFromNode(&nodes.Items[0])
+}
+
+func GetCloudProviderFromNode(node *corev1.Node) string {
+	providerID := node.Spec.ProviderID
+	// The providerID is typically in the format: <ProviderName>://<ProviderSpecificInfo>
+	// So we split by :// and take the first part
+	if parts := strings.Split(providerID, "://"); len(parts) > 0 {
+		switch parts[0] {
+		case "aws":
+			return EKS
+		case "gce":
+			return GKE
+		case "azure":
+			return AKS
+		case "digitalocean":
+			return DigitalOcean
+		case "openstack":
+			return OpenStack
+		case "vsphere":
+			return vSphere
+		case "oci":
+			return Oracle
+		case "ibm":
+			return IBM
+		}
 	}
 	return ""
 }
@@ -323,34 +349,4 @@ func GetPolicyVersionAKS(aksSupport IAKSSupport, cluster string, subscriptionId 
 	listPolicyInfo.SetData(data)
 
 	return listPolicyInfo, nil
-}
-
-// check if the server is AKS. e.g. https://XXX.XX.XXX.azmk8s.io:443
-func IsAKS(nodeList *corev1.NodeList) bool {
-	return labelHasCloudPrefix(nodeList, "aks-")
-}
-
-// check if the server is EKS. e.g. arn:aws:eks:eu-west-1:xxx:cluster/xxxx
-func IsEKS() bool {
-	version, err := k8sinterface.GetK8SServerGitVersion()
-	if err != nil {
-		return false
-	}
-	return strings.Contains(version, EKS)
-}
-
-// check if the server is GKE. e.g. gke_xxx-xx-0000_us-central1-c_xxxx-1
-func IsGKE(nodeList *corev1.NodeList) bool {
-	return labelHasCloudPrefix(nodeList, "gke-")
-}
-
-func labelHasCloudPrefix(nodeList *corev1.NodeList, cloud string) bool {
-	for _, node := range nodeList.Items {
-		if val, ok := node.Labels["kubernetes.io/hostname"]; ok {
-			if strings.HasPrefix(val, cloud) {
-				return true
-			}
-		}
-	}
-	return false
 }
