@@ -113,6 +113,8 @@ func GetDescribeRepositoriesFromCloudProvider(cluster string, cloudProvider stri
 	case cloudsupportv1.AKS:
 		//TODO - implement AKS support
 		return nil, fmt.Errorf(cloudsupportv1.NotSupportedMsg)
+	default:
+		return nil, fmt.Errorf(cloudsupportv1.NotSupportedMsg)
 	}
 
 	return clusterInfo, nil
@@ -150,6 +152,8 @@ func GetListEntitiesForPoliciesFromCloudProvider(cluster string, cloudProvider s
 		if err != nil {
 			return nil, err
 		}
+	default:
+		return nil, fmt.Errorf(cloudsupportv1.NotSupportedMsg)
 	}
 
 	return listEntitiesForPolicies, nil
@@ -187,6 +191,8 @@ func GetPolicyVersionFromCloudProvider(cluster string, cloudProvider string) (wo
 		if err != nil {
 			return nil, err
 		}
+	default:
+		return nil, fmt.Errorf(cloudsupportv1.NotSupportedMsg)
 	}
 
 	return policyVersion, nil
