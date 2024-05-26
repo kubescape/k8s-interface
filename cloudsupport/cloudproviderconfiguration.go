@@ -85,6 +85,8 @@ func GetDescriptiveInfoFromCloudProvider(cluster string, cloudProvider string) (
 		if err != nil {
 			return nil, err
 		}
+	default:
+		return nil, fmt.Errorf(cloudsupportv1.NotSupportedMsg)
 	}
 
 	return clusterInfo, nil
