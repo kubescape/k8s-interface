@@ -32,7 +32,7 @@ const (
 
 const (
 	Version         = "v1"
-	NotSupportedMsg = "Not supported"
+	NotSupportedMsg = "not supported"
 )
 
 // GetCloudProvider get cloud provider name from gitVersion/nodes
