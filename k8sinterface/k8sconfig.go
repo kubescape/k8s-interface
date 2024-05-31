@@ -47,6 +47,9 @@ func NewKubernetesApi() *KubernetesApi {
 	}
 
 	k8sConfig := GetK8sConfig()
+	// force GRPC
+	k8sConfig.AcceptContentTypes = "application/vnd.kubernetes.protobuf"
+	k8sConfig.ContentType = "application/vnd.kubernetes.protobuf"
 
 	kubernetesClient, err = kubernetes.NewForConfig(k8sConfig)
 	if err != nil {
