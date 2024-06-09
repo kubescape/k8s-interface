@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"strings"
 
+	"k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
+
 	logger "github.com/kubescape/go-logger"
 	"github.com/kubescape/go-logger/helpers"
 	"k8s.io/client-go/discovery"
@@ -30,11 +32,12 @@ var clientConfigAPI *clientcmdapi.Config
 
 // KubernetesApi -
 type KubernetesApi struct {
-	KubernetesClient kubernetes.Interface
-	DynamicClient    dynamic.Interface
-	DiscoveryClient  discovery.DiscoveryInterface
-	Context          context.Context
-	K8SConfig        *restclient.Config
+	ApiExtensionsClient clientset.Interface
+	KubernetesClient    kubernetes.Interface
+	DynamicClient       dynamic.Interface
+	DiscoveryClient     discovery.DiscoveryInterface
+	Context             context.Context
+	K8SConfig           *restclient.Config
 }
 
 // NewKubernetesApi -
@@ -62,15 +65,22 @@ func NewKubernetesApi() *KubernetesApi {
 	if err != nil {
 		logger.L().Fatal("failed to initialize a new discovery client", helpers.Error(err))
 	}
+
+	apiExtensionsClient, err := clientset.NewForConfig(k8sConfig)
+	if err != nil {
+		logger.L().Fatal("failed to initialize a new discovery client", helpers.Error(err))
+	}
+
 	restclient.SetDefaultWarningHandler(restclient.NoWarnings{})
 	InitializeMapResources(discoveryClient)
 
 	return &KubernetesApi{
-		KubernetesClient: kubernetesClient,
-		DynamicClient:    dynamicClient,
-		DiscoveryClient:  discoveryClient,
-		Context:          context.Background(),
-		K8SConfig:        k8sConfig,
+		ApiExtensionsClient: apiExtensionsClient,
+		KubernetesClient:    kubernetesClient,
+		DynamicClient:       dynamicClient,
+		DiscoveryClient:     discoveryClient,
+		Context:             context.Background(),
+		K8SConfig:           k8sConfig,
 	}
 }
 func (k8sAPI *KubernetesApi) GetKubernetesClient() kubernetes.Interface {

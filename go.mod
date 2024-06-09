@@ -24,6 +24,7 @@ require (
 	golang.org/x/oauth2 v0.12.0
 	google.golang.org/genproto v0.0.0-20230822172742-b8732ec3820d
 	k8s.io/api v0.29.0
+	k8s.io/apiextensions-apiserver v0.27.2
 	k8s.io/apimachinery v0.29.0
 	k8s.io/client-go v0.29.0
 	k8s.io/utils v0.0.0-20230726121419-3b25d923346b
@@ -47,7 +48,7 @@ require (
 	github.com/magiconair/properties v1.8.1 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.19 // indirect
-	github.com/mitchellh/mapstructure v1.1.2 // indirect
+	github.com/mitchellh/mapstructure v1.4.1 // indirect
 	github.com/olvrng/ujson v1.1.0 // indirect
 	github.com/pelletier/go-toml v1.2.0 // indirect
 	github.com/spf13/afero v1.6.0 // indirect
