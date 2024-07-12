@@ -8,6 +8,8 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
+const container = "container"
+
 func Test_validateInstanceID(t *testing.T) {
 	type args struct {
 		instanceID *InstanceID
@@ -28,11 +30,12 @@ func Test_validateInstanceID(t *testing.T) {
 			name: "empty apiVersion",
 			args: args{
 				instanceID: &InstanceID{
-					apiVersion:    "",
-					namespace:     "test",
-					kind:          "test",
-					name:          "test",
-					containerName: "test",
+					ApiVersion:    "",
+					Namespace:     "test",
+					Kind:          "test",
+					Name:          "test",
+					ContainerName: "test",
+					InstanceType:  container,
 				},
 			},
 			wantErr: true,
@@ -42,11 +45,12 @@ func Test_validateInstanceID(t *testing.T) {
 			args: args{
 				instanceID: &InstanceID{
 
-					apiVersion:    "test",
-					namespace:     "",
-					kind:          "test",
-					name:          "test",
-					containerName: "test",
+					ApiVersion:    "test",
+					Namespace:     "",
+					Kind:          "test",
+					Name:          "test",
+					ContainerName: "test",
+					InstanceType:  container,
 				},
 			},
 			wantErr: true,
@@ -55,11 +59,12 @@ func Test_validateInstanceID(t *testing.T) {
 			name: "empty kind",
 			args: args{
 				instanceID: &InstanceID{
-					apiVersion:    "test",
-					namespace:     "test",
-					kind:          "",
-					name:          "test",
-					containerName: "test",
+					ApiVersion:    "test",
+					Namespace:     "test",
+					Kind:          "",
+					Name:          "test",
+					ContainerName: "test",
+					InstanceType:  container,
 				},
 			},
 			wantErr: true,
@@ -68,11 +73,12 @@ func Test_validateInstanceID(t *testing.T) {
 			name: "empty name",
 			args: args{
 				instanceID: &InstanceID{
-					apiVersion:    "test",
-					namespace:     "test",
-					kind:          "test",
-					name:          "",
-					containerName: "test",
+					ApiVersion:    "test",
+					Namespace:     "test",
+					Kind:          "test",
+					Name:          "",
+					ContainerName: "test",
+					InstanceType:  container,
 				},
 			},
 			wantErr: true,
@@ -81,11 +87,26 @@ func Test_validateInstanceID(t *testing.T) {
 			name: "empty containerName",
 			args: args{
 				instanceID: &InstanceID{
-					apiVersion:    "test",
-					namespace:     "test",
-					kind:          "test",
-					name:          "test",
-					containerName: "",
+					ApiVersion:    "test",
+					Namespace:     "test",
+					Kind:          "test",
+					Name:          "test",
+					ContainerName: "",
+					InstanceType:  container,
+				},
+			},
+			wantErr: true,
+		},
+		{
+			name: "empty InstanceType",
+			args: args{
+				instanceID: &InstanceID{
+					ApiVersion:    "test",
+					Namespace:     "test",
+					Kind:          "test",
+					Name:          "test",
+					ContainerName: "test",
+					InstanceType:  "",
 				},
 			},
 			wantErr: true,
@@ -94,11 +115,12 @@ func Test_validateInstanceID(t *testing.T) {
 			name: "valid instanceID",
 			args: args{
 				instanceID: &InstanceID{
-					apiVersion:    "test",
-					namespace:     "test",
-					kind:          "test",
-					name:          "test",
-					containerName: "test",
+					ApiVersion:    "test",
+					Namespace:     "test",
+					Kind:          "test",
+					Name:          "test",
+					ContainerName: "test",
+					InstanceType:  container,
 				},
 			},
 			wantErr: false,
@@ -115,7 +137,7 @@ func Test_validateInstanceID(t *testing.T) {
 
 func Test_listInstanceIDs(t *testing.T) {
 	type args struct {
-		ownerReferences []metav1.OwnerReference
+		ownerReferences *metav1.OwnerReference
 		containers      []core1.Container
 		apiVersion      string
 		namespace       string
@@ -131,7 +153,6 @@ func Test_listInstanceIDs(t *testing.T) {
 		{
 			name: "empty ownerReferences",
 			args: args{
-				ownerReferences: []metav1.OwnerReference{},
 				containers: []core1.Container{
 					{
 						Name: "test",
@@ -144,11 +165,12 @@ func Test_listInstanceIDs(t *testing.T) {
 			},
 			want: []*InstanceID{
 				{
-					apiVersion:    "test",
-					namespace:     "test",
-					kind:          "Pod",
-					name:          "test",
-					containerName: "test",
+					ApiVersion:    "test",
+					Namespace:     "test",
+					Kind:          "Pod",
+					Name:          "test",
+					ContainerName: "test",
+					InstanceType:  container,
 				},
 			},
 			wantErr: false,
@@ -156,25 +178,27 @@ func Test_listInstanceIDs(t *testing.T) {
 		{
 			name: "empty containers",
 			args: args{
-				ownerReferences: []metav1.OwnerReference{},
-				containers:      []core1.Container{},
-				apiVersion:      "test",
-				namespace:       "test",
-				kind:            "test",
-				name:            "test",
+				containers: []core1.Container{},
+				apiVersion: "test",
+				namespace:  "test",
+				kind:       "test",
+				name:       "test",
 			},
 			want:    []*InstanceID{},
-			wantErr: true,
+			wantErr: false,
 		},
 		{
 			name: "invalid instanceID",
 			args: args{
-				ownerReferences: []metav1.OwnerReference{},
-				containers:      []core1.Container{},
-				apiVersion:      "",
-				namespace:       "test",
-				kind:            "test",
-				name:            "test",
+				containers: []core1.Container{
+					{
+						Name: "test",
+					},
+				},
+				apiVersion: "",
+				namespace:  "test",
+				kind:       "test",
+				name:       "test",
 			},
 			want:    []*InstanceID{},
 			wantErr: true,
@@ -182,7 +206,6 @@ func Test_listInstanceIDs(t *testing.T) {
 		{
 			name: "valid instanceID - Pod",
 			args: args{
-				ownerReferences: []metav1.OwnerReference{},
 				containers: []core1.Container{
 					{
 						Name: "test",
@@ -195,11 +218,12 @@ func Test_listInstanceIDs(t *testing.T) {
 			},
 			want: []*InstanceID{
 				{
-					apiVersion:    "test",
-					namespace:     "test",
-					kind:          "Pod",
-					name:          "test",
-					containerName: "test",
+					ApiVersion:    "test",
+					Namespace:     "test",
+					Kind:          "Pod",
+					Name:          "test",
+					ContainerName: "test",
+					InstanceType:  container,
 				},
 			},
 			wantErr: false,
@@ -207,11 +231,9 @@ func Test_listInstanceIDs(t *testing.T) {
 		{
 			name: "valid instanceID - Node",
 			args: args{
-				ownerReferences: []metav1.OwnerReference{
-					{
-						Kind: "Node",
-						Name: "nodeName",
-					},
+				ownerReferences: &metav1.OwnerReference{
+					Kind: "Node",
+					Name: "nodeName",
 				},
 				containers: []core1.Container{
 					{
@@ -225,11 +247,12 @@ func Test_listInstanceIDs(t *testing.T) {
 			},
 			want: []*InstanceID{
 				{
-					apiVersion:    "test",
-					namespace:     "test",
-					kind:          "Pod",
-					name:          "podName",
-					containerName: "test",
+					ApiVersion:    "test",
+					Namespace:     "test",
+					Kind:          "Pod",
+					Name:          "podName",
+					ContainerName: "test",
+					InstanceType:  container,
 				},
 			},
 			wantErr: false,
@@ -237,12 +260,10 @@ func Test_listInstanceIDs(t *testing.T) {
 		{
 			name: "valid instanceID - multiple containers",
 			args: args{
-				ownerReferences: []metav1.OwnerReference{
-					{
-						APIVersion: "apps/v1",
-						Kind:       "ReplicaSet",
-						Name:       "OwnerTest",
-					},
+				ownerReferences: &metav1.OwnerReference{
+					APIVersion: "apps/v1",
+					Kind:       "ReplicaSet",
+					Name:       "OwnerTest",
 				},
 				containers: []core1.Container{
 					{
@@ -256,11 +277,12 @@ func Test_listInstanceIDs(t *testing.T) {
 			},
 			want: []*InstanceID{
 				{
-					apiVersion:    "apps/v1",
-					namespace:     "test",
-					kind:          "ReplicaSet",
-					name:          "OwnerTest",
-					containerName: "test",
+					ApiVersion:    "apps/v1",
+					Namespace:     "test",
+					Kind:          "ReplicaSet",
+					Name:          "OwnerTest",
+					ContainerName: "test",
+					InstanceType:  container,
 				},
 			},
 			wantErr: false,
@@ -268,12 +290,10 @@ func Test_listInstanceIDs(t *testing.T) {
 		{
 			name: "valid instanceID - Replica",
 			args: args{
-				ownerReferences: []metav1.OwnerReference{
-					{
-						Kind:       "ReplicaSet",
-						Name:       "OwnerTest",
-						APIVersion: "apps/v1",
-					},
+				ownerReferences: &metav1.OwnerReference{
+					Kind:       "ReplicaSet",
+					Name:       "OwnerTest",
+					APIVersion: "apps/v1",
 				},
 				containers: []core1.Container{
 					{
@@ -290,18 +310,20 @@ func Test_listInstanceIDs(t *testing.T) {
 			},
 			want: []*InstanceID{
 				{
-					apiVersion:    "apps/v1",
-					namespace:     "test",
-					kind:          "ReplicaSet",
-					name:          "OwnerTest",
-					containerName: "test-0",
+					ApiVersion:    "apps/v1",
+					Namespace:     "test",
+					Kind:          "ReplicaSet",
+					Name:          "OwnerTest",
+					ContainerName: "test-0",
+					InstanceType:  container,
 				},
 				{
-					apiVersion:    "apps/v1",
-					namespace:     "test",
-					kind:          "ReplicaSet",
-					name:          "OwnerTest",
-					containerName: "test-1",
+					ApiVersion:    "apps/v1",
+					Namespace:     "test",
+					Kind:          "ReplicaSet",
+					Name:          "OwnerTest",
+					ContainerName: "test-1",
+					InstanceType:  container,
 				},
 			},
 			wantErr: false,
@@ -310,7 +332,7 @@ func Test_listInstanceIDs(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := listInstanceIDs(tt.args.ownerReferences, tt.args.containers, tt.args.apiVersion, tt.args.namespace, tt.args.kind, tt.args.name)
+			got, err := ListInstanceIDs(tt.args.ownerReferences, tt.args.containers, container, tt.args.apiVersion, tt.args.namespace, tt.args.kind, tt.args.name, "")
 			if (err != nil) != tt.wantErr {
 				t.Errorf("listInstanceIDs() error = %v, wantErr %v", err, tt.wantErr)
 				return

@@ -12,69 +12,38 @@ import (
 )
 
 // string format: apiVersion-<apiVersion>/namespace-<namespace>/kind-<kind>/name-<name>/containerName-<containerName>
-const (
-	prefixContainer = "containerName-"
-	stringFormat    = helpers.PrefixApiVersion + "%s" + helpers.StringFormatSeparator + helpers.PrefixNamespace + "%s" + helpers.StringFormatSeparator + helpers.PrefixKind + "%s" + helpers.StringFormatSeparator + helpers.PrefixName + "%s" + helpers.StringFormatSeparator + prefixContainer + "%s"
-)
-
-const InstanceType helpers.InstanceType = "container"
 
 // ensure that InstanceID implements IInstanceID
-var _ instanceidhandler.IInstanceID = &InstanceID{}
+var _ instanceidhandler.IInstanceID = (*InstanceID)(nil)
 
 type InstanceID struct {
-	apiVersion    string
-	namespace     string
-	kind          string
-	name          string
-	containerName string
+	ApiVersion    string
+	Namespace     string
+	Kind          string
+	Name          string
+	AlternateName string
+	ContainerName string
+	InstanceType  string
 }
 
 func (id *InstanceID) GetInstanceType() helpers.InstanceType {
-	return InstanceType
-}
-func (id *InstanceID) GetAPIVersion() string {
-	return id.apiVersion
-}
-
-func (id *InstanceID) GetNamespace() string {
-	return id.namespace
-}
-
-func (id *InstanceID) GetKind() string {
-	return id.kind
+	return helpers.InstanceType(id.InstanceType)
 }
 
 func (id *InstanceID) GetName() string {
-	return id.name
+	return id.Name
 }
 
 func (id *InstanceID) GetContainerName() string {
-	return id.containerName
-}
-
-func (id *InstanceID) SetAPIVersion(apiVersion string) {
-	id.apiVersion = apiVersion
-}
-
-func (id *InstanceID) SetNamespace(namespace string) {
-	id.namespace = namespace
-}
-
-func (id *InstanceID) SetKind(kind string) {
-	id.kind = kind
-}
-
-func (id *InstanceID) SetName(name string) {
-	id.name = name
-}
-
-func (id *InstanceID) SetContainerName(containerName string) {
-	id.containerName = containerName
+	return id.ContainerName
 }
 
 func (id *InstanceID) GetStringFormatted() string {
-	return fmt.Sprintf(stringFormat, id.GetAPIVersion(), id.GetNamespace(), id.GetKind(), id.GetName(), id.GetContainerName())
+	stringFormat := helpers.PrefixApiVersion + "%s" + helpers.StringFormatSeparator + helpers.PrefixNamespace + "%s" + helpers.StringFormatSeparator + helpers.PrefixKind + "%s" + helpers.StringFormatSeparator + helpers.PrefixName + "%s" + helpers.StringFormatSeparator + "%sName-%s"
+	if id.AlternateName != "" {
+		return fmt.Sprintf(stringFormat, id.ApiVersion, id.Namespace, id.Kind, id.AlternateName, id.InstanceType, id.ContainerName)
+	}
+	return fmt.Sprintf(stringFormat, id.ApiVersion, id.Namespace, id.Kind, id.Name, id.InstanceType, id.ContainerName)
 }
 
 func (id *InstanceID) GetHashed() string {
@@ -84,17 +53,29 @@ func (id *InstanceID) GetHashed() string {
 }
 
 func (id *InstanceID) GetLabels() map[string]string {
-	group, version := k8sinterface.SplitApiVersion(id.GetAPIVersion())
+	group, version := k8sinterface.SplitApiVersion(id.ApiVersion)
 	return map[string]string{
 		helpers.ApiGroupMetadataKey:      group,
 		helpers.ApiVersionMetadataKey:    version,
-		helpers.NamespaceMetadataKey:     id.GetNamespace(),
-		helpers.KindMetadataKey:          id.GetKind(),
-		helpers.NameMetadataKey:          id.GetName(),
-		helpers.ContainerNameMetadataKey: id.GetContainerName(),
+		helpers.NamespaceMetadataKey:     id.Namespace,
+		helpers.KindMetadataKey:          id.Kind,
+		helpers.NameMetadataKey:          id.Name,
+		helpers.ContainerNameMetadataKey: id.ContainerName,
 	}
 }
 
-func (id *InstanceID) GetSlug() (string, error) {
-	return names.InstanceIDToSlug(id.GetName(), id.GetKind(), id.GetContainerName(), id.GetHashed())
+func (id *InstanceID) GetSlug(noContainer bool) (string, error) {
+	name := id.Name
+	kind := id.Kind
+	containerName := id.ContainerName
+	hashedID := id.GetHashed()
+	// use alternate name if present
+	if len(id.AlternateName) > 0 {
+		name = id.AlternateName
+	}
+	// eventually remove the container name
+	if noContainer {
+		containerName = ""
+	}
+	return names.InstanceIDToSlug(name, kind, containerName, hashedID)
 }

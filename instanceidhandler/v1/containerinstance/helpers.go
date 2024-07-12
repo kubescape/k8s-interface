@@ -3,54 +3,57 @@ package containerinstance
 import (
 	"fmt"
 
-	"github.com/kubescape/k8s-interface/instanceidhandler"
 	"github.com/kubescape/k8s-interface/instanceidhandler/v1/helpers"
 	core1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func validateInstanceID(instanceID instanceidhandler.IInstanceID) error {
-	if instanceID.GetAPIVersion() == "" {
+func validateInstanceID(instanceID *InstanceID) error {
+	if instanceID.ApiVersion == "" {
 		return fmt.Errorf("invalid instanceID: apiVersion cannot be empty")
 	}
-	if instanceID.GetNamespace() == "" {
+	if instanceID.Namespace == "" {
 		return fmt.Errorf("invalid instanceID: namespace cannot be empty")
 	}
-	if instanceID.GetKind() == "" {
+	if instanceID.Kind == "" {
 		return fmt.Errorf("invalid instanceID: kind cannot be empty")
 	}
-	if instanceID.GetName() == "" {
+	if instanceID.Name == "" {
 		return fmt.Errorf("invalid instanceID: name cannot be empty")
 	}
-	if instanceID.GetContainerName() == "" {
+	if instanceID.ContainerName == "" {
 		return fmt.Errorf("invalid instanceID: containerName cannot be empty")
+	}
+	if instanceID.InstanceType == "" {
+		return fmt.Errorf("invalid instanceID: InstanceType cannot be empty")
 	}
 	return nil
 }
 
-func listInstanceIDs(ownerReferences []metav1.OwnerReference, containers []core1.Container, apiVersion, namespace, kind, name string) ([]InstanceID, error) {
+func ListInstanceIDs(ownerReference *metav1.OwnerReference, containers []core1.Container, instanceType, apiVersion, namespace, kind, name, alternateName string) ([]InstanceID, error) {
+	instanceIDs := make([]InstanceID, 0)
 
 	if len(containers) == 0 {
-		return nil, fmt.Errorf("failed to validate instance ID: missing containers")
+		return instanceIDs, nil
 	}
-
-	instanceIDs := make([]InstanceID, 0)
 
 	parentApiVersion, parentKind, parentName := apiVersion, kind, name
 
-	if len(ownerReferences) != 0 && !helpers.IgnoreOwnerReference(ownerReferences[0].Kind) {
-		parentApiVersion = ownerReferences[0].APIVersion
-		parentKind = ownerReferences[0].Kind
-		parentName = ownerReferences[0].Name
+	if ownerReference != nil && !helpers.IgnoreOwnerReference(ownerReference.Kind) {
+		parentApiVersion = ownerReference.APIVersion
+		parentKind = ownerReference.Kind
+		parentName = ownerReference.Name
 	}
 
 	for i := range containers {
 		instanceID := InstanceID{
-			apiVersion:    parentApiVersion,
-			namespace:     namespace,
-			kind:          parentKind,
-			name:          parentName,
-			containerName: containers[i].Name,
+			ApiVersion:    parentApiVersion,
+			Namespace:     namespace,
+			Kind:          parentKind,
+			Name:          parentName,
+			AlternateName: alternateName,
+			ContainerName: containers[i].Name,
+			InstanceType:  instanceType,
 		}
 
 		if err := validateInstanceID(&instanceID); err != nil {
