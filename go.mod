@@ -1,8 +1,6 @@
 module github.com/kubescape/k8s-interface
 
-go 1.21
-
-toolchain go1.21.6
+go 1.22.5
 
 require (
 	cloud.google.com/go/container v1.24.0

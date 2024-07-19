@@ -1,0 +1,189 @@
+{
+    "apiVersion": "v1",
+    "kind": "Pod",
+    "metadata": {
+        "creationTimestamp": "2024-07-11T04:06:00Z",
+        "generateName": "kubevuln-scheduler-28677846-",
+        "labels": {
+            "app": "kubevuln-scheduler",
+            "app.kubernetes.io/name": "kubevuln-scheduler",
+            "armo.tier": "vuln-scan",
+            "batch.kubernetes.io/controller-uid": "059940bf-f037-4c0b-9a0d-a6633f761f70",
+            "batch.kubernetes.io/job-name": "kubevuln-scheduler-28677846",
+            "controller-uid": "059940bf-f037-4c0b-9a0d-a6633f761f70",
+            "job-name": "kubevuln-scheduler-28677846",
+            "kubescape.io/tier": "core"
+        },
+        "name": "kubevuln-scheduler-28677846-pdblz",
+        "namespace": "kubescape",
+        "ownerReferences": [
+            {
+                "apiVersion": "batch/v1",
+                "blockOwnerDeletion": true,
+                "controller": true,
+                "kind": "Job",
+                "name": "kubevuln-scheduler-28677846",
+                "uid": "059940bf-f037-4c0b-9a0d-a6633f761f70"
+            }
+        ],
+        "resourceVersion": "93151",
+        "uid": "45f7b146-be87-4439-94ff-451b06111933"
+    },
+    "spec": {
+        "automountServiceAccountToken": false,
+        "containers": [
+            {
+                "args": [
+                    "-method=post",
+                    "-scheme=http",
+                    "-host=operator:4002",
+                    "-path=v1/triggerAction",
+                    "-headers=Content-Type:application/json",
+                    "-path-body=/home/ks/request-body.json"
+                ],
+                "image": "quay.io/kubescape/http-request:v0.2.8",
+                "imagePullPolicy": "IfNotPresent",
+                "name": "kubevuln-scheduler",
+                "resources": {
+                    "limits": {
+                        "cpu": "10m",
+                        "memory": "20Mi"
+                    },
+                    "requests": {
+                        "cpu": "1m",
+                        "memory": "10Mi"
+                    }
+                },
+                "securityContext": {
+                    "allowPrivilegeEscalation": false,
+                    "readOnlyRootFilesystem": true,
+                    "runAsNonRoot": true,
+                    "runAsUser": 100
+                },
+                "terminationMessagePath": "/dev/termination-log",
+                "terminationMessagePolicy": "File",
+                "volumeMounts": [
+                    {
+                        "mountPath": "/home/ks/request-body.json",
+                        "name": "kubevuln-scheduler",
+                        "readOnly": true,
+                        "subPath": "request-body.json"
+                    }
+                ]
+            }
+        ],
+        "dnsPolicy": "ClusterFirst",
+        "enableServiceLinks": true,
+        "nodeName": "kind-control-plane",
+        "preemptionPolicy": "PreemptLowerPriority",
+        "priority": 0,
+        "restartPolicy": "Never",
+        "schedulerName": "default-scheduler",
+        "securityContext": {},
+        "serviceAccount": "default",
+        "serviceAccountName": "default",
+        "terminationGracePeriodSeconds": 30,
+        "tolerations": [
+            {
+                "effect": "NoExecute",
+                "key": "node.kubernetes.io/not-ready",
+                "operator": "Exists",
+                "tolerationSeconds": 300
+            },
+            {
+                "effect": "NoExecute",
+                "key": "node.kubernetes.io/unreachable",
+                "operator": "Exists",
+                "tolerationSeconds": 300
+            }
+        ],
+        "volumes": [
+            {
+                "configMap": {
+                    "defaultMode": 420,
+                    "name": "kubevuln-scheduler"
+                },
+                "name": "kubevuln-scheduler"
+            }
+        ]
+    },
+    "status": {
+        "conditions": [
+            {
+                "lastProbeTime": null,
+                "lastTransitionTime": "2024-07-11T04:06:28Z",
+                "status": "False",
+                "type": "PodReadyToStartContainers"
+            },
+            {
+                "lastProbeTime": null,
+                "lastTransitionTime": "2024-07-11T04:06:00Z",
+                "reason": "PodCompleted",
+                "status": "True",
+                "type": "Initialized"
+            },
+            {
+                "lastProbeTime": null,
+                "lastTransitionTime": "2024-07-11T04:06:27Z",
+                "reason": "PodCompleted",
+                "status": "False",
+                "type": "Ready"
+            },
+            {
+                "lastProbeTime": null,
+                "lastTransitionTime": "2024-07-11T04:06:27Z",
+                "reason": "PodCompleted",
+                "status": "False",
+                "type": "ContainersReady"
+            },
+            {
+                "lastProbeTime": null,
+                "lastTransitionTime": "2024-07-11T04:06:00Z",
+                "status": "True",
+                "type": "PodScheduled"
+            }
+        ],
+        "containerStatuses": [
+            {
+                "containerID": "containerd://916370bb7dbc1a2f4283c84291d54a3f564fa544b6cf82d52addf0feaa7ebacd",
+                "image": "quay.io/kubescape/http-request:v0.2.8",
+                "imageID": "quay.io/kubescape/http-request@sha256:7fa45952fe6c5ce0bbd4c2172b56a0e93345d2d7f13750fac1e720548898b44a",
+                "lastState": {},
+                "name": "kubevuln-scheduler",
+                "ready": false,
+                "restartCount": 0,
+                "started": false,
+                "state": {
+                    "terminated": {
+                        "containerID": "containerd://916370bb7dbc1a2f4283c84291d54a3f564fa544b6cf82d52addf0feaa7ebacd",
+                        "exitCode": 0,
+                        "finishedAt": "2024-07-11T04:06:26Z",
+                        "reason": "Completed",
+                        "startedAt": "2024-07-11T04:06:25Z"
+                    }
+                }
+            }
+        ],
+        "hostIP": "172.18.0.2",
+        "hostIPs": [
+            {
+                "ip": "172.18.0.2"
+            },
+            {
+                "ip": "fc00:f853:ccd:e793::2"
+            }
+        ],
+        "phase": "Succeeded",
+        "podIP": "10.244.0.65",
+        "podIPs": [
+            {
+                "ip": "10.244.0.65"
+            },
+            {
+                "ip": "fd00:10:244::41"
+            }
+        ],
+        "qosClass": "Burstable",
+        "startTime": "2024-07-11T04:06:00Z"
+    }
+}

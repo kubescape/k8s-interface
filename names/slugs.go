@@ -155,6 +155,7 @@ func sanitizeInstanceIDSlug(instanceIDSlug, containerName, hashedID string) stri
 // InstanceIDToSlug retuns a human-friendly representation given a description of an instance ID
 //
 // If the given inputs would produce an invalid slug, it returns an appropriate error
+// Deprecated: use InstanceID.GetSlug instead
 func InstanceIDToSlug(name, kind, containerName, hashedID string) (string, error) {
 
 	slug := sanitizeInstanceIDSlug(fmt.Sprintf(instanceIDSlugHashlessFormat, kind, name), containerName, hashedID)

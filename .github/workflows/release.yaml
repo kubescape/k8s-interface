@@ -1,7 +1,7 @@
 name: Release-Tag
 on:
   push:
-    branches: [ master, main ] 
+    branches: [ master, main ]
     paths-ignore:
       - '**.md' ### Ignore running when .md files change
       - '**.yaml' ### Ignore running when .yaml files change
@@ -17,7 +17,7 @@ jobs:
       security-events: write
     uses: kubescape/workflows/.github/workflows/go-basic-tests.yaml@main
     with:
-      GO_VERSION: '1.21'
+      GO_VERSION: '1.22'
     secrets: inherit
   release:
     needs: test
@@ -29,4 +29,3 @@ jobs:
     - uses: rickstaa/action-create-tag@v1
       with:
         tag: "v0.0.${{ github.run_number }}"
- 

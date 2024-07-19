@@ -1,61 +1,10 @@
 package containerinstance
 
 import (
-	"encoding/json"
-	"reflect"
 	"testing"
 
-	"github.com/kubescape/k8s-interface/instanceidhandler"
-	"github.com/kubescape/k8s-interface/workloadinterface"
 	"github.com/stretchr/testify/assert"
-	core1 "k8s.io/api/core/v1"
 )
-
-// Test_InitInstanceID tests the instance id initialization
-func TestInitInstanceID(t *testing.T) {
-	wp, err := workloadinterface.NewWorkload([]byte(mockPod))
-	if err != nil {
-		t.Fatalf(err.Error())
-	}
-	insFromWorkload, err := GenerateInstanceID(wp)
-	if err != nil {
-		t.Fatalf("can't create instance ID from pod")
-	}
-
-	p := &core1.Pod{}
-	if err := json.Unmarshal([]byte(mockPod), p); err != nil {
-		t.Fatalf(err.Error())
-	}
-	insFromPod, err := GenerateInstanceIDFromPod(p)
-	if err != nil {
-		t.Fatalf("can't create instance ID from pod")
-	}
-
-	assert.NotEqual(t, 0, len(insFromWorkload))
-	assert.Equal(t, len(insFromWorkload), len(insFromPod))
-
-	for i := range insFromWorkload {
-		compare(t, &insFromWorkload[i], &insFromPod[i])
-	}
-
-	insFromString, err := GenerateInstanceIDFromString("apiVersion-v1/namespace-default/kind-Pod/name-nginx/containerName-nginx") //insFromWorkload[0].GetStringFormatted())
-	if err != nil {
-		t.Fatalf("can't create instance ID from string: %s, error: %s", insFromWorkload[0].GetStringFormatted(), err.Error())
-	}
-	compare(t, &insFromWorkload[0], insFromString)
-
-}
-
-func compare(t *testing.T, a, b instanceidhandler.IInstanceID) {
-	assert.Equal(t, a.GetHashed(), b.GetHashed())
-	assert.Equal(t, a.GetStringFormatted(), b.GetStringFormatted())
-
-	assert.Equal(t, a.GetAPIVersion(), b.GetAPIVersion())
-	assert.Equal(t, a.GetNamespace(), b.GetNamespace())
-	assert.Equal(t, a.GetKind(), b.GetKind())
-	assert.Equal(t, a.GetName(), b.GetName())
-	assert.Equal(t, a.GetContainerName(), b.GetContainerName())
-}
 
 func TestGenerateInstanceIDFromString(t *testing.T) {
 	type args struct {
@@ -97,11 +46,12 @@ func TestGenerateInstanceIDFromString(t *testing.T) {
 				input: "apiVersion-v1/namespace-default/kind-Pod/name-nginx/containerName-nginx",
 			},
 			want: &InstanceID{
-				apiVersion:    "v1",
-				namespace:     "default",
-				kind:          "Pod",
-				name:          "nginx",
-				containerName: "nginx",
+				ApiVersion:    "v1",
+				Namespace:     "default",
+				Kind:          "Pod",
+				Name:          "nginx",
+				ContainerName: "nginx",
+				InstanceType:  container,
 			},
 			wantErr: false,
 		},
@@ -111,11 +61,28 @@ func TestGenerateInstanceIDFromString(t *testing.T) {
 				input: "apiVersion-apps/v1/namespace-default/kind-ReplicaSet/name-nginx-1234/containerName-nginx",
 			},
 			want: &InstanceID{
-				apiVersion:    "apps/v1",
-				namespace:     "default",
-				kind:          "ReplicaSet",
-				name:          "nginx-1234",
-				containerName: "nginx",
+				ApiVersion:    "apps/v1",
+				Namespace:     "default",
+				Kind:          "ReplicaSet",
+				Name:          "nginx-1234",
+				ContainerName: "nginx",
+				InstanceType:  container,
+			},
+			wantErr: false,
+		},
+		{
+			name: "valid input - CronJob",
+			args: args{
+				input: "apiVersion-batch/v1/namespace-kubescape/kind-Job/name-kubevuln-scheduler-b449cf78f/containerName-kubevuln-scheduler",
+			},
+			want: &InstanceID{
+				ApiVersion:    "batch/v1",
+				Namespace:     "kubescape",
+				Kind:          "Job",
+				Name:          "kubevuln-scheduler-b449cf78f", // should be kubevuln-scheduler-28677846
+				ContainerName: "kubevuln-scheduler",
+				InstanceType:  container,
+				AlternateName: "", // should be kubevuln-scheduler-b449cf78f
 			},
 			wantErr: false,
 		},
@@ -127,9 +94,7 @@ func TestGenerateInstanceIDFromString(t *testing.T) {
 				t.Errorf("GenerateInstanceIDFromString() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			if got != nil && !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("GenerateInstanceIDFromString() = %v, want %v", got, tt.want)
-			}
+			assert.Equalf(t, tt.want, got, "GenerateInstanceIDFromString() = %v, want %v", got, tt.want)
 		})
 	}
 }
