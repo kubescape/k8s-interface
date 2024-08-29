@@ -34,7 +34,7 @@ const (
 	ResourceSizeMetadataKey           = metadataPrefix + "/resource-size"
 	CompletionMetadataKey             = metadataPrefix + "/completion"
 	TierMetadataKey                   = metadataPrefix + "/tier"
-	ManagedByMetadataKey			  = metadataPrefix + "/managed-by"
+	ManagedByMetadataKey              = metadataPrefix + "/managed-by"
 )
 
 // metadata values
