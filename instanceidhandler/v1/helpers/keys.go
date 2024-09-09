@@ -42,10 +42,11 @@ const (
 	ContextMetadataKeyFiltered    = "filtered"
 	ContextMetadataKeyNonFiltered = "non-filtered"
 )
-// application profile metadata 
-const(
-	ManagedByUserValue = "User"
-	PrefixUserApplicationProfile = "ug-"
+
+// application profile metadata
+const (
+	ManagedByUserValue           = "User"
+	UserApplicationProfilePrefix = "ug-"
 )
 
 // string format: apiVersion-<apiVersion>/namespace-<namespace>/kind-<kind>/name-<name>/...
@@ -55,7 +56,6 @@ const (
 	PrefixNamespace       = "namespace-"
 	PrefixKind            = "kind-"
 	PrefixName            = "name-"
-	
 )
 
 // Statuses
