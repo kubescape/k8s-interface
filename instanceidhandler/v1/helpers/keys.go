@@ -43,6 +43,12 @@ const (
 	ContextMetadataKeyNonFiltered = "non-filtered"
 )
 
+// application profile metadata
+const (
+	ManagedByUserValue           = "User"
+	UserApplicationProfilePrefix = "ug-"
+)
+
 // string format: apiVersion-<apiVersion>/namespace-<namespace>/kind-<kind>/name-<name>/...
 const (
 	StringFormatSeparator = "/"
