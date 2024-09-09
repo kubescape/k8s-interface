@@ -35,7 +35,6 @@ const (
 	CompletionMetadataKey             = metadataPrefix + "/completion"
 	TierMetadataKey                   = metadataPrefix + "/tier"
 	ManagedByMetadataKey              = metadataPrefix + "/managed-by"
-	UserApplicationMetadataKey        = metadataPrefix + "/user-application-profile"
 )
 
 // metadata values
@@ -46,6 +45,7 @@ const (
 // application profile metadata 
 const(
 	ManagedByUserValue = "User"
+	PrefixUserApplicationProfile = "ug-"
 )
 
 // string format: apiVersion-<apiVersion>/namespace-<namespace>/kind-<kind>/name-<name>/...
@@ -55,6 +55,7 @@ const (
 	PrefixNamespace       = "namespace-"
 	PrefixKind            = "kind-"
 	PrefixName            = "name-"
+	
 )
 
 // Statuses
