@@ -5,10 +5,15 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/kubescape/k8s-interface/k8sinterface"
 	"github.com/stretchr/testify/assert"
+	clientcmdapi "k8s.io/client-go/tools/clientcmd/api"
 )
 
 func TestGetContextName(t *testing.T) {
+	defer tearDown()
+
+	// Test ARN context names
 	mockname1 := "arn:aws:eks:eu-north-1:123456789:cluster-test-cluster"
 	eksSupport := NewEKSSupport()
 	name := eksSupport.GetContextName(mockname1)
@@ -24,6 +29,67 @@ func TestGetContextName(t *testing.T) {
 	region, err = eksSupport.GetRegion(mockname2)
 	assert.NoError(t, err)
 	assert.Equal(t, "eu-north-1", region)
+
+	// Test non-ARN context names (i.e., cluster name is context name)
+	tests := []struct {
+		name                string
+		config              *clientcmdapi.Config
+		connected           bool
+		cluster             string
+		expectedContextName string
+	}{
+		{
+			name: "Config is empty, return empty string",
+			config: &clientcmdapi.Config{
+				CurrentContext: "d34db33f",
+				Clusters: map[string]*clientcmdapi.Cluster{
+					"d34db33f": {
+						Server: "https://my-server.local",
+					},
+				},
+			},
+			connected:           true,
+			cluster:             "my-cluster",
+			expectedContextName: "",
+		},
+		{
+			name: "Context name is cluster name, connected",
+			config: &clientcmdapi.Config{
+				CurrentContext: "my-cluster",
+				Clusters: map[string]*clientcmdapi.Cluster{
+					"my-cluster": {
+						Server: "https://my-server.local",
+					},
+				},
+			},
+			connected:           true,
+			cluster:             "my-cluster",
+			expectedContextName: "my-cluster",
+		},
+		{
+			name: "Context name is cluster name, not connected",
+			config: &clientcmdapi.Config{
+				CurrentContext: "my-cluster",
+				Clusters: map[string]*clientcmdapi.Cluster{
+					"my-cluster": {
+						Server: "https://my-server.local",
+					},
+				},
+			},
+			connected:           false,
+			cluster:             "my-cluster",
+			expectedContextName: "",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			k8sinterface.SetConnectedToCluster(tt.connected)
+			k8sinterface.SetClientConfigAPI(tt.config)
+			actualContextName := eksSupport.GetContextName(tt.cluster)
+			assert.Equal(t, tt.expectedContextName, actualContextName)
+		})
+	}
 
 }
 

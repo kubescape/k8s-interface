@@ -132,6 +132,7 @@ func TestGetContext(t *testing.T) {
 }
 
 func tearDown() {
+	SetConnectedToCluster(true)
 	SetClientConfigAPI(nil)
 	SetClusterContextName("")
 	SetConfigClusterServerName("")
