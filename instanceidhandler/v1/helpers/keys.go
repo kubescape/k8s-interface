@@ -47,6 +47,7 @@ const (
 const (
 	ManagedByUserValue           = "User"
 	UserApplicationProfilePrefix = "ug-"
+	UserNetworkNeighborhoodPrefix  = "ug-"
 )
 
 // string format: apiVersion-<apiVersion>/namespace-<namespace>/kind-<kind>/name-<name>/...
