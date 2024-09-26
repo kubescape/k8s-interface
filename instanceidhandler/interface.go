@@ -7,6 +7,7 @@ type IInstanceID interface {
 	GetName() string
 	GetContainerName() string
 	GetStringFormatted() string
+	GetStringNoContainer() string
 	GetHashed() string
 	GetLabels() map[string]string
 	// GetSlug returns a string with a human-friendly and Kubernetes-compatible name
