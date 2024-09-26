@@ -4,6 +4,8 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
+	"regexp"
+	"strings"
 
 	"github.com/kubescape/k8s-interface/instanceidhandler"
 	"github.com/kubescape/k8s-interface/instanceidhandler/v1/helpers"
@@ -11,7 +13,14 @@ import (
 	"github.com/kubescape/k8s-interface/names"
 )
 
-// string format: apiVersion-<apiVersion>/namespace-<namespace>/kind-<kind>/name-<name>/containerName-<containerName>
+var (
+	anyGroup          = "(.+)"
+	anyNoSlash        = "([^/]+)"
+	RegexFormatted    = regexp.MustCompile(strings.Join([]string{helpers.PrefixApiVersion + anyGroup, helpers.PrefixNamespace + anyNoSlash, helpers.PrefixKind + anyNoSlash, helpers.PrefixName + anyNoSlash, anyNoSlash + "Name-" + anyNoSlash}, helpers.StringFormatSeparator))
+	StringFormatted   = strings.Join([]string{helpers.PrefixApiVersion + "%s", helpers.PrefixNamespace + "%s", helpers.PrefixKind + "%s", helpers.PrefixName + "%s", "%sName-%s"}, helpers.StringFormatSeparator)
+	RegexNoContainer  = regexp.MustCompile(strings.Join([]string{helpers.PrefixApiVersion + anyGroup, helpers.PrefixNamespace + anyNoSlash, helpers.PrefixKind + anyNoSlash, helpers.PrefixName + anyNoSlash}, helpers.StringFormatSeparator))
+	StringNoContainer = strings.Join([]string{helpers.PrefixApiVersion + "%s", helpers.PrefixNamespace + "%s", helpers.PrefixKind + "%s", helpers.PrefixName + "%s"}, helpers.StringFormatSeparator)
+)
 
 // ensure that InstanceID implements IInstanceID
 var _ instanceidhandler.IInstanceID = (*InstanceID)(nil)
@@ -39,11 +48,17 @@ func (id *InstanceID) GetContainerName() string {
 }
 
 func (id *InstanceID) GetStringFormatted() string {
-	stringFormat := helpers.PrefixApiVersion + "%s" + helpers.StringFormatSeparator + helpers.PrefixNamespace + "%s" + helpers.StringFormatSeparator + helpers.PrefixKind + "%s" + helpers.StringFormatSeparator + helpers.PrefixName + "%s" + helpers.StringFormatSeparator + "%sName-%s"
 	if id.AlternateName != "" {
-		return fmt.Sprintf(stringFormat, id.ApiVersion, id.Namespace, id.Kind, id.AlternateName, id.InstanceType, id.ContainerName)
+		return fmt.Sprintf(StringFormatted, id.ApiVersion, id.Namespace, id.Kind, id.AlternateName, id.InstanceType, id.ContainerName)
 	}
-	return fmt.Sprintf(stringFormat, id.ApiVersion, id.Namespace, id.Kind, id.Name, id.InstanceType, id.ContainerName)
+	return fmt.Sprintf(StringFormatted, id.ApiVersion, id.Namespace, id.Kind, id.Name, id.InstanceType, id.ContainerName)
+}
+
+func (id *InstanceID) GetStringNoContainer() string {
+	if id.AlternateName != "" {
+		return fmt.Sprintf(StringNoContainer, id.ApiVersion, id.Namespace, id.Kind, id.AlternateName)
+	}
+	return fmt.Sprintf(StringNoContainer, id.ApiVersion, id.Namespace, id.Kind, id.Name)
 }
 
 func (id *InstanceID) GetHashed() string {

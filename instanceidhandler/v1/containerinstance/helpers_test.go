@@ -95,7 +95,7 @@ func Test_validateInstanceID(t *testing.T) {
 					InstanceType:  container,
 				},
 			},
-			wantErr: true,
+			wantErr: false,
 		},
 		{
 			name: "empty InstanceType",
@@ -109,7 +109,7 @@ func Test_validateInstanceID(t *testing.T) {
 					InstanceType:  "",
 				},
 			},
-			wantErr: true,
+			wantErr: false,
 		},
 		{
 			name: "valid instanceID",

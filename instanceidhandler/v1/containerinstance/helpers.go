@@ -21,12 +21,6 @@ func validateInstanceID(instanceID *InstanceID) error {
 	if instanceID.Name == "" {
 		return fmt.Errorf("invalid instanceID: name cannot be empty")
 	}
-	if instanceID.ContainerName == "" {
-		return fmt.Errorf("invalid instanceID: containerName cannot be empty")
-	}
-	if instanceID.InstanceType == "" {
-		return fmt.Errorf("invalid instanceID: InstanceType cannot be empty")
-	}
 	return nil
 }
 

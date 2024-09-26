@@ -86,6 +86,19 @@ func TestGenerateInstanceIDFromString(t *testing.T) {
 			},
 			wantErr: false,
 		},
+		{
+			name: "valid input - ReplicaSet, no container",
+			args: args{
+				input: "apiVersion-apps/v1/namespace-default/kind-ReplicaSet/name-nginx-1234",
+			},
+			want: &InstanceID{
+				ApiVersion: "apps/v1",
+				Namespace:  "default",
+				Kind:       "ReplicaSet",
+				Name:       "nginx-1234",
+			},
+			wantErr: false,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
