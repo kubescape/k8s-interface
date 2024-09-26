@@ -2,9 +2,6 @@ package containerinstance
 
 import (
 	"fmt"
-	"strings"
-
-	"github.com/kubescape/k8s-interface/instanceidhandler/v1/helpers"
 )
 
 // GenerateInstanceIDFromString generates instance ID from string
@@ -15,32 +12,28 @@ func GenerateInstanceIDFromString(input string) (*InstanceID, error) {
 
 	// TODO add case for CronJobs here, or deprecate
 
-	// Split the input string by the field separator "/"
-	fields := strings.Split(input, helpers.StringFormatSeparator)
-	if len(fields) != 5 && len(fields) != 6 {
+	if fields := RegexFormatted.FindStringSubmatch(input); fields != nil {
+		instanceID.ApiVersion = fields[1]
+		instanceID.Namespace = fields[2]
+		instanceID.Kind = fields[3]
+		instanceID.Name = fields[4]
+		instanceID.InstanceType = fields[5]
+		instanceID.ContainerName = fields[6]
+	} else if fields := RegexNoContainer.FindStringSubmatch(input); fields != nil {
+		instanceID.ApiVersion = fields[1]
+		instanceID.Namespace = fields[2]
+		instanceID.Kind = fields[3]
+		instanceID.Name = fields[4]
+	} else {
 		return nil, fmt.Errorf("invalid format: %s", input)
 	}
-
-	i := 0
-	instanceID.ApiVersion = strings.TrimPrefix(fields[0], helpers.PrefixApiVersion)
-
-	// if the apiVersion has a group, e.g. apps/v1
-	if len(fields) == 6 {
-		instanceID.ApiVersion += helpers.StringFormatSeparator + fields[1]
-		i += 1
-	}
-
-	instanceID.Namespace = strings.TrimPrefix(fields[1+i], helpers.PrefixNamespace)
-	instanceID.Kind = strings.TrimPrefix(fields[2+i], helpers.PrefixKind)
-	instanceID.Name = strings.TrimPrefix(fields[3+i], helpers.PrefixName)
-	instanceID.InstanceType, instanceID.ContainerName, _ = strings.Cut(fields[4+i], "Name-")
 
 	if err := validateInstanceID(instanceID); err != nil {
 		return nil, err
 	}
 
 	// Check if the input string is valid
-	if instanceID.GetStringFormatted() != input {
+	if instanceID.GetStringFormatted() != input && instanceID.GetStringNoContainer() != input {
 		return nil, fmt.Errorf("invalid format: %s", input)
 	}
 
