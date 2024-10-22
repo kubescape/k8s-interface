@@ -35,6 +35,7 @@ const (
 	CompletionMetadataKey             = metadataPrefix + "/completion"
 	TierMetadataKey                   = metadataPrefix + "/tier"
 	ManagedByMetadataKey              = metadataPrefix + "/managed-by"
+	ApplicationProfileCommand         = metadataPrefix + "/application-profile-command"
 )
 
 // metadata values
@@ -45,9 +46,11 @@ const (
 
 // application profile metadata
 const (
-	ManagedByUserValue           = "User"
-	UserApplicationProfilePrefix = "ug-"
-	UserNetworkNeighborhoodPrefix  = "ug-"
+	ManagedByUserValue            = "User"
+	UserApplicationProfilePrefix  = "ug-"
+	UserNetworkNeighborhoodPrefix = "ug-"
+	AddCommand                    = "add"
+	DeleteCommand                 = "delete"
 )
 
 // string format: apiVersion-<apiVersion>/namespace-<namespace>/kind-<kind>/name-<name>/...
