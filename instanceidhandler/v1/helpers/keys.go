@@ -31,6 +31,7 @@ const (
 	RoleBindingNamespaceMetadataKey   = metadataPrefix + "/rolebinding-namespace"
 	RoleNameMetadataKey               = metadataPrefix + "/role-name"
 	RoleNamespaceMetadataKey          = metadataPrefix + "/role-namespace"
+	ScanIdMetadataKey                 = metadataPrefix + "/scan-id"
 	StatusMetadataKey                 = metadataPrefix + "/status"
 	SyncChecksumMetadataKey           = metadataPrefix + "/sync-checksum"
 	TemplateHashKey                   = metadataPrefix + "/instance-template-hash"
