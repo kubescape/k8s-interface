@@ -98,10 +98,10 @@ func TestGenerateInstanceID(t *testing.T) {
 					Name:          "kubevuln-scheduler-28677846",
 					ContainerName: "kubevuln-scheduler",
 					InstanceType:  Container,
-					AlternateName: "kubevuln-scheduler-b449cf78f",
+					AlternateName: "kubevuln-scheduler-6656c46778",
 				},
 			},
-			wantSlug: "job-kubevuln-scheduler-b449cf78f",
+			wantSlug: "job-kubevuln-scheduler-6656c46778",
 			wantErr:  assert.NoError,
 		},
 	}
@@ -132,10 +132,10 @@ func TestSameSlug(t *testing.T) {
 		require.NoError(t, err)
 		slug, err := ins[0].(*containerinstance.InstanceID).GetSlug(true)
 		require.NoError(t, err)
-		assert.Equal(t, "job-hello-65866c76d6", slug)
+		assert.Equal(t, "job-hello-64c875c864", slug)
 		slugFull, err := ins[0].(*containerinstance.InstanceID).GetSlug(false)
 		require.NoError(t, err)
-		assert.Equal(t, "job-hello-65866c76d6-hello-d9a7-58fb", slugFull)
+		assert.Equal(t, "job-hello-64c875c864-hello-f699-a8be", slugFull)
 	}
 }
 
