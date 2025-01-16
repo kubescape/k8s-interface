@@ -29,6 +29,8 @@ var (
 	jobPod string
 	//go:embed testdata/mockPod.json
 	mockPod string
+	//go:embed testdata/statefulset.json
+	statefulset string
 )
 
 func TestGenerateInstanceID(t *testing.T) {
@@ -102,6 +104,23 @@ func TestGenerateInstanceID(t *testing.T) {
 				},
 			},
 			wantSlug: "job-kubevuln-scheduler-6656c46778",
+			wantErr:  assert.NoError,
+		},
+		{
+			name:      "statefulset",
+			sWorkload: statefulset,
+			want: []instanceidhandler.IInstanceID{
+				&containerinstance.InstanceID{
+					ApiVersion:    "apps/v1",
+					Namespace:     "default",
+					Kind:          "StatefulSet",
+					Name:          "web",
+					ContainerName: "nginx",
+					InstanceType:  Container,
+					AlternateName: "web-7757fc6447",
+				},
+			},
+			wantSlug: "statefulset-web-7757fc6447",
 			wantErr:  assert.NoError,
 		},
 	}

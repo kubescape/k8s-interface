@@ -1,0 +1,215 @@
+{
+    "apiVersion": "v1",
+    "kind": "Pod",
+    "metadata": {
+        "creationTimestamp": "2025-01-16T06:35:59Z",
+        "generateName": "web-",
+        "labels": {
+            "app": "nginx",
+            "apps.kubernetes.io/pod-index": "0",
+            "controller-revision-hash": "web-7757fc6447",
+            "statefulset.kubernetes.io/pod-name": "web-0"
+        },
+        "name": "web-0",
+        "namespace": "default",
+        "ownerReferences": [
+            {
+                "apiVersion": "apps/v1",
+                "blockOwnerDeletion": true,
+                "controller": true,
+                "kind": "StatefulSet",
+                "name": "web",
+                "uid": "b63b0eca-1873-4cf1-967b-243f08f1e986"
+            }
+        ],
+        "resourceVersion": "861503",
+        "uid": "58fd3633-e33d-4067-89aa-1ba99aa6e856"
+    },
+    "spec": {
+        "containers": [
+            {
+                "image": "registry.k8s.io/nginx-slim:0.24",
+                "imagePullPolicy": "IfNotPresent",
+                "name": "nginx",
+                "ports": [
+                    {
+                        "containerPort": 80,
+                        "name": "web",
+                        "protocol": "TCP"
+                    }
+                ],
+                "resources": {},
+                "terminationMessagePath": "/dev/termination-log",
+                "terminationMessagePolicy": "File",
+                "volumeMounts": [
+                    {
+                        "mountPath": "/usr/share/nginx/html",
+                        "name": "www"
+                    },
+                    {
+                        "mountPath": "/var/run/secrets/kubernetes.io/serviceaccount",
+                        "name": "kube-api-access-zhbdk",
+                        "readOnly": true
+                    }
+                ]
+            }
+        ],
+        "dnsPolicy": "ClusterFirst",
+        "enableServiceLinks": true,
+        "hostname": "web-0",
+        "nodeName": "kind-control-plane",
+        "preemptionPolicy": "PreemptLowerPriority",
+        "priority": 0,
+        "restartPolicy": "Always",
+        "schedulerName": "default-scheduler",
+        "securityContext": {},
+        "serviceAccount": "default",
+        "serviceAccountName": "default",
+        "subdomain": "nginx",
+        "terminationGracePeriodSeconds": 10,
+        "tolerations": [
+            {
+                "effect": "NoExecute",
+                "key": "node.kubernetes.io/not-ready",
+                "operator": "Exists",
+                "tolerationSeconds": 300
+            },
+            {
+                "effect": "NoExecute",
+                "key": "node.kubernetes.io/unreachable",
+                "operator": "Exists",
+                "tolerationSeconds": 300
+            }
+        ],
+        "volumes": [
+            {
+                "name": "www",
+                "persistentVolumeClaim": {
+                    "claimName": "www-web-0"
+                }
+            },
+            {
+                "name": "kube-api-access-zhbdk",
+                "projected": {
+                    "defaultMode": 420,
+                    "sources": [
+                        {
+                            "serviceAccountToken": {
+                                "expirationSeconds": 3607,
+                                "path": "token"
+                            }
+                        },
+                        {
+                            "configMap": {
+                                "items": [
+                                    {
+                                        "key": "ca.crt",
+                                        "path": "ca.crt"
+                                    }
+                                ],
+                                "name": "kube-root-ca.crt"
+                            }
+                        },
+                        {
+                            "downwardAPI": {
+                                "items": [
+                                    {
+                                        "fieldRef": {
+                                            "apiVersion": "v1",
+                                            "fieldPath": "metadata.namespace"
+                                        },
+                                        "path": "namespace"
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                }
+            }
+        ]
+    },
+    "status": {
+        "conditions": [
+            {
+                "lastProbeTime": null,
+                "lastTransitionTime": "2025-01-16T06:36:02Z",
+                "status": "True",
+                "type": "PodReadyToStartContainers"
+            },
+            {
+                "lastProbeTime": null,
+                "lastTransitionTime": "2025-01-16T06:35:59Z",
+                "status": "True",
+                "type": "Initialized"
+            },
+            {
+                "lastProbeTime": null,
+                "lastTransitionTime": "2025-01-16T06:36:02Z",
+                "status": "True",
+                "type": "Ready"
+            },
+            {
+                "lastProbeTime": null,
+                "lastTransitionTime": "2025-01-16T06:36:02Z",
+                "status": "True",
+                "type": "ContainersReady"
+            },
+            {
+                "lastProbeTime": null,
+                "lastTransitionTime": "2025-01-16T06:35:59Z",
+                "status": "True",
+                "type": "PodScheduled"
+            }
+        ],
+        "containerStatuses": [
+            {
+                "containerID": "containerd://8c4b5311ed9bc3fd8d1ffb8cf5e5c6937e16edbff198dad373863c6941bbfdc4",
+                "image": "registry.k8s.io/nginx-slim:0.24",
+                "imageID": "registry.k8s.io/nginx-slim@sha256:0e3657b75574b38c98c9ea0cc5a90a24352515b0237035fa61dadd457fe4b426",
+                "lastState": {},
+                "name": "nginx",
+                "ready": true,
+                "restartCount": 0,
+                "started": true,
+                "state": {
+                    "running": {
+                        "startedAt": "2025-01-16T06:36:02Z"
+                    }
+                },
+                "volumeMounts": [
+                    {
+                        "mountPath": "/usr/share/nginx/html",
+                        "name": "www"
+                    },
+                    {
+                        "mountPath": "/var/run/secrets/kubernetes.io/serviceaccount",
+                        "name": "kube-api-access-zhbdk",
+                        "readOnly": true,
+                        "recursiveReadOnly": "Disabled"
+                    }
+                ]
+            }
+        ],
+        "hostIP": "172.19.0.2",
+        "hostIPs": [
+            {
+                "ip": "172.19.0.2"
+            },
+            {
+                "ip": "fc00:f853:ccd:e793::2"
+            }
+        ],
+        "phase": "Running",
+        "podIP": "10.244.0.83",
+        "podIPs": [
+            {
+                "ip": "10.244.0.83"
+            },
+            {
+                "ip": "fd00:10:244::53"
+            }
+        ],
+        "qosClass": "BestEffort",
+        "startTime": "2025-01-16T06:35:59Z"
+    }
+}
