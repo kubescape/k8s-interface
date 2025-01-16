@@ -11,6 +11,7 @@ import (
 	"github.com/kubescape/k8s-interface/instanceidhandler"
 	"github.com/kubescape/k8s-interface/instanceidhandler/v1/containerinstance"
 	"github.com/kubescape/k8s-interface/workloadinterface"
+	appsv1 "k8s.io/api/apps/v1"
 	core1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -50,6 +51,10 @@ func GenerateInstanceID(w workloadinterface.IWorkload) ([]instanceidhandler.IIns
 				DeepHashObject(podTemplateSpecHasher, spec)
 				s[len(s)-1] = rand.SafeEncodeString(fmt.Sprint(podTemplateSpecHasher.Sum32()))
 				alternateName = strings.Join(s, "-")
+			}
+		} else if ownerReference.Kind == "StatefulSet" {
+			if label, ok := w.GetLabel(appsv1.StatefulSetRevisionLabel); ok {
+				alternateName = label
 			}
 		}
 	}
