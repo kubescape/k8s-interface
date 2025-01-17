@@ -20,7 +20,6 @@ require (
 	github.com/docker/docker v25.0.6+incompatible
 	github.com/kubescape/go-logger v0.0.22
 	github.com/stretchr/testify v1.9.0
-	golang.org/x/exp v0.0.0-20230728194245-b0cb94b80691
 	golang.org/x/oauth2 v0.23.0
 	google.golang.org/genproto v0.0.0-20230822172742-b8732ec3820d
 	k8s.io/api v0.32.0
