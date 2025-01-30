@@ -97,7 +97,7 @@ func TestGetCloudMetadata(t *testing.T) {
 			},
 			wantErr: false,
 		},
-		/*{
+		{
 			name: "VMware provider",
 			node: vsphere,
 			want: &apitypes.CloudMetadata{
@@ -112,7 +112,7 @@ func TestGetCloudMetadata(t *testing.T) {
 				Hostname:     "aaaa00",
 			},
 			wantErr: false,
-		},*/
+		},
 	}
 
 	for _, tt := range tests {
