@@ -1,0 +1,100 @@
+{
+    "apiVersion": "v1",
+    "kind": "Node",
+    "metadata": {
+        "annotations": {
+            "container.googleapis.com/instance_id": "123456789",
+            "csi.volume.kubernetes.io/nodeid": "{\"pd.csi.storage.gke.io\":\"projects/kubescape-123456/zones/us-west1-a/instances/gke-cluster-pool-1-123456\"}",
+            "node.alpha.kubernetes.io/ttl": "0",
+            "node.gke.io/last-applied-node-labels": "cloud.google.com/gke-boot-disk=pd-balanced,cloud.google.com/gke-container-runtime=containerd,cloud.google.com/gke-cpu-scaling-level=16,cloud.google.com/gke-logging-variant=DEFAULT,cloud.google.com/gke-max-pods-per-node=110,cloud.google.com/gke-memory-gb-scaling-level=65,cloud.google.com/gke-netd-ready=true,cloud.google.com/gke-nodepool=secure-pool-2,cloud.google.com/gke-os-distribution=cos,cloud.google.com/gke-provisioning=standard,cloud.google.com/gke-stack-type=IPV4,cloud.google.com/machine-family=c2,node.kubernetes.io/masq-agent-ds-ready=true,projectcalico.org/ds-ready=true",
+            "node.gke.io/last-applied-node-taints": "",
+            "volumes.kubernetes.io/controller-managed-attach-detach": "true"
+        },
+        "creationTimestamp": "2025-01-27T11:47:54Z",
+        "labels": {
+            "beta.kubernetes.io/arch": "amd64",
+            "beta.kubernetes.io/instance-type": "c2-standard-16",
+            "beta.kubernetes.io/os": "linux",
+            "cloud.google.com/gke-boot-disk": "pd-balanced",
+            "cloud.google.com/gke-container-runtime": "containerd",
+            "cloud.google.com/gke-cpu-scaling-level": "16",
+            "cloud.google.com/gke-logging-variant": "DEFAULT",
+            "cloud.google.com/gke-max-pods-per-node": "110",
+            "cloud.google.com/gke-memory-gb-scaling-level": "65",
+            "cloud.google.com/gke-netd-ready": "true",
+            "cloud.google.com/gke-nodepool": "secure-pool-2",
+            "cloud.google.com/gke-os-distribution": "cos",
+            "cloud.google.com/gke-provisioning": "standard",
+            "cloud.google.com/gke-stack-type": "IPV4",
+            "cloud.google.com/machine-family": "c2",
+            "failure-domain.beta.kubernetes.io/region": "us-west1",
+            "failure-domain.beta.kubernetes.io/zone": "us-west1-a",
+            "kubernetes.io/arch": "amd64",
+            "kubernetes.io/hostname": "gke-cluster-pool-1-123456",
+            "kubernetes.io/os": "linux",
+            "node.kubernetes.io/instance-type": "c2-standard-16",
+            "node.kubernetes.io/masq-agent-ds-ready": "true",
+            "projectcalico.org/ds-ready": "true",
+            "topology.gke.io/zone": "us-west1-a",
+            "topology.kubernetes.io/region": "us-west1",
+            "topology.kubernetes.io/zone": "us-west1-a"
+        },
+        "name": "gke-cluster-pool-1-123456",
+        "resourceVersion": "1576006000",
+        "uid": "00000000-ffff-ffff-ffff-fffffffffff1"
+    },
+    "spec": {
+        "podCIDR": "1.1.1.1/24",
+        "podCIDRs": [
+            "1.1.1.1/24"
+        ],
+        "providerID": "gce://kubescape-123456/us-west1-a/gke-cluster-pool-1-123456"
+    },
+    "status": {
+        "addresses": [
+            {
+                "address": "1.1.1.2",
+                "type": "InternalIP"
+            },
+            {
+                "address": "gke-cluster-pool-1-123456",
+                "type": "Hostname"
+            }
+        ],
+        "allocatable": {
+            "cpu": "15890m",
+            "ephemeral-storage": "47060071478",
+            "hugepages-1Gi": "0",
+            "hugepages-2Mi": "0",
+            "memory": "60043260Ki",
+            "pods": "110"
+        },
+        "capacity": {
+            "cpu": "16",
+            "ephemeral-storage": "98831908Ki",
+            "hugepages-1Gi": "0",
+            "hugepages-2Mi": "0",
+            "memory": "65851388Ki",
+            "pods": "110"
+        },
+        "conditions": null,
+        "daemonEndpoints": {
+            "kubeletEndpoint": {
+                "Port": 10250
+            }
+        },
+        "images": [],
+        "nodeInfo": {
+            "architecture": "amd64",
+            "bootID": "00000000-ffff-ffff-ffff-fffffffffff3",
+            "containerRuntimeVersion": "containerd://1.7.24",
+            "kernelVersion": "6.6.56+",
+            "kubeProxyVersion": "v1.31.4-gke.1256000",
+            "kubeletVersion": "v1.31.4-gke.1256000",
+            "machineID": "testmachineid",
+            "operatingSystem": "linux",
+            "osImage": "Container-Optimized OS from Google",
+            "systemUUID": "00000000-ffff-ffff-ffff-fffffffffff4"
+        }
+    }
+}
