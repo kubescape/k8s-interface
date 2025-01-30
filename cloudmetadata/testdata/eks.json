@@ -1,0 +1,139 @@
+{
+    "apiVersion": "v1",
+    "kind": "Node",
+    "metadata": {
+        "annotations": {
+            "alpha.kubernetes.io/provided-node-ip": "1.1.1.1",
+            "csi.volume.kubernetes.io/nodeid": "{\"ebs.csi.aws.com\":\"i-000000fff00eeaa00\"}",
+            "karpenter.k8s.aws/ec2nodeclass-hash": "11235555555555555555",
+            "karpenter.k8s.aws/ec2nodeclass-hash-version": "v4",
+            "karpenter.sh/nodepool-hash": "14444444444444444444",
+            "karpenter.sh/nodepool-hash-version": "v3",
+            "node.alpha.kubernetes.io/ttl": "0",
+            "volumes.kubernetes.io/controller-managed-attach-detach": "true"
+        },
+        "creationTimestamp": "2025-01-29T10:26:18Z",
+        "finalizers": [
+            "karpenter.sh/termination"
+        ],
+        "labels": {
+            "beta.kubernetes.io/arch": "arm64",
+            "beta.kubernetes.io/instance-type": "c7g.large",
+            "beta.kubernetes.io/os": "linux",
+            "failure-domain.beta.kubernetes.io/region": "eu-west-1",
+            "failure-domain.beta.kubernetes.io/zone": "eu-west-1b",
+            "k8s.io/cloud-provider-aws": "aaaaaaaaaaaaaaaaaaaaffffffffffff",
+            "karpenter.k8s.aws/ec2nodeclass": "test123",
+            "karpenter.k8s.aws/instance-category": "c",
+            "karpenter.k8s.aws/instance-cpu": "2",
+            "karpenter.k8s.aws/instance-cpu-manufacturer": "aws",
+            "karpenter.k8s.aws/instance-cpu-sustained-clock-speed-mhz": "2600",
+            "karpenter.k8s.aws/instance-ebs-bandwidth": "10000",
+            "karpenter.k8s.aws/instance-encryption-in-transit-supported": "true",
+            "karpenter.k8s.aws/instance-family": "c7g",
+            "karpenter.k8s.aws/instance-generation": "7",
+            "karpenter.k8s.aws/instance-hypervisor": "nitro",
+            "karpenter.k8s.aws/instance-memory": "4096",
+            "karpenter.k8s.aws/instance-network-bandwidth": "937",
+            "karpenter.k8s.aws/instance-size": "large",
+            "karpenter.sh/capacity-type": "on-demand",
+            "karpenter.sh/initialized": "true",
+            "karpenter.sh/nodepool": "test123",
+            "karpenter.sh/registered": "true",
+            "kubernetes.io/arch": "arm64",
+            "kubernetes.io/hostname": "ip-1-1-1-1.eu-west-1.compute.internal",
+            "kubernetes.io/os": "linux",
+            "node.kubernetes.io/instance-type": "c7g.large",
+            "runner": "test123",
+            "topology.ebs.csi.aws.com/zone": "eu-west-1b",
+            "topology.k8s.aws/zone-id": "euw1-az2",
+            "topology.kubernetes.io/region": "eu-west-1",
+            "topology.kubernetes.io/zone": "eu-west-1b"
+        },
+        "name": "ip-1-1-1-1.eu-west-1.compute.internal",
+        "ownerReferences": [
+            {
+                "apiVersion": "karpenter.sh/v1",
+                "blockOwnerDeletion": true,
+                "kind": "NodeClaim",
+                "name": "test123-2ggg2",
+                "uid": "f0db8e65-5036-4d8c-9cc9-534cb1fd4351"
+            }
+        ],
+        "resourceVersion": "141111111",
+        "uid": "00000000-ffff-ffff-ffff-fffffffffff9"
+    },
+    "spec": {
+        "providerID": "aws:///eu-west-1b/i-000000fff00eeaa00",
+        "taints": [
+            {
+                "effect": "NoSchedule",
+                "key": "dedicated",
+                "value": "test123"
+            }
+        ]
+    },
+    "status": {
+        "addresses": [
+            {
+                "address": "1.1.1.1",
+                "type": "InternalIP"
+            },
+            {
+                "address": "ip-1-1-1-1.eu-west-1.compute.internal",
+                "type": "InternalDNS"
+            },
+            {
+                "address": "ip-1-1-1-1.eu-west-1.compute.internal",
+                "type": "Hostname"
+            }
+        ],
+        "allocatable": {
+            "cpu": "1930m",
+            "ephemeral-storage": "18233774458",
+            "hugepages-1Gi": "0",
+            "hugepages-2Mi": "0",
+            "hugepages-32Mi": "0",
+            "hugepages-64Ki": "0",
+            "memory": "3217992Ki",
+            "pods": "29"
+        },
+        "capacity": {
+            "cpu": "2",
+            "ephemeral-storage": "20949996Ki",
+            "hugepages-1Gi": "0",
+            "hugepages-2Mi": "0",
+            "hugepages-32Mi": "0",
+            "hugepages-64Ki": "0",
+            "memory": "3908168Ki",
+            "pods": "29"
+        },
+        "conditions": null,
+        "daemonEndpoints": {
+            "kubeletEndpoint": {
+                "Port": 10250
+            }
+        },
+        "images": [
+            {
+                "names": [
+                    "602401143452.dkr.ecr.eu-west-1.amazonaws.com/amazon-k8s-cni-init@sha256:ce36e6fc8457a3c79eab29ad7ca86ebc9220056c443e15502eeab7ceeef8496f",
+                    "602401143452.dkr.ecr.eu-west-1.amazonaws.com/amazon-k8s-cni-init:v1.19.0-eksbuild.1"
+                ],
+                "sizeBytes": 60233428
+            }
+        ],
+        "nodeInfo": {
+            "architecture": "arm64",
+            "bootID": "00000000-ffff-ffff-ffff-fffffffffff8",
+            "containerRuntimeVersion": "containerd://1.7.11",
+            "kernelVersion": "5.10.219-208.866.amzn2.aarch64",
+            "kubeProxyVersion": "v1.29.3-eks-ae9a62a",
+            "kubeletVersion": "v1.29.3-eks-ae9a62a",
+            "machineID": "ec2machineid",
+            "operatingSystem": "linux",
+            "osImage": "Amazon Linux 2",
+            "systemUUID": "00000000-ffff-ffff-ffff-fffffffffff7"
+        }
+    }
+}
