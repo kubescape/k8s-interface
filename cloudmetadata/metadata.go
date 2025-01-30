@@ -141,10 +141,10 @@ func extractGCPMetadata(node *corev1.Node, metadata *apitypes.CloudMetadata) *ap
 	metadata.Zone = node.Labels["topology.kubernetes.io/zone"]
 
 	// Extract project and instance ID from provider ID
-	// Format: gce:///project-name/zone/instance-name
+	// Format: gce://project-name/zone/instance-name
 	parts := strings.Split(node.Spec.ProviderID, "/")
 	if len(parts) > 3 {
-		metadata.AccountID = parts[3] // project name
+		metadata.AccountID = parts[2] // project name
 		metadata.InstanceID = parts[len(parts)-1]
 	}
 
