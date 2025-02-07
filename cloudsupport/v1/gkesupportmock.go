@@ -51,3 +51,7 @@ func (gkeSupportM *GKESupportMock) GetContextName(cluster string) string {
 	}
 	return parsedName[3]
 }
+
+func (gkeSupportM *GKESupportMock) GetIAMMappings(project string) (map[string]string, map[string]string, error) {
+	return nil, nil, nil
+}

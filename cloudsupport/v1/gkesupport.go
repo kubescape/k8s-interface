@@ -9,6 +9,8 @@ import (
 	container "cloud.google.com/go/container/apiv1"
 	"github.com/kubescape/k8s-interface/k8sinterface"
 	"golang.org/x/oauth2/google"
+	"google.golang.org/api/iam/v1"
+	"google.golang.org/api/option"
 	containerpb "google.golang.org/genproto/googleapis/container/v1"
 )
 
@@ -18,6 +20,7 @@ type IGKESupport interface {
 	GetProject(cluster string) (string, error)
 	GetRegion(cluster string) (string, error)
 	GetContextName(cluster string) string
+	GetIAMMappings(project string) (map[string]string, map[string]string, error)
 }
 type GKESupport struct {
 }
@@ -110,4 +113,65 @@ func (gkeSupport *GKESupport) GetContextName(cluster string) string {
 		return ""
 	}
 	return parsedName[3]
+}
+
+// GetIAMMappings returns iam-roles and service accounts
+func (gkeSupport *GKESupport) GetIAMMappings(project string) (map[string]string, map[string]string, error) {
+	ctx := context.Background()
+	client, err := google.DefaultClient(ctx, iam.CloudPlatformScope)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to create Google Cloud client: %w", err)
+	}
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to create Google Cloud client: %w", err)
+	}
+
+	iamService, err := iam.NewService(ctx, option.WithHTTPClient(client))
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to create IAM service client: %w", err)
+	}
+
+	roleMappings := make(map[string]string)
+	saMappings := make(map[string]string)
+
+	roleIterator, err := iamService.Projects.Roles.List("projects/" + project).Do()
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to retrieve roles: %w", err)
+	}
+	for {
+		for _, role := range roleIterator.Roles {
+			roleMappings[role.Name] = role.Title
+		}
+
+		if roleIterator.NextPageToken == "" {
+			break
+		}
+
+		roleIterator, err = iamService.Projects.Roles.List("projects/" + project).PageToken(roleIterator.NextPageToken).Do()
+		if err != nil {
+			return nil, nil, fmt.Errorf("failed to retrieve roles: %w", err)
+		}
+	}
+
+	saIterator, err := iamService.Projects.ServiceAccounts.List("projects/" + project).Do()
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to retrieve service accounts: %w", err)
+	}
+	for {
+
+		for _, sa := range saIterator.Accounts {
+			saMappings[sa.Name] = sa.Name
+		}
+
+		if saIterator.NextPageToken == "" {
+			break
+		}
+
+		saIterator, err = iamService.Projects.ServiceAccounts.List("projects/" + project).PageToken(saIterator.NextPageToken).Do()
+		if err != nil {
+			return nil, nil, fmt.Errorf("failed to retrieve service accounts: %w", err)
+		}
+	}
+
+	return roleMappings, saMappings, nil
 }
