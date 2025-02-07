@@ -195,7 +195,7 @@ func excahngeAzureAADAccessTokenForACRRefreshToken(registry, tenantID, azureAADA
 
 func CheckIsGCRImage(imageTag string) bool {
 	// gcr.io/elated-pottery-310110/golang-inf:2
-	return strings.Contains(imageTag, "gcr.io/")
+	return strings.Contains(imageTag, "gcr.io/") || strings.Contains(imageTag, ".pkg.dev/")
 }
 
 // GetLoginDetailsForGCR return user name + password to use
