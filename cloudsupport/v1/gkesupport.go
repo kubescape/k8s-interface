@@ -3,15 +3,14 @@ package v1
 import (
 	"context"
 	"fmt"
-	"google.golang.org/api/option"
 	"os"
 	"strings"
 
 	container "cloud.google.com/go/container/apiv1"
 	"github.com/kubescape/k8s-interface/k8sinterface"
 	"golang.org/x/oauth2/google"
-	//"cloud.google.com/go/iam"
 	"google.golang.org/api/iam/v1"
+	"google.golang.org/api/option"
 	containerpb "google.golang.org/genproto/googleapis/container/v1"
 )
 
