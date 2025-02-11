@@ -36,6 +36,7 @@ const (
 	SyncChecksumMetadataKey           = metadataPrefix + "/sync-checksum"
 	TemplateHashKey                   = metadataPrefix + "/instance-template-hash"
 	TierMetadataKey                   = metadataPrefix + "/tier"
+	ToolVersionMetadataKey            = metadataPrefix + "/tool-version"
 	WlidMetadataKey                   = metadataPrefix + "/wlid"
 )
 
