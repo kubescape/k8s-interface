@@ -67,8 +67,6 @@ const (
 	Initializing   = "initializing"
 	Ready          = "ready"
 	Completed      = "completed"
-	Incomplete     = "incomplete"
-	Unauthorize    = "unauthorize"
 	MissingRuntime = "missing-runtime"
 	TooLarge       = "too-large"
 )
