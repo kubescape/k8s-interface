@@ -299,11 +299,26 @@ func extractLinodeMetadata(node *corev1.Node, metadata *apitypes.CloudMetadata) 
 	metadata.Region = node.Labels["topology.kubernetes.io/region"]
 	metadata.Zone = node.Labels["topology.kubernetes.io/zone"]
 
+	// Use Linode-specific region label if available
+	if liNodeRegion, ok := node.Labels["topology.linode.com/region"]; ok && metadata.Region == "" {
+		metadata.Region = liNodeRegion
+	}
+
 	// Extract Linode ID from provider ID
 	// Format: linode:///linode-id
 	parts := strings.Split(node.Spec.ProviderID, "/")
 	if len(parts) > 0 {
 		metadata.InstanceID = parts[len(parts)-1]
+	}
+
+	// Check for Linode-specific private IP annotation
+	if privateIP, ok := node.Annotations["node.k8s.linode.com/private-ip"]; ok && metadata.PrivateIP == "" {
+		metadata.PrivateIP = privateIP
+	}
+
+	// Check for Linode-specific hostname label
+	if hostname, ok := node.Labels["kubernetes.io/hostname"]; ok && metadata.Hostname == "" {
+		metadata.Hostname = hostname
 	}
 
 	return metadata

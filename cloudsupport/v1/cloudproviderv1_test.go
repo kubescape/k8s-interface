@@ -394,6 +394,11 @@ func TestGetCloudProviderFromNode(t *testing.T) {
 			want:       IBM,
 		},
 		{
+			name:       "Test Linode",
+			providerID: "linode://instance-id",
+			want:       Linode,
+		},
+		{
 			name:       "Test Unknown Provider",
 			providerID: "unknown://instance-id",
 			want:       "",

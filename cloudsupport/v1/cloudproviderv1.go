@@ -28,6 +28,7 @@ const (
 	vSphere      string = "vsphere"
 	Oracle       string = "oracle"
 	IBM          string = "ibm"
+	Linode       string = "linode"
 )
 
 const (
@@ -65,6 +66,8 @@ func GetCloudProviderFromNode(node *corev1.Node) string {
 			return Oracle
 		case "ibm":
 			return IBM
+		case "linode":
+			return Linode
 		}
 	}
 	return ""

@@ -1,0 +1,143 @@
+{
+    "apiVersion": "v1",
+    "kind": "Node",
+    "metadata": {
+        "annotations": {
+            "csi.volume.kubernetes.io/nodeid": "{\"linodebs.csi.linode.com\":\"71504446\"}",
+            "kubeadm.alpha.kubernetes.io/cri-socket": "unix:///run/containerd/containerd.sock",
+            "lke.linode.com/wgip": "172.31.0.1",
+            "lke.linode.com/wgpub": "MpSHoGCW4Krl2CSdewZ6XrjD0ClHc3uiFeEnfcIUi00=",
+            "node.alpha.kubernetes.io/ttl": "0",
+            "node.k8s.linode.com/private-ip": "192.168.137.215",
+            "projectcalico.org/IPv4Address": "192.168.137.215/17",
+            "projectcalico.org/IPv4IPIPTunnelAddr": "10.2.0.1",
+            "volumes.kubernetes.io/controller-managed-attach-detach": "true"
+        },
+        "creationTimestamp": "2025-02-07T15:09:22Z",
+        "labels": {
+            "beta.kubernetes.io/arch": "amd64",
+            "beta.kubernetes.io/instance-type": "g6-standard-1",
+            "beta.kubernetes.io/os": "linux",
+            "failure-domain.beta.kubernetes.io/region": "eu-central",
+            "kubernetes.io/arch": "amd64",
+            "kubernetes.io/hostname": "lke99535-149699-641dcb2a5313",
+            "kubernetes.io/os": "linux",
+            "lke.linode.com/pool-id": "149699",
+            "node.k8s.linode.com/host-uuid": "ce4658c7027b91c15bcde5e1eab1237b0fa467f7",
+            "node.kubernetes.io/instance-type": "g6-standard-1",
+            "topology.kubernetes.io/region": "eu-central",
+            "topology.linode.com/region": "eu-central"
+        },
+        "name": "lke99535-149699-641dcb2a5313",
+        "resourceVersion": "47369288",
+        "uid": "f6555f9e-40e1-44c3-b3b7-cc84b18d87c2"
+    },
+    "spec": {
+        "podCIDR": "10.2.0.0/25",
+        "podCIDRs": [
+            "10.2.0.0/25"
+        ],
+        "providerID": "linode://71504446"
+    },
+    "status": {
+        "addresses": [
+            {
+                "address": "lke99535-149699-641dcb2a5313",
+                "type": "Hostname"
+            },
+            {
+                "address": "192.168.137.215",
+                "type": "InternalIP"
+            }
+        ],
+        "allocatable": {
+            "cpu": "1",
+            "ephemeral-storage": "47484676837",
+            "hugepages-1Gi": "0",
+            "hugepages-2Mi": "0",
+            "memory": "1924900Ki",
+            "pods": "110"
+        },
+        "capacity": {
+            "cpu": "1",
+            "ephemeral-storage": "51524172Ki",
+            "hugepages-1Gi": "0",
+            "hugepages-2Mi": "0",
+            "memory": "2027300Ki",
+            "pods": "110"
+        },
+        "conditions": [
+            {
+                "lastHeartbeatTime": "2025-02-07T15:10:09Z",
+                "lastTransitionTime": "2025-02-07T15:10:09Z",
+                "message": "Calico is running on this node",
+                "reason": "CalicoIsUp",
+                "status": "False",
+                "type": "NetworkUnavailable"
+            },
+            {
+                "lastHeartbeatTime": "2025-02-25T19:35:42Z",
+                "lastTransitionTime": "2025-02-07T15:09:21Z",
+                "message": "kubelet has sufficient memory available",
+                "reason": "KubeletHasSufficientMemory",
+                "status": "False",
+                "type": "MemoryPressure"
+            },
+            {
+                "lastHeartbeatTime": "2025-02-25T19:35:42Z",
+                "lastTransitionTime": "2025-02-07T15:09:21Z",
+                "message": "kubelet has no disk pressure",
+                "reason": "KubeletHasNoDiskPressure",
+                "status": "False",
+                "type": "DiskPressure"
+            },
+            {
+                "lastHeartbeatTime": "2025-02-25T19:35:42Z",
+                "lastTransitionTime": "2025-02-07T15:09:21Z",
+                "message": "kubelet has sufficient PID available",
+                "reason": "KubeletHasSufficientPID",
+                "status": "False",
+                "type": "PIDPressure"
+            },
+            {
+                "lastHeartbeatTime": "2025-02-25T19:35:42Z",
+                "lastTransitionTime": "2025-02-07T15:09:40Z",
+                "message": "kubelet is posting ready status",
+                "reason": "KubeletReady",
+                "status": "True",
+                "type": "Ready"
+            }
+        ],
+        "daemonEndpoints": {
+            "kubeletEndpoint": {
+                "Port": 10250
+            }
+        },
+        "nodeInfo": {
+            "architecture": "amd64",
+            "bootID": "b8dec8a1-5576-4616-8a9d-64d8cbe7ac01",
+            "containerRuntimeVersion": "containerd://1.7.22",
+            "kernelVersion": "6.1.0-27-cloud-amd64",
+            "kubeProxyVersion": "",
+            "kubeletVersion": "v1.31.0",
+            "machineID": "7a3522a313d14078a761ceefcdfc8c0e",
+            "operatingSystem": "linux",
+            "osImage": "Debian GNU/Linux 12 (bookworm)",
+            "systemUUID": "7a3522a313d14078a761ceefcdfc8c0e"
+        },
+        "volumesAttached": [
+            {
+                "devicePath": "",
+                "name": "kubernetes.io/csi/linodebs.csi.linode.com^994306-pvcae4987f200604d5a"
+            },
+            {
+                "devicePath": "",
+                "name": "kubernetes.io/csi/linodebs.csi.linode.com^996442-pvcc5f581f4459b4599"
+            }
+        ],
+        "volumesInUse": [
+            "kubernetes.io/csi/linodebs.csi.linode.com^994306-pvcae4987f200604d5a",
+            "kubernetes.io/csi/linodebs.csi.linode.com^996442-pvcc5f581f4459b4599"
+        ]
+    }
+}
