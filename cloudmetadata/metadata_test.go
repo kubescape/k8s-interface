@@ -23,6 +23,9 @@ var eks []byte
 //go:embed testdata/gke.json
 var gke []byte
 
+//go:embed testdata/linode.json
+var linode []byte
+
 //go:embed testdata/vsphere.json
 var vsphere []byte
 
@@ -94,6 +97,19 @@ func TestGetCloudMetadata(t *testing.T) {
 				PrivateIP:    "1.1.1.2",
 				PublicIP:     "",
 				Hostname:     "gke-cluster-pool-1-123456",
+			},
+			wantErr: false,
+		},
+		{
+			name: "Linode provider",
+			node: linode,
+			want: &apitypes.CloudMetadata{
+				Provider:     ProviderLinode,
+				InstanceType: "g6-standard-1",
+				Region:       "eu-central",
+				InstanceID:   "71504446",
+				PrivateIP:    "192.168.137.215",
+				Hostname:     "lke99535-149699-641dcb2a5313",
 			},
 			wantErr: false,
 		},
