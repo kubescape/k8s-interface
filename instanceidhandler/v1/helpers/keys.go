@@ -40,6 +40,12 @@ const (
 	WlidMetadataKey                   = metadataPrefix + "/wlid"
 )
 
+// NP annotations
+const (
+	ActionGUIDAnnotation = "action-guid"
+	GenerateByAnnotation = "generated-by"
+)
+
 // metadata values
 const (
 	ContextMetadataKeyFiltered    = "filtered"
