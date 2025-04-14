@@ -53,6 +53,15 @@ const (
 	UserNetworkNeighborhoodPrefix = "ug-"
 )
 
+// sbom metadata keys and values
+const (
+	ArtifactTypeMetadataKey = metadataPrefix + "/sbom-type"
+	ContainerArtifactType   = "container"
+	HostArtifactType        = "host"
+	ImageArtifactType       = "image"
+	NodeArtifactType        = "node"
+)
+
 // string format: apiVersion-<apiVersion>/namespace-<namespace>/kind-<kind>/name-<name>/...
 const (
 	StringFormatSeparator = "/"
