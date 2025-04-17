@@ -2,12 +2,13 @@ package cloudmetadata
 
 import (
 	"context"
-	"fmt"
 	"strings"
 
 	apitypes "github.com/armosec/armoapi-go/armotypes"
 	"github.com/aws/aws-sdk-go/aws/ec2metadata"
 	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/kubescape/go-logger"
+	"github.com/kubescape/go-logger/helpers"
 	corev1 "k8s.io/api/core/v1"
 )
 
@@ -86,7 +87,7 @@ func GetCloudMetadata(ctx context.Context, node *corev1.Node, nodeName string) (
 		metadata = extractExoscaleMetadata(node, metadata)
 	default:
 		metadata.Provider = ProviderUnknown
-		return nil, fmt.Errorf("unknown cloud provider for node %s: %s", nodeName, providerID)
+		logger.L().Ctx(ctx).Warning("unknown cloud provider for node %s: %s", helpers.String("nodeName", nodeName))
 	}
 
 	// Extract common metadata from node status
