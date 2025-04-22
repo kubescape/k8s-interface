@@ -86,7 +86,6 @@ func GetCloudMetadata(ctx context.Context, node *corev1.Node, nodeName string) (
 		metadata.Provider = ProviderExoscale
 		metadata = extractExoscaleMetadata(node, metadata)
 	default:
-		metadata.Provider = ProviderUnknown
 		logger.L().Ctx(ctx).Warning("unknown cloud provider for node %s: %s", helpers.String("nodeName", nodeName))
 	}
 
