@@ -8,6 +8,8 @@ import (
 	apitypes "github.com/armosec/armoapi-go/armotypes"
 	"github.com/aws/aws-sdk-go/aws/ec2metadata"
 	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/kubescape/go-logger"
+	"github.com/kubescape/go-logger/helpers"
 	corev1 "k8s.io/api/core/v1"
 )
 
@@ -28,6 +30,8 @@ const (
 	ProviderEquinixMetal = "equinixmetal" // formerly Packet
 	ProviderExoscale     = "exoscale"
 	ProviderUnknown      = "unknown"
+
+	TestMode = "testmode"
 )
 
 // GetCloudMetadata retrieves cloud metadata for a given node
@@ -86,7 +90,11 @@ func GetCloudMetadata(ctx context.Context, node *corev1.Node, nodeName string) (
 		metadata = extractExoscaleMetadata(node, metadata)
 	default:
 		metadata.Provider = ProviderUnknown
-		return nil, fmt.Errorf("unknown cloud provider for node %s: %s", nodeName, providerID)
+		if v := ctx.Value(TestMode); v != nil {
+			logger.L().Ctx(ctx).Warning("Test mode: unknown cloud provider for node %s: %s", helpers.String("nodeName", nodeName), helpers.String("providerID", providerID))
+		} else {
+			return nil, fmt.Errorf("unknown cloud provider for node %s: %s", nodeName, providerID)
+		}
 	}
 
 	// Extract common metadata from node status
