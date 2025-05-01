@@ -33,7 +33,7 @@ func checkAllsFunctions(t *testing.T, object, apiversion, namespace, kind, name,
 	}
 	containers, err := podWorkload.GetContainers()
 	require.NoError(t, err)
-	podWorkloadInstanceID, err := ListInstanceIDs(ownerReference, containers, container, podWorkload.GetApiVersion(), podWorkload.GetNamespace(), podWorkload.GetKind(), podWorkload.GetName(), "")
+	podWorkloadInstanceID, err := ListInstanceIDs(ownerReference, containers, container, podWorkload.GetApiVersion(), podWorkload.GetNamespace(), podWorkload.GetKind(), podWorkload.GetName(), "", "")
 	require.NoError(t, err)
 
 	assert.Equal(t, 1, len(podWorkloadInstanceID))
@@ -60,6 +60,7 @@ func TestInstanceID(t *testing.T) {
 		helpers.KindMetadataKey:          "ReplicaSet",
 		helpers.NameMetadataKey:          "nginx-84f5585d68",
 		helpers.ContainerNameMetadataKey: "nginx",
+		helpers.TemplateHashKey:          "",
 	}
 
 	err := checkAllsFunctions(t, deployment, "apps/v1", "default", "ReplicaSet", "nginx-84f5585d68", "nginx", "apiVersion-apps/v1/namespace-default/kind-ReplicaSet/name-nginx-84f5585d68/containerName-nginx", "apiVersion-apps/v1/namespace-default/kind-ReplicaSet/name-nginx-84f5585d68", "57366ade3da2e7ba01f8b78251cb57bd70840939f4f207da91cb092b30c06feb", expectedLabels)
@@ -72,6 +73,7 @@ func TestInstanceID(t *testing.T) {
 		helpers.KindMetadataKey:          "Job",
 		helpers.NameMetadataKey:          "nginx-job",
 		helpers.ContainerNameMetadataKey: "nginx-job",
+		helpers.TemplateHashKey:          "",
 	}
 	err = checkAllsFunctions(t, jobPod, "batch/v1", "default", "Job", "nginx-job", "nginx-job", "apiVersion-batch/v1/namespace-default/kind-Job/name-nginx-job/containerName-nginx-job", "apiVersion-batch/v1/namespace-default/kind-Job/name-nginx-job", "1fdef304b3383588f0e8a267914746de2bf03e1652908d57232cd543a87541c5", expectedLabels)
 	assert.NoError(t, err)
@@ -83,6 +85,7 @@ func TestInstanceID(t *testing.T) {
 		helpers.KindMetadataKey:          "Pod",
 		helpers.NameMetadataKey:          "nginx",
 		helpers.ContainerNameMetadataKey: "nginx",
+		helpers.TemplateHashKey:          "",
 	}
 	err = checkAllsFunctions(t, mockPod, "v1", "default", "Pod", "nginx", "nginx", "apiVersion-v1/namespace-default/kind-Pod/name-nginx/containerName-nginx", "apiVersion-v1/namespace-default/kind-Pod/name-nginx", "1ba506b28f9ee9c7e8a0c98840fe5a1fe21142d225ecc526fbb535d0d6344aaf", expectedLabels)
 	assert.NoError(t, err)

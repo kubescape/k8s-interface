@@ -332,7 +332,7 @@ func Test_listInstanceIDs(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := ListInstanceIDs(tt.args.ownerReferences, tt.args.containers, container, tt.args.apiVersion, tt.args.namespace, tt.args.kind, tt.args.name, "")
+			got, err := ListInstanceIDs(tt.args.ownerReferences, tt.args.containers, container, tt.args.apiVersion, tt.args.namespace, tt.args.kind, tt.args.name, "", "")
 			if (err != nil) != tt.wantErr {
 				t.Errorf("listInstanceIDs() error = %v, wantErr %v", err, tt.wantErr)
 				return

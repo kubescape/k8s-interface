@@ -27,6 +27,10 @@ const (
 
 // GenerateInstanceID generates instance ID from workload
 func GenerateInstanceID(w workloadinterface.IWorkload) ([]instanceidhandler.IInstanceID, error) {
+	var templateHash string
+	if podHash, ok := w.GetLabel("pod-template-hash"); ok && podHash != "" {
+		templateHash = podHash
+	}
 	ownerReferences, err := w.GetOwnerReferences()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get owner references: %v", err)
@@ -49,7 +53,8 @@ func GenerateInstanceID(w workloadinterface.IWorkload) ([]instanceidhandler.IIns
 					return nil, fmt.Errorf("failed to get pod spec: %v", err)
 				}
 				DeepHashObject(podTemplateSpecHasher, spec)
-				s[len(s)-1] = rand.SafeEncodeString(fmt.Sprint(podTemplateSpecHasher.Sum32()))
+				templateHash = rand.SafeEncodeString(fmt.Sprint(podTemplateSpecHasher.Sum32()))
+				s[len(s)-1] = templateHash
 				alternateName = strings.Join(s, "-")
 			}
 		} else if ownerReference.Kind == "StatefulSet" {
@@ -64,7 +69,7 @@ func GenerateInstanceID(w workloadinterface.IWorkload) ([]instanceidhandler.IIns
 		return nil, err
 	}
 
-	c, err := containerinstance.ListInstanceIDs(ownerReference, containers, Container, w.GetApiVersion(), w.GetNamespace(), w.GetKind(), w.GetName(), alternateName)
+	c, err := containerinstance.ListInstanceIDs(ownerReference, containers, Container, w.GetApiVersion(), w.GetNamespace(), w.GetKind(), w.GetName(), alternateName, templateHash)
 	if err != nil {
 		return nil, err
 	}
@@ -74,7 +79,7 @@ func GenerateInstanceID(w workloadinterface.IWorkload) ([]instanceidhandler.IIns
 		return nil, err
 	}
 
-	initC, err := containerinstance.ListInstanceIDs(ownerReference, initContainers, InitContainer, w.GetApiVersion(), w.GetNamespace(), w.GetKind(), w.GetName(), alternateName)
+	initC, err := containerinstance.ListInstanceIDs(ownerReference, initContainers, InitContainer, w.GetApiVersion(), w.GetNamespace(), w.GetKind(), w.GetName(), alternateName, templateHash)
 	if err != nil {
 		return nil, err
 	}
@@ -85,7 +90,7 @@ func GenerateInstanceID(w workloadinterface.IWorkload) ([]instanceidhandler.IIns
 		return nil, err
 	}
 
-	ephemeralC, err := containerinstance.ListInstanceIDs(ownerReference, convertEphemeralToContainers(ephemeralContainers), EphemeralContainer, w.GetApiVersion(), w.GetNamespace(), w.GetKind(), w.GetName(), alternateName)
+	ephemeralC, err := containerinstance.ListInstanceIDs(ownerReference, convertEphemeralToContainers(ephemeralContainers), EphemeralContainer, w.GetApiVersion(), w.GetNamespace(), w.GetKind(), w.GetName(), alternateName, templateHash)
 	if err != nil {
 		return nil, err
 	}

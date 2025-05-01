@@ -24,7 +24,7 @@ func validateInstanceID(instanceID *InstanceID) error {
 	return nil
 }
 
-func ListInstanceIDs(ownerReference *metav1.OwnerReference, containers []core1.Container, instanceType, apiVersion, namespace, kind, name, alternateName string) ([]InstanceID, error) {
+func ListInstanceIDs(ownerReference *metav1.OwnerReference, containers []core1.Container, instanceType, apiVersion, namespace, kind, name, alternateName, templateHash string) ([]InstanceID, error) {
 	instanceIDs := make([]InstanceID, 0)
 
 	if len(containers) == 0 {
@@ -48,6 +48,7 @@ func ListInstanceIDs(ownerReference *metav1.OwnerReference, containers []core1.C
 			AlternateName: alternateName,
 			ContainerName: containers[i].Name,
 			InstanceType:  instanceType,
+			TemplateHash:  templateHash,
 		}
 
 		if err := validateInstanceID(&instanceID); err != nil {
