@@ -33,6 +33,7 @@ type InstanceID struct {
 	AlternateName string
 	ContainerName string
 	InstanceType  string
+	TemplateHash  string
 }
 
 func (id *InstanceID) GetInstanceType() helpers.InstanceType {
@@ -76,6 +77,7 @@ func (id *InstanceID) GetLabels() map[string]string {
 		helpers.KindMetadataKey:          id.Kind,
 		helpers.NameMetadataKey:          id.Name,
 		helpers.ContainerNameMetadataKey: id.ContainerName,
+		helpers.TemplateHashKey:          id.TemplateHash,
 	}
 }
 

@@ -52,6 +52,7 @@ func TestGenerateInstanceID(t *testing.T) {
 					Name:          "nginx-84f5585d68",
 					ContainerName: "nginx",
 					InstanceType:  Container,
+					TemplateHash:  "84f5585d68",
 				},
 				&containerinstance.InstanceID{
 					ApiVersion:    "apps/v1",
@@ -60,6 +61,7 @@ func TestGenerateInstanceID(t *testing.T) {
 					Name:          "nginx-84f5585d68",
 					ContainerName: "bla",
 					InstanceType:  InitContainer,
+					TemplateHash:  "84f5585d68",
 				},
 				&containerinstance.InstanceID{
 					ApiVersion:    "apps/v1",
@@ -68,6 +70,7 @@ func TestGenerateInstanceID(t *testing.T) {
 					Name:          "nginx-84f5585d68",
 					ContainerName: "abc",
 					InstanceType:  EphemeralContainer,
+					TemplateHash:  "84f5585d68",
 				},
 			},
 			wantSlug: "replicaset-nginx-84f5585d68",
@@ -101,6 +104,7 @@ func TestGenerateInstanceID(t *testing.T) {
 					ContainerName: "kubevuln-scheduler",
 					InstanceType:  Container,
 					AlternateName: "kubevuln-scheduler-6656c46778",
+					TemplateHash:  "6656c46778",
 				},
 			},
 			wantSlug: "job-kubevuln-scheduler-6656c46778",
