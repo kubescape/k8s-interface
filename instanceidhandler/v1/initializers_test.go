@@ -23,6 +23,8 @@ var (
 	cronjob2 string
 	//go:embed testdata/cronjob3.json
 	cronjob3 string
+	//go:embed testdata/daemonset.json
+	daemonset string
 	//go:embed testdata/deployment.json
 	deployment string
 	//go:embed testdata/jobPod.json
@@ -41,6 +43,23 @@ func TestGenerateInstanceID(t *testing.T) {
 		wantSlug  string
 		wantErr   assert.ErrorAssertionFunc
 	}{
+		{
+			name:      "daemonset",
+			sWorkload: daemonset,
+			want: []instanceidhandler.IInstanceID{
+				&containerinstance.InstanceID{
+					ApiVersion:    "apps/v1",
+					Namespace:     "kubescape",
+					Kind:          "DaemonSet",
+					Name:          "node-agent",
+					ContainerName: "node-agent",
+					InstanceType:  Container,
+					AlternateName: "node-agent-f9dd7596f",
+				},
+			},
+			wantSlug: "daemonset-node-agent-f9dd7596f",
+			wantErr:  assert.NoError,
+		},
 		{
 			name:      "deployment",
 			sWorkload: deployment,
@@ -103,11 +122,11 @@ func TestGenerateInstanceID(t *testing.T) {
 					Name:          "kubevuln-scheduler-28677846",
 					ContainerName: "kubevuln-scheduler",
 					InstanceType:  Container,
-					AlternateName: "kubevuln-scheduler-6656c46778",
-					TemplateHash:  "6656c46778",
+					AlternateName: "kubevuln-scheduler-5976555c87",
+					TemplateHash:  "5976555c87",
 				},
 			},
-			wantSlug: "job-kubevuln-scheduler-6656c46778",
+			wantSlug: "job-kubevuln-scheduler-5976555c87",
 			wantErr:  assert.NoError,
 		},
 		{
@@ -132,7 +151,7 @@ func TestGenerateInstanceID(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			wp, err := workloadinterface.NewWorkload([]byte(tt.sWorkload))
 			require.NoError(t, err)
-			got, err := GenerateInstanceID(wp)
+			got, err := GenerateInstanceID(wp, nil)
 			if !tt.wantErr(t, err, fmt.Sprintf("GenerateInstanceID - %s", tt.name)) {
 				return
 			}
@@ -151,7 +170,7 @@ func TestSameSlug(t *testing.T) {
 	for _, s := range []string{cronjob1, cronjob2, cronjob3} {
 		wp, err := workloadinterface.NewWorkload([]byte(s))
 		require.NoError(t, err)
-		ins, err := GenerateInstanceID(wp)
+		ins, err := GenerateInstanceID(wp, nil)
 		require.NoError(t, err)
 		slug, err := ins[0].(*containerinstance.InstanceID).GetSlug(true)
 		require.NoError(t, err)
@@ -166,7 +185,7 @@ func TestSameSlug(t *testing.T) {
 func TestInitInstanceID(t *testing.T) {
 	wp, err := workloadinterface.NewWorkload([]byte(mockPod))
 	require.NoError(t, err)
-	insFromWorkload, err := GenerateInstanceID(wp)
+	insFromWorkload, err := GenerateInstanceID(wp, nil)
 	require.NoError(t, err)
 
 	p := &core1.Pod{}
