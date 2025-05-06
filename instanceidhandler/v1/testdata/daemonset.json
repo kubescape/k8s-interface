@@ -1,0 +1,529 @@
+{
+    "apiVersion": "v1",
+    "kind": "Pod",
+    "metadata": {
+        "annotations": {
+            "checksum/cloud-config": "a6f9d0c1076bff9fc71951c5a048594ce15879e62a3551740b75e2b534949f2e",
+            "checksum/cloud-secret": "b1eacf5bbae8bb4ac49264dada203da3cb6503755321f496618301054ca8b305",
+            "checksum/node-agent-config": "226a73811e102333e853e928d517c48df68e8b71327a7d7960e6c50d4d777d2e",
+            "container.apparmor.security.beta.kubernetes.io/node-agent": "unconfined"
+        },
+        "creationTimestamp": "2025-05-06T05:52:53Z",
+        "generateName": "node-agent-",
+        "labels": {
+            "app": "node-agent",
+            "app.kubernetes.io/component": "node-agent",
+            "app.kubernetes.io/instance": "kubescape",
+            "app.kubernetes.io/managed-by": "Helm",
+            "app.kubernetes.io/name": "kubescape-operator",
+            "app.kubernetes.io/part-of": "kubescape",
+            "app.kubernetes.io/version": "1.27.4",
+            "controller-revision-hash": "f9dd7596f",
+            "helm.sh/chart": "kubescape-operator-1.27.4",
+            "kubescape.io/ignore": "true",
+            "kubescape.io/tier": "core",
+            "otel": "enabled",
+            "pod-template-generation": "1",
+            "tier": "ks-control-plane"
+        },
+        "name": "node-agent-4l822",
+        "namespace": "kubescape",
+        "ownerReferences": [
+            {
+                "apiVersion": "apps/v1",
+                "blockOwnerDeletion": true,
+                "controller": true,
+                "kind": "DaemonSet",
+                "name": "node-agent",
+                "uid": "64352146-0444-4798-99cb-0042e8a51c62"
+            }
+        ],
+        "resourceVersion": "1128",
+        "uid": "fc118872-0867-4baa-bbdf-0331672cfc61"
+    },
+    "spec": {
+        "affinity": {
+            "nodeAffinity": {
+                "requiredDuringSchedulingIgnoredDuringExecution": {
+                    "nodeSelectorTerms": [
+                        {
+                            "matchFields": [
+                                {
+                                    "key": "metadata.name",
+                                    "operator": "In",
+                                    "values": [
+                                        "kind-control-plane"
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                }
+            }
+        },
+        "automountServiceAccountToken": true,
+        "containers": [
+            {
+                "env": [
+                    {
+                        "name": "GOMEMLIMIT",
+                        "valueFrom": {
+                            "resourceFieldRef": {
+                                "divisor": "1",
+                                "resource": "limits.memory"
+                            }
+                        }
+                    },
+                    {
+                        "name": "GOMAXPROCS",
+                        "valueFrom": {
+                            "resourceFieldRef": {
+                                "divisor": "1",
+                                "resource": "limits.cpu"
+                            }
+                        }
+                    },
+                    {
+                        "name": "HOST_ROOT",
+                        "value": "/host"
+                    },
+                    {
+                        "name": "KS_LOGGER_LEVEL",
+                        "value": "info"
+                    },
+                    {
+                        "name": "KS_LOGGER_NAME",
+                        "value": "zap"
+                    },
+                    {
+                        "name": "OTEL_COLLECTOR_SVC",
+                        "value": "otel-collector:4318"
+                    },
+                    {
+                        "name": "NODE_NAME",
+                        "valueFrom": {
+                            "fieldRef": {
+                                "apiVersion": "v1",
+                                "fieldPath": "spec.nodeName"
+                            }
+                        }
+                    },
+                    {
+                        "name": "POD_NAME",
+                        "valueFrom": {
+                            "fieldRef": {
+                                "apiVersion": "v1",
+                                "fieldPath": "metadata.name"
+                            }
+                        }
+                    },
+                    {
+                        "name": "NAMESPACE_NAME",
+                        "valueFrom": {
+                            "fieldRef": {
+                                "apiVersion": "v1",
+                                "fieldPath": "metadata.namespace"
+                            }
+                        }
+                    },
+                    {
+                        "name": "NodeName"
+                    }
+                ],
+                "image": "quay.io/kubescape/node-agent:v0.2.306",
+                "imagePullPolicy": "IfNotPresent",
+                "livenessProbe": {
+                    "failureThreshold": 3,
+                    "httpGet": {
+                        "path": "/livez",
+                        "port": 7888,
+                        "scheme": "HTTP"
+                    },
+                    "initialDelaySeconds": 60,
+                    "periodSeconds": 3,
+                    "successThreshold": 1,
+                    "timeoutSeconds": 1
+                },
+                "name": "node-agent",
+                "readinessProbe": {
+                    "failureThreshold": 3,
+                    "httpGet": {
+                        "path": "/readyz",
+                        "port": 7888,
+                        "scheme": "HTTP"
+                    },
+                    "initialDelaySeconds": 3,
+                    "periodSeconds": 3,
+                    "successThreshold": 1,
+                    "timeoutSeconds": 1
+                },
+                "resources": {
+                    "limits": {
+                        "cpu": "500m",
+                        "memory": "1400Mi"
+                    },
+                    "requests": {
+                        "cpu": "100m",
+                        "memory": "180Mi"
+                    }
+                },
+                "securityContext": {
+                    "capabilities": {
+                        "add": [
+                            "SYS_ADMIN",
+                            "SYS_PTRACE",
+                            "NET_ADMIN",
+                            "SYSLOG",
+                            "SYS_RESOURCE",
+                            "IPC_LOCK",
+                            "NET_RAW"
+                        ]
+                    },
+                    "privileged": false,
+                    "runAsUser": 0,
+                    "seLinuxOptions": {
+                        "type": "spc_t"
+                    }
+                },
+                "terminationMessagePath": "/dev/termination-log",
+                "terminationMessagePolicy": "File",
+                "volumeMounts": [
+                    {
+                        "mountPath": "/host",
+                        "name": "host"
+                    },
+                    {
+                        "mountPath": "/run",
+                        "name": "run"
+                    },
+                    {
+                        "mountPath": "/var",
+                        "name": "var"
+                    },
+                    {
+                        "mountPath": "/lib/modules",
+                        "name": "modules"
+                    },
+                    {
+                        "mountPath": "/sys/kernel/debug",
+                        "name": "debugfs"
+                    },
+                    {
+                        "mountPath": "/sys/fs/cgroup",
+                        "name": "cgroup"
+                    },
+                    {
+                        "mountPath": "/sys/fs/bpf",
+                        "name": "bpffs"
+                    },
+                    {
+                        "mountPath": "/data",
+                        "name": "data"
+                    },
+                    {
+                        "mountPath": "/boot",
+                        "name": "boot"
+                    },
+                    {
+                        "mountPath": "/clamav",
+                        "name": "clamrun"
+                    },
+                    {
+                        "mountPath": "/etc/credentials",
+                        "name": "cloud-secret",
+                        "readOnly": true
+                    },
+                    {
+                        "mountPath": "/etc/config/clusterData.json",
+                        "name": "ks-cloud-config",
+                        "readOnly": true,
+                        "subPath": "clusterData.json"
+                    },
+                    {
+                        "mountPath": "/etc/config/config.json",
+                        "name": "config",
+                        "readOnly": true,
+                        "subPath": "config.json"
+                    },
+                    {
+                        "mountPath": "/var/run/secrets/kubernetes.io/serviceaccount",
+                        "name": "kube-api-access-dh7lt",
+                        "readOnly": true
+                    }
+                ]
+            }
+        ],
+        "dnsPolicy": "ClusterFirst",
+        "enableServiceLinks": true,
+        "hostPID": true,
+        "nodeName": "kind-control-plane",
+        "nodeSelector": {
+            "kubernetes.io/os": "linux"
+        },
+        "preemptionPolicy": "PreemptLowerPriority",
+        "priority": 100000100,
+        "priorityClassName": "kubescape-critical",
+        "restartPolicy": "Always",
+        "schedulerName": "default-scheduler",
+        "securityContext": {
+            "seccompProfile": {
+                "type": "Unconfined"
+            }
+        },
+        "serviceAccount": "node-agent",
+        "serviceAccountName": "node-agent",
+        "terminationGracePeriodSeconds": 30,
+        "tolerations": [
+            {
+                "effect": "NoExecute",
+                "key": "node.kubernetes.io/not-ready",
+                "operator": "Exists"
+            },
+            {
+                "effect": "NoExecute",
+                "key": "node.kubernetes.io/unreachable",
+                "operator": "Exists"
+            },
+            {
+                "effect": "NoSchedule",
+                "key": "node.kubernetes.io/disk-pressure",
+                "operator": "Exists"
+            },
+            {
+                "effect": "NoSchedule",
+                "key": "node.kubernetes.io/memory-pressure",
+                "operator": "Exists"
+            },
+            {
+                "effect": "NoSchedule",
+                "key": "node.kubernetes.io/pid-pressure",
+                "operator": "Exists"
+            },
+            {
+                "effect": "NoSchedule",
+                "key": "node.kubernetes.io/unschedulable",
+                "operator": "Exists"
+            }
+        ],
+        "volumes": [
+            {
+                "hostPath": {
+                    "path": "/",
+                    "type": ""
+                },
+                "name": "host"
+            },
+            {
+                "hostPath": {
+                    "path": "/run",
+                    "type": ""
+                },
+                "name": "run"
+            },
+            {
+                "hostPath": {
+                    "path": "/var",
+                    "type": ""
+                },
+                "name": "var"
+            },
+            {
+                "hostPath": {
+                    "path": "/sys/fs/cgroup",
+                    "type": ""
+                },
+                "name": "cgroup"
+            },
+            {
+                "hostPath": {
+                    "path": "/lib/modules",
+                    "type": ""
+                },
+                "name": "modules"
+            },
+            {
+                "hostPath": {
+                    "path": "/sys/fs/bpf",
+                    "type": ""
+                },
+                "name": "bpffs"
+            },
+            {
+                "hostPath": {
+                    "path": "/sys/kernel/debug",
+                    "type": ""
+                },
+                "name": "debugfs"
+            },
+            {
+                "hostPath": {
+                    "path": "/boot",
+                    "type": ""
+                },
+                "name": "boot"
+            },
+            {
+                "emptyDir": {},
+                "name": "data"
+            },
+            {
+                "emptyDir": {},
+                "name": "clamdb"
+            },
+            {
+                "emptyDir": {},
+                "name": "clamrun"
+            },
+            {
+                "configMap": {
+                    "defaultMode": 420,
+                    "items": [
+                        {
+                            "key": "clamd.conf",
+                            "path": "clamd.conf"
+                        },
+                        {
+                            "key": "freshclam.conf",
+                            "path": "freshclam.conf"
+                        }
+                    ],
+                    "name": "clamav"
+                },
+                "name": "etc"
+            },
+            {
+                "name": "cloud-secret",
+                "secret": {
+                    "defaultMode": 420,
+                    "secretName": "cloud-secret"
+                }
+            },
+            {
+                "configMap": {
+                    "defaultMode": 420,
+                    "items": [
+                        {
+                            "key": "clusterData",
+                            "path": "clusterData.json"
+                        },
+                        {
+                            "key": "services",
+                            "path": "services.json"
+                        }
+                    ],
+                    "name": "ks-cloud-config"
+                },
+                "name": "ks-cloud-config"
+            },
+            {
+                "configMap": {
+                    "defaultMode": 420,
+                    "items": [
+                        {
+                            "key": "config.json",
+                            "path": "config.json"
+                        }
+                    ],
+                    "name": "node-agent"
+                },
+                "name": "config"
+            },
+            {
+                "name": "kube-api-access-dh7lt",
+                "projected": {
+                    "defaultMode": 420,
+                    "sources": [
+                        {
+                            "serviceAccountToken": {
+                                "expirationSeconds": 3607,
+                                "path": "token"
+                            }
+                        },
+                        {
+                            "configMap": {
+                                "items": [
+                                    {
+                                        "key": "ca.crt",
+                                        "path": "ca.crt"
+                                    }
+                                ],
+                                "name": "kube-root-ca.crt"
+                            }
+                        },
+                        {
+                            "downwardAPI": {
+                                "items": [
+                                    {
+                                        "fieldRef": {
+                                            "apiVersion": "v1",
+                                            "fieldPath": "metadata.namespace"
+                                        },
+                                        "path": "namespace"
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                }
+            }
+        ]
+    },
+    "status": {
+        "conditions": [
+            {
+                "lastProbeTime": null,
+                "lastTransitionTime": "2025-05-06T05:52:54Z",
+                "status": "True",
+                "type": "Initialized"
+            },
+            {
+                "lastProbeTime": null,
+                "lastTransitionTime": "2025-05-06T05:53:54Z",
+                "status": "True",
+                "type": "Ready"
+            },
+            {
+                "lastProbeTime": null,
+                "lastTransitionTime": "2025-05-06T05:53:54Z",
+                "status": "True",
+                "type": "ContainersReady"
+            },
+            {
+                "lastProbeTime": null,
+                "lastTransitionTime": "2025-05-06T05:52:54Z",
+                "status": "True",
+                "type": "PodScheduled"
+            }
+        ],
+        "containerStatuses": [
+            {
+                "containerID": "containerd://caa03cd949ba9e786ce222cc8bfb8e99c530b3146451736e0031ba9b84269d60",
+                "image": "quay.io/kubescape/node-agent:v0.2.306",
+                "imageID": "quay.io/kubescape/node-agent@sha256:09ee5c4e4833807cd63a726707a06cd9d4f69ed9b935b3651f541197df83ff1b",
+                "lastState": {},
+                "name": "node-agent",
+                "ready": true,
+                "restartCount": 0,
+                "started": true,
+                "state": {
+                    "running": {
+                        "startedAt": "2025-05-06T05:53:39Z"
+                    }
+                }
+            }
+        ],
+        "hostIP": "172.18.0.2",
+        "phase": "Running",
+        "podIP": "10.244.0.11",
+        "podIPs": [
+            {
+                "ip": "10.244.0.11"
+            },
+            {
+                "ip": "fd00:10:244::b"
+            }
+        ],
+        "qosClass": "Burstable",
+        "startTime": "2025-05-06T05:52:54Z"
+    }
+}

@@ -41,6 +41,16 @@
                     "-headers=Content-Type:application/json",
                     "-path-body=/home/ks/request-body.json"
                 ],
+                "env": [
+                    {
+                        "name": "DD_INSTRUMENTATION_INSTALL_ID",
+                        "value": "0ca6045d-9232-4ad0-bdf0-12330094bcc3"
+                    },
+                    {
+                        "name": "DD_INJECT_START_TIME",
+                        "value": "1746527100"
+                    }
+                ],
                 "image": "quay.io/kubescape/http-request:v0.2.8",
                 "imagePullPolicy": "IfNotPresent",
                 "name": "kubevuln-scheduler",
