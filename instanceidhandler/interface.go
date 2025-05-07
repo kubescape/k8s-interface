@@ -12,4 +12,5 @@ type IInstanceID interface {
 	GetLabels() map[string]string
 	// GetSlug returns a string with a human-friendly and Kubernetes-compatible name
 	GetSlug(noContainer bool) (string, error)
+	GetTemplateHash() string
 }

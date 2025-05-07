@@ -96,3 +96,7 @@ func (id *InstanceID) GetSlug(noContainer bool) (string, error) {
 	}
 	return names.InstanceIDToSlug(name, kind, containerName, hashedID)
 }
+
+func (id *InstanceID) GetTemplateHash() string {
+	return id.TemplateHash
+}
