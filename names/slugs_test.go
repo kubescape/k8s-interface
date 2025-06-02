@@ -508,7 +508,7 @@ func TestStringToSlug(t *testing.T) {
 			if slug != tc.expected {
 				t.Errorf("Expected %s, got %s", tc.expected, slug)
 			}
-			assert.LessOrEqual(t, len(slug), maxDNSSubdomainLength)
+			assert.LessOrEqual(t, len(slug), MaxDNSSubdomainLength)
 		})
 	}
 }

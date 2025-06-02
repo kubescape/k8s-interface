@@ -7,6 +7,7 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/google/uuid"
 	"github.com/kubescape/k8s-interface/instanceidhandler"
 	"github.com/kubescape/k8s-interface/instanceidhandler/v1/helpers"
 	"github.com/kubescape/k8s-interface/k8sinterface"
@@ -81,7 +82,18 @@ func (id *InstanceID) GetLabels() map[string]string {
 	}
 }
 
+func (id *InstanceID) GetOneTimeSlug(noContainer bool) (string, error) {
+	u := uuid.New()
+	hexSuffix := hex.EncodeToString(u[:]) // u is [16]byte, u[:] is []byte
+	suffix := "-" + hexSuffix
+	return id.getSlugWithSuffix(noContainer, suffix)
+}
+
 func (id *InstanceID) GetSlug(noContainer bool) (string, error) {
+	return id.getSlugWithSuffix(noContainer, "")
+}
+
+func (id *InstanceID) getSlugWithSuffix(noContainer bool, suffix string) (string, error) {
 	name := id.Name
 	kind := id.Kind
 	containerName := id.ContainerName
@@ -94,7 +106,11 @@ func (id *InstanceID) GetSlug(noContainer bool) (string, error) {
 	if noContainer {
 		containerName = ""
 	}
-	return names.InstanceIDToSlug(name, kind, containerName, hashedID)
+	slug, err := names.InstanceIDToSlugWithMaxLength(name, kind, containerName, hashedID, names.MaxDNSSubdomainLength-len(suffix))
+	if err != nil {
+		return "", err
+	}
+	return slug + suffix, nil
 }
 
 func (id *InstanceID) GetTemplateHash() string {

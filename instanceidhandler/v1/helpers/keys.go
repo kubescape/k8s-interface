@@ -13,12 +13,13 @@ const (
 	ClusterRoleNameMetadataKey         = metadataPrefix + "/clusterrole-name"
 	CompletionMetadataKey              = metadataPrefix + "/completion"
 	ContainerNameMetadataKey           = metadataPrefix + "/workload-container-name"
+	ContainerTypeMetadataKey           = metadataPrefix + "/workload-container-type"
 	ContextMetadataKey                 = metadataPrefix + "/context"
-	EphemeralContainerNameMetadataKey  = metadataPrefix + "/workload-ephemeral-container-name"
+	EphemeralContainerNameMetadataKey  = metadataPrefix + "/workload-ephemeral-container-name" // DEPRECATED - use ContainerNameMetadataKey and ContainerTypeMetadataKey
 	ImageIDMetadataKey                 = metadataPrefix + "/image-id"
 	ImageNameMetadataKey               = metadataPrefix + "/image-name"
 	ImageTagMetadataKey                = metadataPrefix + "/image-tag"
-	InitContainerNameMetadataKey       = metadataPrefix + "/workload-init-container-name"
+	InitContainerNameMetadataKey       = metadataPrefix + "/workload-init-container-name" // DEPRECATED - use ContainerNameMetadataKey and ContainerTypeMetadataKey
 	InstanceIDMetadataKey              = metadataPrefix + "/instance-id"
 	KindMetadataKey                    = metadataPrefix + "/workload-kind"
 	ManagedByMetadataKey               = metadataPrefix + "/managed-by"
@@ -77,7 +78,7 @@ const (
 // Statuses
 const (
 	Initializing   = "initializing"
-	Ready          = "ready"
+	Learning       = "ready"
 	Completed      = "completed"
 	Incomplete     = "incomplete"
 	Unauthorize    = "unauthorize"
@@ -87,8 +88,8 @@ const (
 
 // Completion
 const (
-	Partial  = "partial"
-	Complete = "complete"
+	Partial = "partial"
+	Full    = "complete"
 )
 
 // Tier values

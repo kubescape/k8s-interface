@@ -10,6 +10,7 @@ type IInstanceID interface {
 	GetStringNoContainer() string
 	GetHashed() string
 	GetLabels() map[string]string
+	GetOneTimeSlug(noContainer bool) (string, error)
 	// GetSlug returns a string with a human-friendly and Kubernetes-compatible name
 	GetSlug(noContainer bool) (string, error)
 	GetTemplateHash() string
