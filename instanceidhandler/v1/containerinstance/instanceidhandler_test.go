@@ -2,6 +2,7 @@ package containerinstance
 
 import (
 	_ "embed"
+	"strings"
 	"testing"
 
 	"github.com/kubescape/k8s-interface/instanceidhandler/v1/helpers"
@@ -156,6 +157,95 @@ func TestInstanceIDToDisplayName(t *testing.T) {
 
 			assert.Equal(t, tc.want, got)
 			assert.ErrorIs(t, tc.wantErr, err)
+		})
+	}
+}
+
+func TestInstanceID_GetSlug(t *testing.T) {
+	tests := []struct {
+		name        string
+		instanceID  *InstanceID
+		noContainer bool
+		want        string
+		wantErr     error
+	}{
+		{
+			name: "basic case, no container, no alternate name",
+			instanceID: &InstanceID{
+				ApiVersion:    "v1",
+				Namespace:     "default",
+				Kind:          "Pod",
+				Name:          "my-pod",
+				ContainerName: "my-container",
+				InstanceType:  "container", // Affects GetHashed()
+			},
+			noContainer: true,
+			want:        "pod-my-pod",
+		},
+		{
+			name: "with container, no alternate name",
+			instanceID: &InstanceID{
+				ApiVersion:    "v1",
+				Namespace:     "default",
+				Kind:          "Deployment",
+				Name:          "my-deployment",
+				ContainerName: "main-app",
+				InstanceType:  "container",
+			},
+			noContainer: false,
+			want:        "deployment-my-deployment-main-app-f9c2-5136",
+		},
+		{
+			name: "with alternate name, no container",
+			instanceID: &InstanceID{
+				ApiVersion:    "apps/v1",
+				Namespace:     "kube-system",
+				Kind:          "DaemonSet",
+				Name:          "fluentd",
+				AlternateName: "fluentd-ds-alt",
+				ContainerName: "fluentd-container",
+				InstanceType:  "initContainer", // Affects GetHashed()
+			},
+			noContainer: true,
+			want:        "daemonset-fluentd-ds-alt",
+		},
+		{
+			name: "with alternate name, with container",
+			instanceID: &InstanceID{
+				ApiVersion:    "batch/v1",
+				Namespace:     "processing",
+				Kind:          "Job",
+				Name:          "data-processor",
+				AlternateName: "processor-job-alt",
+				ContainerName: "worker",
+				InstanceType:  "container",
+			},
+			noContainer: false,
+			want:        "job-processor-job-alt-worker-32c7-f0b9",
+		},
+		{
+			name: "empty container name in ID, noContainer=false",
+			instanceID: &InstanceID{
+				ApiVersion:    "v1",
+				Namespace:     "default",
+				Kind:          "Pod",
+				Name:          "pod-no-cont-name",
+				ContainerName: "", // Explicitly empty
+				InstanceType:  "container",
+			},
+			noContainer: false,
+			want:        "pod-pod-no-cont-name",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			slug, err := tt.instanceID.GetSlug(tt.noContainer)
+			assert.Equal(t, tt.want, slug)
+			assert.NoError(t, err)
+			oneTimeSlug, err := tt.instanceID.GetOneTimeSlug(tt.noContainer)
+			assert.Equal(t, tt.want, oneTimeSlug[:strings.LastIndex(oneTimeSlug, "-")])
+			assert.NoError(t, err)
 		})
 	}
 }

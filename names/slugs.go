@@ -18,15 +18,14 @@ const (
 	slugFormat     = "%s-%s"
 	slugHashLength = 4
 	// slugHashesLength is a length of the hash-based identifiers (-xxxx-xxxx) in the slug string
-	slugHashesLength        = slugHashLength*2 + 2
-	maxHashlessStringLength = maxDNSSubdomainLength - slugHashesLength
+	slugHashesLength = slugHashLength*2 + 2
 
 	// imageIDSlugFormat is a format of the Image ID slug
 	imageIDSlugFormat     = "%s-%s"
 	imageIDSlugHashLength = 6
 
-	maxDNSSubdomainLength = 253
-	maxImageNameLength    = maxDNSSubdomainLength - imageIDSlugHashLength - 1
+	MaxDNSSubdomainLength = 253
+	maxImageNameLength    = MaxDNSSubdomainLength - imageIDSlugHashLength - 1
 )
 
 // imageToDNSSubdomainReplacer is a replacer that can replace a valid, well-formed container image string to a valid DNS Subdomain
@@ -136,7 +135,7 @@ func sanitizeImage(image string) string {
 }
 
 // sanitizeInstanceIDSlug returns a sanitized instance ID slug
-func sanitizeInstanceIDSlug(instanceIDSlug, containerName, hashedID string) string {
+func sanitizeInstanceIDSlug(instanceIDSlug, containerName, hashedID string, maxLength int) string {
 	leadingDigest, trailingDigest := hashedID[:slugHashLength], hashedID[len(hashedID)-slugHashLength:]
 
 	// if container name is not empty, add it to the slug, and add the hash as well
@@ -145,6 +144,7 @@ func sanitizeInstanceIDSlug(instanceIDSlug, containerName, hashedID string) stri
 		instanceIDSlug = fmt.Sprintf("%s-%s", instanceIDSlug, containerName)
 		instanceIDSlug = fmt.Sprintf("%s-%s-%s", instanceIDSlug, leadingDigest, trailingDigest)
 	}
+	maxHashlessStringLength := maxLength - slugHashesLength
 	if len(instanceIDSlug) < maxHashlessStringLength {
 		return instanceIDSlug
 	}
@@ -157,8 +157,12 @@ func sanitizeInstanceIDSlug(instanceIDSlug, containerName, hashedID string) stri
 // If the given inputs would produce an invalid slug, it returns an appropriate error
 // Deprecated: use InstanceID.GetSlug instead
 func InstanceIDToSlug(name, kind, containerName, hashedID string) (string, error) {
+	return InstanceIDToSlugWithMaxLength(name, kind, containerName, hashedID, MaxDNSSubdomainLength)
+}
 
-	slug := sanitizeInstanceIDSlug(fmt.Sprintf(instanceIDSlugHashlessFormat, kind, name), containerName, hashedID)
+func InstanceIDToSlugWithMaxLength(name, kind, containerName, hashedID string, maxLength int) (string, error) {
+
+	slug := sanitizeInstanceIDSlug(fmt.Sprintf(instanceIDSlugHashlessFormat, kind, name), containerName, hashedID, maxLength)
 
 	var err error
 	slug = strings.ToLower(slug)
@@ -210,7 +214,7 @@ func StringToSlug(str string) (string, error) {
 
 	hashBytes := sha256.Sum256([]byte(str))
 	hashStr := hex.EncodeToString(hashBytes[:])
-	slug := sanitizeInstanceIDSlug(sanitizedStr, "", hashStr)
+	slug := sanitizeInstanceIDSlug(sanitizedStr, "", hashStr, MaxDNSSubdomainLength)
 
 	slug = strings.ToLower(slug)
 
