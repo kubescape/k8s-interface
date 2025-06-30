@@ -157,7 +157,13 @@ func GetWorkloadsImages(workload k8sinterface.IWorkload) map[string]string {
 	return images
 }
 
-type DockerConfigJsonstructure map[string]map[string]registry.AuthConfig
+type DockerConfig map[string]registry.AuthConfig
+
+type DockerConfigJsonstructure struct {
+	Auths *DockerConfig `json:"auths,omitempty"`
+	// +optional
+	HTTPHeaders map[string]string `json:"HttpHeaders,omitempty"`
+}
 
 func updateSecret(authConfig *registry.AuthConfig, serverAddress string) {
 	if authConfig.ServerAddress == "" {
@@ -203,7 +209,7 @@ func GetSecretContent(secret *corev1.Secret) (interface{}, error) {
 	// Secret types- https://github.com/kubernetes/kubernetes/blob/7693a1d5fe2a35b6e2e205f03ae9b3eddcdabc6b/pkg/apis/core/types.go#L4394-L4478
 	switch secret.Type {
 	case corev1.SecretTypeDockerConfigJson:
-		sec := make(DockerConfigJsonstructure)
+		sec := DockerConfigJsonstructure{}
 		if err := json.Unmarshal(secret.Data[corev1.DockerConfigJsonKey], &sec); err != nil {
 			return nil, err
 		}
@@ -232,7 +238,6 @@ func GetSecretContent(secret *corev1.Secret) (interface{}, error) {
 }
 
 func ParseSecret(res *corev1.Secret) ([]registry.AuthConfig, error) {
-
 	// Read secret
 	secret, err := GetSecretContent(res)
 	if err != nil {
@@ -247,7 +252,6 @@ func ParseSecret(res *corev1.Secret) ([]registry.AuthConfig, error) {
 		return sec, err
 	}
 	return sec, nil
-
 }
 
 func ReadSecret(secret interface{}) ([]registry.AuthConfig, error) {
@@ -260,10 +264,10 @@ func ReadSecret(secret interface{}) ([]registry.AuthConfig, error) {
 		return []registry.AuthConfig{{Username: sec["username"]}}, nil
 	}
 	if sec, ok := secret.(DockerConfigJsonstructure); ok {
-		if _, k := sec["auths"]; !k {
+		if sec.Auths == nil {
 			return authConfig, fmt.Errorf("cant find auths")
 		}
-		for serverAddress, auth := range sec["auths"] {
+		for serverAddress, auth := range *sec.Auths {
 			updateSecret(&auth, serverAddress)
 			authConfig = append(authConfig, auth)
 		}
