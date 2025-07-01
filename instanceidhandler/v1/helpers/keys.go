@@ -6,38 +6,42 @@ type InstanceType string
 
 // metadata keys
 const (
-	metadataPrefix                    = "kubescape.io"
-	ApiGroupMetadataKey               = metadataPrefix + "/workload-api-group"
-	ApiVersionMetadataKey             = metadataPrefix + "/workload-api-version"
-	ClusterRoleBindingNameMetadataKey = metadataPrefix + "/clusterrolebinding-name"
-	ClusterRoleNameMetadataKey        = metadataPrefix + "/clusterrole-name"
-	CompletionMetadataKey             = metadataPrefix + "/completion"
-	ContainerNameMetadataKey          = metadataPrefix + "/workload-container-name"
-	ContextMetadataKey                = metadataPrefix + "/context"
-	EphemeralContainerNameMetadataKey = metadataPrefix + "/workload-ephemeral-container-name"
-	ImageIDMetadataKey                = metadataPrefix + "/image-id"
-	ImageNameMetadataKey              = metadataPrefix + "/image-name"
-	ImageTagMetadataKey               = metadataPrefix + "/image-tag"
-	InitContainerNameMetadataKey      = metadataPrefix + "/workload-init-container-name"
-	InstanceIDMetadataKey             = metadataPrefix + "/instance-id"
-	KindMetadataKey                   = metadataPrefix + "/workload-kind"
-	ManagedByMetadataKey              = metadataPrefix + "/managed-by"
-	NameMetadataKey                   = metadataPrefix + "/workload-name"
-	NamespaceMetadataKey              = metadataPrefix + "/workload-namespace"
-	RbacResourceMetadataKey           = metadataPrefix + "/rbac-resource"
-	ResourceSizeMetadataKey           = metadataPrefix + "/resource-size"
-	ResourceVersionMetadataKey        = metadataPrefix + "/workload-resource-version"
-	RoleBindingNameMetadataKey        = metadataPrefix + "/rolebinding-name"
-	RoleBindingNamespaceMetadataKey   = metadataPrefix + "/rolebinding-namespace"
-	RoleNameMetadataKey               = metadataPrefix + "/role-name"
-	RoleNamespaceMetadataKey          = metadataPrefix + "/role-namespace"
-	ScanIdMetadataKey                 = metadataPrefix + "/scan-id"
-	StatusMetadataKey                 = metadataPrefix + "/status"
-	SyncChecksumMetadataKey           = metadataPrefix + "/sync-checksum"
-	TemplateHashKey                   = metadataPrefix + "/instance-template-hash"
-	TierMetadataKey                   = metadataPrefix + "/tier"
-	ToolVersionMetadataKey            = metadataPrefix + "/tool-version"
-	WlidMetadataKey                   = metadataPrefix + "/wlid"
+	metadataPrefix                     = "kubescape.io"
+	ApiGroupMetadataKey                = metadataPrefix + "/workload-api-group"
+	ApiVersionMetadataKey              = metadataPrefix + "/workload-api-version"
+	ClusterRoleBindingNameMetadataKey  = metadataPrefix + "/clusterrolebinding-name"
+	ClusterRoleNameMetadataKey         = metadataPrefix + "/clusterrole-name"
+	CompletionMetadataKey              = metadataPrefix + "/completion"
+	ContainerNameMetadataKey           = metadataPrefix + "/workload-container-name"
+	ContainerTypeMetadataKey           = metadataPrefix + "/workload-container-type"
+	ContextMetadataKey                 = metadataPrefix + "/context"
+	EphemeralContainerNameMetadataKey  = metadataPrefix + "/workload-ephemeral-container-name" // DEPRECATED - use ContainerNameMetadataKey and ContainerTypeMetadataKey
+	ImageIDMetadataKey                 = metadataPrefix + "/image-id"
+	ImageNameMetadataKey               = metadataPrefix + "/image-name"
+	ImageTagMetadataKey                = metadataPrefix + "/image-tag"
+	InitContainerNameMetadataKey       = metadataPrefix + "/workload-init-container-name" // DEPRECATED - use ContainerNameMetadataKey and ContainerTypeMetadataKey
+	InstanceIDMetadataKey              = metadataPrefix + "/instance-id"
+	KindMetadataKey                    = metadataPrefix + "/workload-kind"
+	ManagedByMetadataKey               = metadataPrefix + "/managed-by"
+	NameMetadataKey                    = metadataPrefix + "/workload-name"
+	NamespaceMetadataKey               = metadataPrefix + "/workload-namespace"
+	PreviousReportTimestampMetadataKey = metadataPrefix + "/previous-report-timestamp"
+	RbacResourceMetadataKey            = metadataPrefix + "/rbac-resource"
+	ReportSeriesIdMetadataKey          = metadataPrefix + "/report-series-id"
+	ReportTimestampMetadataKey         = metadataPrefix + "/report-timestamp"
+	ResourceSizeMetadataKey            = metadataPrefix + "/resource-size"
+	ResourceVersionMetadataKey         = metadataPrefix + "/workload-resource-version"
+	RoleBindingNameMetadataKey         = metadataPrefix + "/rolebinding-name"
+	RoleBindingNamespaceMetadataKey    = metadataPrefix + "/rolebinding-namespace"
+	RoleNameMetadataKey                = metadataPrefix + "/role-name"
+	RoleNamespaceMetadataKey           = metadataPrefix + "/role-namespace"
+	ScanIdMetadataKey                  = metadataPrefix + "/scan-id"
+	StatusMetadataKey                  = metadataPrefix + "/status"
+	SyncChecksumMetadataKey            = metadataPrefix + "/sync-checksum"
+	TemplateHashKey                    = metadataPrefix + "/instance-template-hash"
+	TierMetadataKey                    = metadataPrefix + "/tier"
+	ToolVersionMetadataKey             = metadataPrefix + "/tool-version"
+	WlidMetadataKey                    = metadataPrefix + "/wlid"
 )
 
 // metadata values
@@ -74,7 +78,7 @@ const (
 // Statuses
 const (
 	Initializing   = "initializing"
-	Ready          = "ready"
+	Learning       = "ready"
 	Completed      = "completed"
 	Incomplete     = "incomplete"
 	Unauthorize    = "unauthorize"
@@ -84,8 +88,8 @@ const (
 
 // Completion
 const (
-	Partial  = "partial"
-	Complete = "complete"
+	Partial = "partial"
+	Full    = "complete"
 )
 
 // Tier values
