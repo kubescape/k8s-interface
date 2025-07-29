@@ -84,6 +84,7 @@ const (
 	Unauthorize    = "unauthorize"
 	MissingRuntime = "missing-runtime"
 	TooLarge       = "too-large"
+	Failed         = "failed" // container exited with a non-zero code
 )
 
 // Completion
