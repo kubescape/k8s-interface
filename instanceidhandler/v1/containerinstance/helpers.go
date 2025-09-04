@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/kubescape/k8s-interface/instanceidhandler/v1/helpers"
-	core1 "k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -24,7 +24,7 @@ func validateInstanceID(instanceID *InstanceID) error {
 	return nil
 }
 
-func ListInstanceIDs(ownerReference *metav1.OwnerReference, containers []core1.Container, instanceType, apiVersion, namespace, kind, name, alternateName, templateHash string) ([]InstanceID, error) {
+func ListInstanceIDs(ownerReference *metav1.OwnerReference, containers []corev1.Container, instanceType, apiVersion, namespace, kind, name, alternateName, templateHash string) ([]InstanceID, error) {
 	instanceIDs := make([]InstanceID, 0)
 
 	if len(containers) == 0 {
