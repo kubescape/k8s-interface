@@ -15,9 +15,8 @@ import (
 	"github.com/kubescape/k8s-interface/instanceidhandler/v1/containerinstance"
 	"github.com/kubescape/k8s-interface/workloadinterface"
 	appsv1 "k8s.io/api/apps/v1"
-	core1 "k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/dump"
 	"k8s.io/apimachinery/pkg/util/rand"
 	"k8s.io/client-go/util/jsonpath"
@@ -111,7 +110,7 @@ func GenerateInstanceID(w workloadinterface.IWorkload, jsonPaths []string) ([]in
 	return convertContainersToIInstanceID(c), nil
 }
 
-func DeepHashObject(hasher hash.Hash32, pod *core1.PodSpec, extraJsonPaths []string) {
+func DeepHashObject(hasher hash.Hash32, pod *corev1.PodSpec, extraJsonPaths []string) {
 	// sanitize pod sped
 	dropProjectedVolumesAndMounts(pod)
 	jsonPaths := []string{
@@ -127,9 +126,9 @@ func DeepHashObject(hasher hash.Hash32, pod *core1.PodSpec, extraJsonPaths []str
 }
 
 // https://github.com/kubernetes/autoscaler/blob/5077f4817bc3105bd61659950833bd6d66edc556/cluster-autoscaler/utils/utils.go#L76
-func dropProjectedVolumesAndMounts(podSpec *core1.PodSpec) {
+func dropProjectedVolumesAndMounts(podSpec *corev1.PodSpec) {
 	projectedVolumeNames := map[string]bool{}
-	var volumes []core1.Volume
+	var volumes []corev1.Volume
 	for _, v := range podSpec.Volumes {
 		if v.Projected == nil {
 			volumes = append(volumes, v)
@@ -140,7 +139,7 @@ func dropProjectedVolumesAndMounts(podSpec *core1.PodSpec) {
 	podSpec.Volumes = volumes
 
 	for i := range podSpec.Containers {
-		var volumeMounts []core1.VolumeMount
+		var volumeMounts []corev1.VolumeMount
 		for _, mount := range podSpec.Containers[i].VolumeMounts {
 			if ok := projectedVolumeNames[mount.Name]; !ok {
 				volumeMounts = append(volumeMounts, mount)
@@ -150,7 +149,7 @@ func dropProjectedVolumesAndMounts(podSpec *core1.PodSpec) {
 	}
 
 	for i := range podSpec.InitContainers {
-		var volumeMounts []core1.VolumeMount
+		var volumeMounts []corev1.VolumeMount
 		for _, mount := range podSpec.InitContainers[i].VolumeMounts {
 			if ok := projectedVolumeNames[mount.Name]; !ok {
 				volumeMounts = append(volumeMounts, mount)
@@ -160,7 +159,7 @@ func dropProjectedVolumesAndMounts(podSpec *core1.PodSpec) {
 	}
 }
 
-func dropFieldsByJSONPath(podSpec *core1.PodSpec, jsonPaths []string) error {
+func dropFieldsByJSONPath(podSpec *corev1.PodSpec, jsonPaths []string) error {
 	for _, path := range jsonPaths {
 		j := jsonpath.New("dropFields")
 		if err := j.Parse(fmt.Sprintf("{%s}", path)); err != nil {
@@ -195,14 +194,9 @@ func isUnixTimeInMinutes(s string) bool {
 }
 
 // GenerateInstanceIDFromPod generates instance ID from pod
-// Deprecated: use GenerateInstanceID instead
-func GenerateInstanceIDFromPod(pod *core1.Pod) ([]instanceidhandler.IInstanceID, error) {
-	unstructuredObj, err := runtime.DefaultUnstructuredConverter.ToUnstructured(pod)
-	if err != nil {
-		return nil, fmt.Errorf("convert pod to unstructured: %v", err)
-	}
-	w := workloadinterface.NewWorkloadObj(unstructuredObj)
-	return GenerateInstanceID(w, nil)
+// Deprecated: use GenerateInstanceIDFromRuntimeObj instead
+func GenerateInstanceIDFromPod(pod *corev1.Pod) ([]instanceidhandler.IInstanceID, error) {
+	return GenerateInstanceIDFromRuntimeObj(pod, nil)
 }
 
 // GenerateInstanceIDFromString generates instance ID from string
@@ -220,10 +214,10 @@ func convertContainersToIInstanceID(l []containerinstance.InstanceID) []instance
 	return li
 }
 
-func convertEphemeralToContainers(e []core1.EphemeralContainer) []core1.Container {
-	c := make([]core1.Container, len(e))
+func convertEphemeralToContainers(e []corev1.EphemeralContainer) []corev1.Container {
+	c := make([]corev1.Container, len(e))
 	for i := range e {
-		c[i] = core1.Container(e[i].EphemeralContainerCommon)
+		c[i] = corev1.Container(e[i].EphemeralContainerCommon)
 	}
 	return c
 }

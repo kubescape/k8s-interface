@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	core1 "k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -138,7 +138,7 @@ func Test_validateInstanceID(t *testing.T) {
 func Test_listInstanceIDs(t *testing.T) {
 	type args struct {
 		ownerReferences *metav1.OwnerReference
-		containers      []core1.Container
+		containers      []corev1.Container
 		apiVersion      string
 		namespace       string
 		kind            string
@@ -153,7 +153,7 @@ func Test_listInstanceIDs(t *testing.T) {
 		{
 			name: "empty ownerReferences",
 			args: args{
-				containers: []core1.Container{
+				containers: []corev1.Container{
 					{
 						Name: "test",
 					},
@@ -178,7 +178,7 @@ func Test_listInstanceIDs(t *testing.T) {
 		{
 			name: "empty containers",
 			args: args{
-				containers: []core1.Container{},
+				containers: []corev1.Container{},
 				apiVersion: "test",
 				namespace:  "test",
 				kind:       "test",
@@ -190,7 +190,7 @@ func Test_listInstanceIDs(t *testing.T) {
 		{
 			name: "invalid instanceID",
 			args: args{
-				containers: []core1.Container{
+				containers: []corev1.Container{
 					{
 						Name: "test",
 					},
@@ -206,7 +206,7 @@ func Test_listInstanceIDs(t *testing.T) {
 		{
 			name: "valid instanceID - Pod",
 			args: args{
-				containers: []core1.Container{
+				containers: []corev1.Container{
 					{
 						Name: "test",
 					},
@@ -235,7 +235,7 @@ func Test_listInstanceIDs(t *testing.T) {
 					Kind: "Node",
 					Name: "nodeName",
 				},
-				containers: []core1.Container{
+				containers: []corev1.Container{
 					{
 						Name: "test",
 					},
@@ -265,7 +265,7 @@ func Test_listInstanceIDs(t *testing.T) {
 					Kind:       "ReplicaSet",
 					Name:       "OwnerTest",
 				},
-				containers: []core1.Container{
+				containers: []corev1.Container{
 					{
 						Name: "test",
 					},
@@ -295,7 +295,7 @@ func Test_listInstanceIDs(t *testing.T) {
 					Name:       "OwnerTest",
 					APIVersion: "apps/v1",
 				},
-				containers: []core1.Container{
+				containers: []corev1.Container{
 					{
 						Name: "test-0",
 					},
