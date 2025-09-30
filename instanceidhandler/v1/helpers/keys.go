@@ -41,6 +41,7 @@ const (
 	TemplateHashKey                    = metadataPrefix + "/instance-template-hash"
 	TierMetadataKey                    = metadataPrefix + "/tier"
 	ToolVersionMetadataKey             = metadataPrefix + "/tool-version"
+	UserDefinedProfileMetadataKey      = metadataPrefix + "/user-defined-profile" // should be used as a label!
 	WlidMetadataKey                    = metadataPrefix + "/wlid"
 )
 
