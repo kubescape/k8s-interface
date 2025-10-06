@@ -22,6 +22,7 @@ const (
 	InitContainerNameMetadataKey       = metadataPrefix + "/workload-init-container-name" // DEPRECATED - use ContainerNameMetadataKey and ContainerTypeMetadataKey
 	InstanceIDMetadataKey              = metadataPrefix + "/instance-id"
 	KindMetadataKey                    = metadataPrefix + "/workload-kind"
+	LastUpdatedMetadataKey             = metadataPrefix + "/last-updated"
 	ManagedByMetadataKey               = metadataPrefix + "/managed-by"
 	NameMetadataKey                    = metadataPrefix + "/workload-name"
 	NamespaceMetadataKey               = metadataPrefix + "/workload-namespace"
