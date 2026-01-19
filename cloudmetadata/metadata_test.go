@@ -4,7 +4,7 @@ import (
 	"context"
 	"testing"
 
-	apitypes "github.com/armosec/armoapi-go/armotypes"
+	"github.com/armosec/armoapi-go/armotypes"
 	"github.com/kubescape/k8s-interface/utils"
 	v1 "k8s.io/api/core/v1"
 
@@ -33,15 +33,15 @@ func TestGetCloudMetadata(t *testing.T) {
 	tests := []struct {
 		name    string
 		node    []byte
-		want    *apitypes.CloudMetadata
+		want    *armotypes.CloudMetadata
 		wantErr bool
 	}{
 		{
 			name: "AWS provider",
 			node: eks,
-			want: &apitypes.CloudMetadata{
+			want: &armotypes.CloudMetadata{
 				AccountID:    "",
-				Provider:     ProviderAWS,
+				Provider:     armotypes.ProviderAws,
 				InstanceType: "c7g.large",
 				Region:       "eu-west-1",
 				Zone:         "eu-west-1b",
@@ -55,9 +55,9 @@ func TestGetCloudMetadata(t *testing.T) {
 		{
 			name: "DigitalOcean provider",
 			node: digitalocean,
-			want: &apitypes.CloudMetadata{
+			want: &armotypes.CloudMetadata{
 				AccountID:    "",
-				Provider:     ProviderDigitalOcean,
+				Provider:     armotypes.ProviderDigitalOcean,
 				InstanceType: "s-8vcpu-16gb",
 				Region:       "fra1",
 				Zone:         "",
@@ -71,9 +71,9 @@ func TestGetCloudMetadata(t *testing.T) {
 		{
 			name: "Azure provider",
 			node: aks,
-			want: &apitypes.CloudMetadata{
+			want: &armotypes.CloudMetadata{
 				AccountID:    "00000000-ffff-ffff-ffff-fffffffffff4",
-				Provider:     ProviderAzure,
+				Provider:     armotypes.ProviderAzure,
 				InstanceType: "Standard_D8ads_v5",
 				Region:       "westeurope",
 				Zone:         "westeurope-1",
@@ -87,9 +87,9 @@ func TestGetCloudMetadata(t *testing.T) {
 		{
 			name: "GCP provider",
 			node: gke,
-			want: &apitypes.CloudMetadata{
+			want: &armotypes.CloudMetadata{
 				AccountID:    "kubescape-123456",
-				Provider:     ProviderGCP,
+				Provider:     armotypes.ProviderGcp,
 				InstanceType: "c2-standard-16",
 				Region:       "us-west1",
 				Zone:         "us-west1-a",
@@ -103,8 +103,8 @@ func TestGetCloudMetadata(t *testing.T) {
 		{
 			name: "Linode provider",
 			node: linode,
-			want: &apitypes.CloudMetadata{
-				Provider:     ProviderLinode,
+			want: &armotypes.CloudMetadata{
+				Provider:     armotypes.ProviderLinode,
 				InstanceType: "g6-standard-1",
 				Region:       "eu-central",
 				InstanceID:   "71504446",
@@ -116,9 +116,9 @@ func TestGetCloudMetadata(t *testing.T) {
 		{
 			name: "VMware provider",
 			node: vsphere,
-			want: &apitypes.CloudMetadata{
+			want: &armotypes.CloudMetadata{
 				AccountID:    "",
-				Provider:     ProviderVMware,
+				Provider:     armotypes.ProviderVMware,
 				InstanceType: "",
 				Region:       "",
 				Zone:         "",
@@ -150,7 +150,7 @@ func TestGetCloudMetadata(t *testing.T) {
 	}
 }
 
-func compareCloudMetadata(a, b *apitypes.CloudMetadata) bool {
+func compareCloudMetadata(a, b *armotypes.CloudMetadata) bool {
 	if a == nil || b == nil {
 		return a == b
 	}

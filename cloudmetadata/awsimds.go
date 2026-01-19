@@ -8,7 +8,7 @@ import (
 	"net/http"
 	"time"
 
-	apitypes "github.com/armosec/armoapi-go/armotypes"
+	"github.com/armosec/armoapi-go/armotypes"
 )
 
 const (
@@ -103,7 +103,7 @@ func (m *MetadataClient) getMetadataValue(ctx context.Context, path string) (str
 }
 
 // GetMetadata fetches all available instance metadata
-func (m *MetadataClient) GetMetadata(ctx context.Context) (*apitypes.CloudMetadata, error) {
+func (m *MetadataClient) GetMetadata(ctx context.Context) (*armotypes.CloudMetadata, error) {
 	// Get instance identity document first
 	data, err := m.get(ctx, "/latest/dynamic/instance-identity/document")
 	if err != nil {
@@ -133,8 +133,8 @@ func (m *MetadataClient) GetMetadata(ctx context.Context) (*apitypes.CloudMetada
 		hostname, _ = m.getMetadataValue(ctx, "local-hostname")
 	}
 
-	metadata := &apitypes.CloudMetadata{
-		Provider:     ProviderAWS,
+	metadata := &armotypes.CloudMetadata{
+		Provider:     armotypes.ProviderAws,
 		InstanceID:   identityDoc.InstanceID,
 		InstanceType: identityDoc.InstanceType,
 		Region:       identityDoc.Region,

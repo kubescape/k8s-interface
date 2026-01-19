@@ -3,7 +3,7 @@ package cloudmetadata
 import (
 	"testing"
 
-	apitypes "github.com/armosec/armoapi-go/armotypes"
+	"github.com/armosec/armoapi-go/armotypes"
 	"github.com/kubescape/k8s-interface/utils"
 	"github.com/stretchr/testify/assert"
 	v1 "k8s.io/api/core/v1"
@@ -20,8 +20,8 @@ func TestEnrichCloudMetadataFromAWSAuthConfigMap(t *testing.T) {
 		t.Fatalf("ConvertUnstructuredToRuntimeObject() error = %v", err)
 	}
 	configmapObj := cm.(*v1.ConfigMap)
-	metadata := &apitypes.CloudMetadata{
-		Provider: ProviderAWS,
+	metadata := &armotypes.CloudMetadata{
+		Provider: armotypes.ProviderAws,
 	}
 	err = EnrichCloudMetadataFromAWSAuthConfigMap(metadata, configmapObj)
 	assert.NoError(t, err)

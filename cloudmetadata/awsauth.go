@@ -4,13 +4,13 @@ import (
 	"fmt"
 	"strings"
 
-	apitypes "github.com/armosec/armoapi-go/armotypes"
+	"github.com/armosec/armoapi-go/armotypes"
 	corev1 "k8s.io/api/core/v1"
 )
 
 // EnrichCloudMetadataFromAWSAuthConfigMap enriches cloud metadata account ID from aws-auth ConfigMap
-func EnrichCloudMetadataFromAWSAuthConfigMap(metadata *apitypes.CloudMetadata, cm *corev1.ConfigMap) error {
-	if metadata == nil || metadata.Provider != ProviderAWS || metadata.AccountID != "" {
+func EnrichCloudMetadataFromAWSAuthConfigMap(metadata *armotypes.CloudMetadata, cm *corev1.ConfigMap) error {
+	if metadata == nil || metadata.Provider != armotypes.ProviderAws || metadata.AccountID != "" {
 		return nil
 	}
 
