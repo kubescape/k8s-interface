@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strings"
 
-	apitypes "github.com/armosec/armoapi-go/armotypes"
+	"github.com/armosec/armoapi-go/armotypes"
 	"github.com/aws/aws-sdk-go/aws/ec2metadata"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/kubescape/go-logger"
@@ -14,82 +14,67 @@ import (
 )
 
 const (
-	ProviderAWS          = "aws"
-	ProviderGCP          = "gcp"
-	ProviderAzure        = "azure"
-	ProviderDigitalOcean = "digitalocean"
-	ProviderOpenStack    = "openstack"
-	ProviderVMware       = "vmware"
-	ProviderAlibaba      = "alibaba"
-	ProviderIBM          = "ibm"
-	ProviderOracle       = "oracle"
-	ProviderLinode       = "linode"
-	ProviderScaleway     = "scaleway"
-	ProviderVultr        = "vultr"
-	ProviderHetzner      = "hetzner"
-	ProviderEquinixMetal = "equinixmetal" // formerly Packet
-	ProviderExoscale     = "exoscale"
-	ProviderUnknown      = "unknown"
-
+	// Providers moved to armoapi-go/armotypes
 	TestMode = "testmode"
 )
 
 // GetCloudMetadata retrieves cloud metadata for a given node
-func GetCloudMetadata(ctx context.Context, node *corev1.Node, nodeName string) (*apitypes.CloudMetadata, error) {
-	metadata := &apitypes.CloudMetadata{
+func GetCloudMetadata(ctx context.Context, node *corev1.Node, nodeName string) (*armotypes.CloudMetadata, error) {
+	metadata := &armotypes.CloudMetadata{
 		Hostname: node.Name,
+		HostType: armotypes.HostTypeKubernetes,
 	}
 
 	// Determine provider and extract metadata
 	providerID := node.Spec.ProviderID
 	switch {
 	case strings.HasPrefix(providerID, "aws://"):
-		metadata.Provider = ProviderAWS
+		metadata.Provider = armotypes.ProviderAws
 		metadata = extractAWSMetadata(node, metadata)
 	case strings.HasPrefix(providerID, "gce://"):
-		metadata.Provider = ProviderGCP
+		metadata.Provider = armotypes.ProviderGcp
 		metadata = extractGCPMetadata(node, metadata)
 	case strings.HasPrefix(providerID, "azure://"):
-		metadata.Provider = ProviderAzure
+		metadata.Provider = armotypes.ProviderAzure
 		metadata = extractAzureMetadata(node, metadata)
 	case strings.HasPrefix(providerID, "digitalocean://"):
-		metadata.Provider = ProviderDigitalOcean
+		metadata.Provider = armotypes.ProviderDigitalOcean
 		metadata = extractDigitalOceanMetadata(node, metadata)
 	case strings.HasPrefix(providerID, "openstack://"):
-		metadata.Provider = ProviderOpenStack
+		metadata.Provider = armotypes.ProviderOpenStack
 		metadata = extractOpenstackMetadata(node, metadata)
 	case strings.HasPrefix(providerID, "vsphere://"):
-		metadata.Provider = ProviderVMware
+		metadata.Provider = armotypes.ProviderVMware
 		metadata = extractVMwareMetadata(node, metadata)
 	case strings.HasPrefix(providerID, "alicloud://"):
-		metadata.Provider = ProviderAlibaba
+		metadata.Provider = armotypes.ProviderAlibaba
 		metadata = extractAlibabaMetadata(node, metadata)
 	case strings.HasPrefix(providerID, "ibm://"):
-		metadata.Provider = ProviderIBM
+		metadata.Provider = armotypes.ProviderIBM
 		metadata = extractIBMMetadata(node, metadata)
 	case strings.HasPrefix(providerID, "oci://"):
-		metadata.Provider = ProviderOracle
+		metadata.Provider = armotypes.ProviderOracle
 		metadata = extractOracleMetadata(node, metadata)
 	case strings.HasPrefix(providerID, "linode://"):
-		metadata.Provider = ProviderLinode
+		metadata.Provider = armotypes.ProviderLinode
 		metadata = extractLinodeMetadata(node, metadata)
 	case strings.HasPrefix(providerID, "scaleway://"):
-		metadata.Provider = ProviderScaleway
+		metadata.Provider = armotypes.ProviderScaleway
 		metadata = extractScalewayMetadata(node, metadata)
 	case strings.HasPrefix(providerID, "vultr://"):
-		metadata.Provider = ProviderVultr
+		metadata.Provider = armotypes.ProviderVultr
 		metadata = extractVultrMetadata(node, metadata)
 	case strings.HasPrefix(providerID, "hcloud://"):
-		metadata.Provider = ProviderHetzner
+		metadata.Provider = armotypes.ProviderHetzner
 		metadata = extractHetznerMetadata(node, metadata)
 	case strings.HasPrefix(providerID, "equinixmetal://"):
-		metadata.Provider = ProviderEquinixMetal
+		metadata.Provider = armotypes.ProviderEquinixMetal
 		metadata = extractEquinixMetalMetadata(node, metadata)
 	case strings.HasPrefix(providerID, "exoscale://"):
-		metadata.Provider = ProviderExoscale
+		metadata.Provider = armotypes.ProviderExoscale
 		metadata = extractExoscaleMetadata(node, metadata)
 	default:
-		metadata.Provider = ProviderUnknown
+		metadata.Provider = armotypes.ProviderOther
 		if v := ctx.Value(TestMode); v != nil {
 			logger.L().Ctx(ctx).Warning("Test mode: unknown cloud provider for node %s: %s", helpers.String("nodeName", nodeName), helpers.String("providerID", providerID))
 		} else {
@@ -112,7 +97,8 @@ func GetCloudMetadata(ctx context.Context, node *corev1.Node, nodeName string) (
 	return metadata, nil
 }
 
-func extractAWSMetadata(node *corev1.Node, metadata *apitypes.CloudMetadata) *apitypes.CloudMetadata {
+func extractAWSMetadata(node *corev1.Node, metadata *armotypes.CloudMetadata) *armotypes.CloudMetadata {
+	metadata.HostType = armotypes.HostTypeEc2
 	// Extract from labels
 	metadata.InstanceType = node.Labels["node.kubernetes.io/instance-type"]
 	metadata.Region = node.Labels["topology.kubernetes.io/region"]
@@ -128,6 +114,11 @@ func extractAWSMetadata(node *corev1.Node, metadata *apitypes.CloudMetadata) *ap
 	// Extract account ID from annotations if available
 	if accountID, ok := node.Annotations["eks.amazonaws.com/account-id"]; ok {
 		metadata.AccountID = accountID
+		if node.Labels["eks.amazonaws.com/compute-type"] == "fargate" {
+			metadata.HostType = armotypes.HostTypeEksFargate
+		} else {
+			metadata.HostType = armotypes.HostTypeEksEc2
+		}
 	} else {
 		// Extract account ID from metadata service if available
 		client := ec2metadata.New(session.Must(session.NewSession()))
@@ -142,11 +133,20 @@ func extractAWSMetadata(node *corev1.Node, metadata *apitypes.CloudMetadata) *ap
 	return metadata
 }
 
-func extractGCPMetadata(node *corev1.Node, metadata *apitypes.CloudMetadata) *apitypes.CloudMetadata {
+func extractGCPMetadata(node *corev1.Node, metadata *armotypes.CloudMetadata) *armotypes.CloudMetadata {
+	metadata.HostType = armotypes.HostTypeGce
 	// Extract from labels
 	metadata.InstanceType = node.Labels["beta.kubernetes.io/instance-type"]
 	metadata.Region = node.Labels["topology.kubernetes.io/region"]
 	metadata.Zone = node.Labels["topology.kubernetes.io/zone"]
+
+	if _, ok := node.Labels["cloud.google.com/gke-nodepool"]; ok {
+		if node.Labels["cloud.google.com/gke-provisioning"] == "autopilot" || node.Labels["cloud.google.com/gke-autopilot"] == "true" {
+			metadata.HostType = armotypes.HostTypeAutopilot
+		} else {
+			metadata.HostType = armotypes.HostTypeGke
+		}
+	}
 
 	// Extract project and instance ID from provider ID
 	// Format: gce://project-name/zone/instance-name
@@ -159,11 +159,16 @@ func extractGCPMetadata(node *corev1.Node, metadata *apitypes.CloudMetadata) *ap
 	return metadata
 }
 
-func extractAzureMetadata(node *corev1.Node, metadata *apitypes.CloudMetadata) *apitypes.CloudMetadata {
+func extractAzureMetadata(node *corev1.Node, metadata *armotypes.CloudMetadata) *armotypes.CloudMetadata {
+	metadata.HostType = armotypes.HostTypeAzureVm
 	// Extract from labels
 	metadata.InstanceType = node.Labels["node.kubernetes.io/instance-type"]
 	metadata.Region = node.Labels["topology.kubernetes.io/region"]
 	metadata.Zone = node.Labels["topology.kubernetes.io/zone"]
+
+	if _, ok := node.Labels["kubernetes.azure.com/cluster"]; ok || node.Labels["kubernetes.azure.com/agentpool"] != "" {
+		metadata.HostType = armotypes.HostTypeAks
+	}
 
 	// Extract subscription ID and resource info from provider ID
 	// Format: azure:///subscriptions/<id>/resourceGroups/<name>/providers/Microsoft.Compute/virtualMachineScaleSets/<name>
@@ -181,11 +186,16 @@ func extractAzureMetadata(node *corev1.Node, metadata *apitypes.CloudMetadata) *
 	return metadata
 }
 
-func extractDigitalOceanMetadata(node *corev1.Node, metadata *apitypes.CloudMetadata) *apitypes.CloudMetadata {
+func extractDigitalOceanMetadata(node *corev1.Node, metadata *armotypes.CloudMetadata) *armotypes.CloudMetadata {
+	metadata.HostType = armotypes.HostTypeDroplet
 	// Extract from labels
 	metadata.InstanceType = node.Labels["beta.kubernetes.io/instance-type"]
 	metadata.Region = node.Labels["topology.kubernetes.io/region"]
 	metadata.Zone = node.Labels["topology.kubernetes.io/zone"]
+
+	if node.Labels["doks.digitalocean.com/managed"] == "true" || node.Labels["doks.digitalocean.com/node-id"] != "" {
+		metadata.HostType = armotypes.HostTypeDoks
+	}
 
 	// Extract droplet ID from provider ID
 	// Format: digitalocean:///droplet-id
@@ -197,7 +207,7 @@ func extractDigitalOceanMetadata(node *corev1.Node, metadata *apitypes.CloudMeta
 	return metadata
 }
 
-func extractOpenstackMetadata(node *corev1.Node, metadata *apitypes.CloudMetadata) *apitypes.CloudMetadata {
+func extractOpenstackMetadata(node *corev1.Node, metadata *armotypes.CloudMetadata) *armotypes.CloudMetadata {
 	// Extract from labels
 	metadata.InstanceType = node.Labels["node.kubernetes.io/instance-type"]
 	metadata.Region = node.Labels["topology.kubernetes.io/region"]
@@ -218,7 +228,7 @@ func extractOpenstackMetadata(node *corev1.Node, metadata *apitypes.CloudMetadat
 	return metadata
 }
 
-func extractVMwareMetadata(node *corev1.Node, metadata *apitypes.CloudMetadata) *apitypes.CloudMetadata {
+func extractVMwareMetadata(node *corev1.Node, metadata *armotypes.CloudMetadata) *armotypes.CloudMetadata {
 	// Extract from labels
 	metadata.InstanceType = node.Labels["node.kubernetes.io/instance-type"]
 	metadata.Zone = node.Labels["topology.kubernetes.io/zone"]
@@ -238,7 +248,7 @@ func extractVMwareMetadata(node *corev1.Node, metadata *apitypes.CloudMetadata) 
 	return metadata
 }
 
-func extractAlibabaMetadata(node *corev1.Node, metadata *apitypes.CloudMetadata) *apitypes.CloudMetadata {
+func extractAlibabaMetadata(node *corev1.Node, metadata *armotypes.CloudMetadata) *armotypes.CloudMetadata {
 	// Extract from labels
 	metadata.InstanceType = node.Labels["node.kubernetes.io/instance-type"]
 	metadata.Region = node.Labels["topology.kubernetes.io/region"]
@@ -259,7 +269,7 @@ func extractAlibabaMetadata(node *corev1.Node, metadata *apitypes.CloudMetadata)
 	return metadata
 }
 
-func extractIBMMetadata(node *corev1.Node, metadata *apitypes.CloudMetadata) *apitypes.CloudMetadata {
+func extractIBMMetadata(node *corev1.Node, metadata *armotypes.CloudMetadata) *armotypes.CloudMetadata {
 	// Extract from labels
 	metadata.InstanceType = node.Labels["node.kubernetes.io/instance-type"]
 	metadata.Region = node.Labels["topology.kubernetes.io/region"]
@@ -280,7 +290,7 @@ func extractIBMMetadata(node *corev1.Node, metadata *apitypes.CloudMetadata) *ap
 	return metadata
 }
 
-func extractOracleMetadata(node *corev1.Node, metadata *apitypes.CloudMetadata) *apitypes.CloudMetadata {
+func extractOracleMetadata(node *corev1.Node, metadata *armotypes.CloudMetadata) *armotypes.CloudMetadata {
 	// Extract from labels
 	metadata.InstanceType = node.Labels["node.kubernetes.io/instance-type"]
 	metadata.Region = node.Labels["topology.kubernetes.io/region"]
@@ -301,7 +311,7 @@ func extractOracleMetadata(node *corev1.Node, metadata *apitypes.CloudMetadata) 
 	return metadata
 }
 
-func extractLinodeMetadata(node *corev1.Node, metadata *apitypes.CloudMetadata) *apitypes.CloudMetadata {
+func extractLinodeMetadata(node *corev1.Node, metadata *armotypes.CloudMetadata) *armotypes.CloudMetadata {
 	// Extract from labels
 	metadata.InstanceType = node.Labels["node.kubernetes.io/instance-type"]
 	metadata.Region = node.Labels["topology.kubernetes.io/region"]
@@ -332,7 +342,7 @@ func extractLinodeMetadata(node *corev1.Node, metadata *apitypes.CloudMetadata) 
 	return metadata
 }
 
-func extractScalewayMetadata(node *corev1.Node, metadata *apitypes.CloudMetadata) *apitypes.CloudMetadata {
+func extractScalewayMetadata(node *corev1.Node, metadata *armotypes.CloudMetadata) *armotypes.CloudMetadata {
 	// Extract from labels
 	metadata.InstanceType = node.Labels["node.kubernetes.io/instance-type"]
 	metadata.Region = node.Labels["topology.kubernetes.io/region"]
@@ -353,7 +363,7 @@ func extractScalewayMetadata(node *corev1.Node, metadata *apitypes.CloudMetadata
 	return metadata
 }
 
-func extractVultrMetadata(node *corev1.Node, metadata *apitypes.CloudMetadata) *apitypes.CloudMetadata {
+func extractVultrMetadata(node *corev1.Node, metadata *armotypes.CloudMetadata) *armotypes.CloudMetadata {
 	// Extract from labels
 	metadata.InstanceType = node.Labels["node.kubernetes.io/instance-type"]
 	metadata.Region = node.Labels["topology.kubernetes.io/region"]
@@ -369,7 +379,7 @@ func extractVultrMetadata(node *corev1.Node, metadata *apitypes.CloudMetadata) *
 	return metadata
 }
 
-func extractHetznerMetadata(node *corev1.Node, metadata *apitypes.CloudMetadata) *apitypes.CloudMetadata {
+func extractHetznerMetadata(node *corev1.Node, metadata *armotypes.CloudMetadata) *armotypes.CloudMetadata {
 	// Extract from labels
 	metadata.InstanceType = node.Labels["node.kubernetes.io/instance-type"]
 	metadata.Region = node.Labels["topology.kubernetes.io/region"]
@@ -390,7 +400,7 @@ func extractHetznerMetadata(node *corev1.Node, metadata *apitypes.CloudMetadata)
 	return metadata
 }
 
-func extractEquinixMetalMetadata(node *corev1.Node, metadata *apitypes.CloudMetadata) *apitypes.CloudMetadata {
+func extractEquinixMetalMetadata(node *corev1.Node, metadata *armotypes.CloudMetadata) *armotypes.CloudMetadata {
 	// Extract from labels
 	metadata.InstanceType = node.Labels["node.kubernetes.io/instance-type"]
 	metadata.Region = node.Labels["topology.kubernetes.io/region"]
@@ -411,7 +421,7 @@ func extractEquinixMetalMetadata(node *corev1.Node, metadata *apitypes.CloudMeta
 	return metadata
 }
 
-func extractExoscaleMetadata(node *corev1.Node, metadata *apitypes.CloudMetadata) *apitypes.CloudMetadata {
+func extractExoscaleMetadata(node *corev1.Node, metadata *armotypes.CloudMetadata) *armotypes.CloudMetadata {
 	// Extract from labels
 	metadata.InstanceType = node.Labels["node.kubernetes.io/instance-type"]
 	metadata.Region = node.Labels["topology.kubernetes.io/region"]
