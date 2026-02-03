@@ -114,28 +114,37 @@ func (eksSupport *EKSSupport) GetName(describe *eks.DescribeClusterOutput) strin
 // GetRegion returns the region in which eks cluster is running.
 func (eksSupport *EKSSupport) GetRegion(cluster string) (string, error) {
 	region, present := os.LookupEnv(KS_CLOUD_REGION_ENV_VAR)
-	if present {
+	if present && region != "" {
 		return region, nil
 	}
+
+	region, present = os.LookupEnv("AWS_REGION")
+	if present && region != "" {
+		return region, nil
+	}
+
+	awsConfig, err := config.LoadDefaultConfig(context.TODO())
+	if err == nil && awsConfig.Region != "" {
+		return awsConfig.Region, nil
+	}
+
 	splittedClusterContext := strings.Split(cluster, ".")
 
-	if len(splittedClusterContext) < 2 {
-		splittedClusterContext := strings.Split(cluster, ":")
-		if len(splittedClusterContext) < 4 {
-			splittedClusterContext := strings.Split(cluster, "-")
-			if len(splittedClusterContext) < 4 {
-				return "", fmt.Errorf("failed to get region")
-			} else if len(splittedClusterContext) >= 6 {
-				return strings.Join(splittedClusterContext[3:6], "-"), nil
-			} else {
-				return "", fmt.Errorf("failed to get region")
-			}
-		}
-		region = splittedClusterContext[3]
-	} else {
-		region = splittedClusterContext[1]
+	if len(splittedClusterContext) >= 2 {
+		return splittedClusterContext[1], nil
 	}
-	return region, nil
+
+	splittedClusterContext = strings.Split(cluster, ":")
+	if len(splittedClusterContext) >= 4 {
+		return splittedClusterContext[3], nil
+	}
+
+	splittedClusterContext = strings.Split(cluster, "-")
+	if len(splittedClusterContext) >= 6 {
+		return strings.Join(splittedClusterContext[3:6], "-"), nil
+	}
+
+	return "", fmt.Errorf("failed to get region: tried environment variables (KS_CLOUD_REGION, AWS_REGION), AWS config, and cluster name parsing")
 }
 
 // Context can be in one of 3 ways:
