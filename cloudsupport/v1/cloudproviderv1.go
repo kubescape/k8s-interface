@@ -48,7 +48,7 @@ func GetCloudProviderFromNode(node *corev1.Node) string {
 	providerID := node.Spec.ProviderID
 	// The providerID is typically in the format: <ProviderName>://<ProviderSpecificInfo>
 	// So we split by :// and take the first part
-	if parts := strings.Split(providerID, "://"); len(parts) > 0 {
+	if parts := strings.SplitN(providerID, "://", 2); len(parts) == 2 {
 		switch parts[0] {
 		case "aws":
 			return EKS
@@ -69,6 +69,20 @@ func GetCloudProviderFromNode(node *corev1.Node) string {
 		case "linode":
 			return Linode
 		}
+	}
+
+	// Fallback: some providers use non-standard providerID formats without "://".
+	// For example, OCI may use a bare OCID like "ocid1.instance.oc1.iad.<unique_id>".
+	return detectCloudProviderFallback(providerID)
+}
+
+// detectCloudProviderFallback handles providerID values that don't follow
+// the standard "<provider>://" convention.
+func detectCloudProviderFallback(providerID string) string {
+	lowerID := strings.ToLower(providerID)
+	switch {
+	case strings.HasPrefix(lowerID, "ocid"):
+		return Oracle
 	}
 	return ""
 }
