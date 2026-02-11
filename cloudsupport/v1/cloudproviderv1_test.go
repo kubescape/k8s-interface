@@ -399,8 +399,28 @@ func TestGetCloudProviderFromNode(t *testing.T) {
 			want:       Linode,
 		},
 		{
+			name:       "Test Oracle bare OCID",
+			providerID: "ocid1.instance.oc1.iad.anuwcljsmlhfdnycaohqtkzfrcsioov6275acx7zqo6pth3dnjhchjauyraq",
+			want:       Oracle,
+		},
+		{
+			name:       "Test Oracle bare OCID uppercase",
+			providerID: "OCID1.INSTANCE.OC1.PHX.ABCDEF",
+			want:       Oracle,
+		},
+		{
 			name:       "Test Unknown Provider",
 			providerID: "unknown://instance-id",
+			want:       "",
+		},
+		{
+			name:       "Test empty providerID",
+			providerID: "",
+			want:       "",
+		},
+		{
+			name:       "Test bare unknown string",
+			providerID: "some-random-id",
 			want:       "",
 		},
 	}
