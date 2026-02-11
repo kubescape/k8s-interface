@@ -150,4 +150,31 @@ func TestGetRegion(t *testing.T) {
 			}
 		})
 	}
+
+	t.Run("AWS_REGION environment variable is checked", func(t *testing.T) {
+		awsRegion := "ap-southeast-2"
+		os.Setenv("AWS_REGION", awsRegion)
+		defer os.Unsetenv("AWS_REGION")
+
+		eksSupport := &EKSSupport{}
+		region, err := eksSupport.GetRegion("my-cluster")
+
+		assert.NoError(t, err)
+		assert.Equal(t, awsRegion, region)
+	})
+
+	t.Run("KS_CLOUD_REGION takes precedence over AWS_REGION", func(t *testing.T) {
+		ksRegion := "us-west-2"
+		awsRegion := "eu-west-1"
+		os.Setenv(KS_CLOUD_REGION_ENV_VAR, ksRegion)
+		os.Setenv("AWS_REGION", awsRegion)
+		defer os.Unsetenv(KS_CLOUD_REGION_ENV_VAR)
+		defer os.Unsetenv("AWS_REGION")
+
+		eksSupport := &EKSSupport{}
+		region, err := eksSupport.GetRegion("my-cluster")
+
+		assert.NoError(t, err)
+		assert.Equal(t, ksRegion, region)
+	})
 }
