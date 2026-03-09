@@ -43,6 +43,12 @@ const (
 	ToolVersionMetadataKey             = metadataPrefix + "/tool-version"
 	UserDefinedProfileMetadataKey      = metadataPrefix + "/user-defined-profile" // should be used as a label!
 	WlidMetadataKey                    = metadataPrefix + "/wlid"
+	HostTypeMetadataKey                = metadataPrefix + "/host-type"
+	ClusterMetadataKey                 = metadataPrefix + "/cluster"
+	AWSAccountIDMetadataKey            = metadataPrefix + "/aws-account-id"
+	RegionMetadataKey                  = metadataPrefix + "/region"
+	HostIDMetadataKey                  = metadataPrefix + "/host-id"
+
 )
 
 // metadata values
