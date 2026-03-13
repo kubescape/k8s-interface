@@ -58,8 +58,8 @@ func TestInstanceID(t *testing.T) {
 		helpers.ApiGroupMetadataKey:      "apps",
 		helpers.ApiVersionMetadataKey:    "v1",
 		helpers.NamespaceMetadataKey:     "default",
-		helpers.KindMetadataKey:          "ReplicaSet",
-		helpers.NameMetadataKey:          "nginx-84f5585d68",
+		helpers.RelatedKindMetadataKey:   "ReplicaSet",
+		helpers.RelatedNameMetadataKey:          "nginx-84f5585d68",
 		helpers.ContainerNameMetadataKey: "nginx",
 		helpers.TemplateHashKey:          "",
 	}
@@ -71,8 +71,8 @@ func TestInstanceID(t *testing.T) {
 		helpers.ApiGroupMetadataKey:      "batch",
 		helpers.ApiVersionMetadataKey:    "v1",
 		helpers.NamespaceMetadataKey:     "default",
-		helpers.KindMetadataKey:          "Job",
-		helpers.NameMetadataKey:          "nginx-job",
+		helpers.RelatedKindMetadataKey:   "Job",
+		helpers.RelatedNameMetadataKey:          "nginx-job",
 		helpers.ContainerNameMetadataKey: "nginx-job",
 		helpers.TemplateHashKey:          "",
 	}
@@ -83,8 +83,8 @@ func TestInstanceID(t *testing.T) {
 		helpers.ApiGroupMetadataKey:      "",
 		helpers.ApiVersionMetadataKey:    "v1",
 		helpers.NamespaceMetadataKey:     "default",
-		helpers.KindMetadataKey:          "Pod",
-		helpers.NameMetadataKey:          "nginx",
+		helpers.RelatedKindMetadataKey:   "Pod",
+		helpers.RelatedNameMetadataKey:          "nginx",
 		helpers.ContainerNameMetadataKey: "nginx",
 		helpers.TemplateHashKey:          "",
 	}

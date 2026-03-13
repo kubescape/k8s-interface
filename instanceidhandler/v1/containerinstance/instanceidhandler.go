@@ -75,8 +75,8 @@ func (id *InstanceID) GetLabels() map[string]string {
 		helpers.ApiGroupMetadataKey:      group,
 		helpers.ApiVersionMetadataKey:    version,
 		helpers.NamespaceMetadataKey:     id.Namespace,
-		helpers.KindMetadataKey:          id.Kind,
-		helpers.NameMetadataKey:          id.Name,
+		helpers.RelatedKindMetadataKey:   id.Kind,
+		helpers.RelatedNameMetadataKey:   id.Name,
 		helpers.ContainerNameMetadataKey: id.ContainerName,
 		helpers.TemplateHashKey:          id.TemplateHash,
 	}
