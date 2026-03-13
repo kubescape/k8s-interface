@@ -21,10 +21,10 @@ const (
 	ImageTagMetadataKey                = metadataPrefix + "/image-tag"
 	InitContainerNameMetadataKey       = metadataPrefix + "/workload-init-container-name" // DEPRECATED - use ContainerNameMetadataKey and ContainerTypeMetadataKey
 	InstanceIDMetadataKey              = metadataPrefix + "/instance-id"
-	KindMetadataKey                    = metadataPrefix + "/workload-kind"
+	RelatedKindMetadataKey             = metadataPrefix + "/workload-kind"
 	ManagedByMetadataKey               = metadataPrefix + "/managed-by"
-	NameMetadataKey                    = metadataPrefix + "/workload-name"
-	NamespaceMetadataKey               = metadataPrefix + "/workload-namespace"
+	RelatedNameMetadataKey             = metadataPrefix + "/workload-name"
+	RelatedNamespaceMetadataKey        = metadataPrefix + "/workload-namespace"
 	PreviousReportTimestampMetadataKey = metadataPrefix + "/previous-report-timestamp"
 	RbacResourceMetadataKey            = metadataPrefix + "/rbac-resource"
 	ReportSeriesIdMetadataKey          = metadataPrefix + "/report-series-id"
@@ -48,7 +48,6 @@ const (
 	AWSAccountIDMetadataKey            = metadataPrefix + "/aws-account-id"
 	RegionMetadataKey                  = metadataPrefix + "/region"
 	HostIDMetadataKey                  = metadataPrefix + "/host-id"
-
 )
 
 // metadata values

@@ -72,13 +72,13 @@ func (id *InstanceID) GetHashed() string {
 func (id *InstanceID) GetLabels() map[string]string {
 	group, version := k8sinterface.SplitApiVersion(id.ApiVersion)
 	return map[string]string{
-		helpers.ApiGroupMetadataKey:      group,
-		helpers.ApiVersionMetadataKey:    version,
-		helpers.NamespaceMetadataKey:     id.Namespace,
-		helpers.KindMetadataKey:          id.Kind,
-		helpers.NameMetadataKey:          id.Name,
-		helpers.ContainerNameMetadataKey: id.ContainerName,
-		helpers.TemplateHashKey:          id.TemplateHash,
+		helpers.ApiGroupMetadataKey:         group,
+		helpers.ApiVersionMetadataKey:       version,
+		helpers.RelatedNamespaceMetadataKey: id.Namespace,
+		helpers.RelatedKindMetadataKey:      id.Kind,
+		helpers.RelatedNameMetadataKey:      id.Name,
+		helpers.ContainerNameMetadataKey:    id.ContainerName,
+		helpers.TemplateHashKey:             id.TemplateHash,
 	}
 }
 
