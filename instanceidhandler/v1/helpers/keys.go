@@ -45,7 +45,7 @@ const (
 	WlidMetadataKey                    = metadataPrefix + "/wlid"
 	HostTypeMetadataKey                = metadataPrefix + "/host-type"
 	ClusterMetadataKey                 = metadataPrefix + "/cluster"
-	AWSAccountIDMetadataKey            = metadataPrefix + "/aws-account-id"
+	CloudAccountIdentifierMetadataKey  = metadataPrefix + "/cloud-account-identifier"
 	RegionMetadataKey                  = metadataPrefix + "/region"
 	HostIDMetadataKey                  = metadataPrefix + "/host-id"
 )
