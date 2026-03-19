@@ -50,8 +50,8 @@ github.com/AzureAD/microsoft-authentication-library-for-go v1.2.2/go.mod h1:wP83
 github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03qcyfWMU=
 github.com/BurntSushi/xgb v0.0.0-20160522181843-27f122750802/go.mod h1:IVnqGOEym/WlBOVXweHU+Q+/VP0lqqI8lqeDx9IjBqo=
 github.com/anmitsu/go-shlex v0.0.0-20161002113705-648efa622239/go.mod h1:2FmKhYUyUczH0OGQWaF5ceTx0UBShxjsH6f8oGKYe2c=
-github.com/armosec/armoapi-go v0.0.667 h1:LrFowKvthnL676Gx+hjhvqP4pQ2+CjykFO9SdIYDc/c=
-github.com/armosec/armoapi-go v0.0.667/go.mod h1:9jAH0g8ZsryhiBDd/aNMX4+n10bGwTx/doWCyyjSxts=
+github.com/armosec/armoapi-go v0.0.693 h1:nVS4OsnvQEZcUj8jdlRiNKo6LoiM+hDB04SCk/ZUD2Q=
+github.com/armosec/armoapi-go v0.0.693/go.mod h1:9jAH0g8ZsryhiBDd/aNMX4+n10bGwTx/doWCyyjSxts=
 github.com/armosec/gojay v1.2.17 h1:VSkLBQzD1c2V+FMtlGFKqWXNsdNvIKygTKJI9ysY8eM=
 github.com/armosec/gojay v1.2.17/go.mod h1:vuvX3DlY0nbVrJ0qCklSS733AWMoQboq3cFyuQW9ybc=
 github.com/armosec/utils-go v0.0.58 h1:g9RnRkxZAmzTfPe2ruMo2OXSYLwVSegQSkSavOfmaIE=
