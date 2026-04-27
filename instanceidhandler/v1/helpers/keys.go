@@ -9,6 +9,8 @@ const (
 	metadataPrefix                     = "kubescape.io"
 	ApiGroupMetadataKey                = metadataPrefix + "/workload-api-group"
 	ApiVersionMetadataKey              = metadataPrefix + "/workload-api-version"
+	CloudAccountIdentifierMetadataKey  = metadataPrefix + "/cloud-account-identifier"
+	ClusterMetadataKey                 = metadataPrefix + "/cluster"
 	ClusterRoleBindingNameMetadataKey  = metadataPrefix + "/clusterrolebinding-name"
 	ClusterRoleNameMetadataKey         = metadataPrefix + "/clusterrole-name"
 	CompletionMetadataKey              = metadataPrefix + "/completion"
@@ -16,17 +18,21 @@ const (
 	ContainerTypeMetadataKey           = metadataPrefix + "/workload-container-type"
 	ContextMetadataKey                 = metadataPrefix + "/context"
 	EphemeralContainerNameMetadataKey  = metadataPrefix + "/workload-ephemeral-container-name" // DEPRECATED - use ContainerNameMetadataKey and ContainerTypeMetadataKey
+	HostIDMetadataKey                  = metadataPrefix + "/host-id"
+	HostTypeMetadataKey                = metadataPrefix + "/host-type"
 	ImageIDMetadataKey                 = metadataPrefix + "/image-id"
 	ImageNameMetadataKey               = metadataPrefix + "/image-name"
 	ImageTagMetadataKey                = metadataPrefix + "/image-tag"
 	InitContainerNameMetadataKey       = metadataPrefix + "/workload-init-container-name" // DEPRECATED - use ContainerNameMetadataKey and ContainerTypeMetadataKey
 	InstanceIDMetadataKey              = metadataPrefix + "/instance-id"
-	RelatedKindMetadataKey             = metadataPrefix + "/workload-kind"
+	LearningPeriodMetadataKey          = metadataPrefix + "/learning-period"
 	ManagedByMetadataKey               = metadataPrefix + "/managed-by"
-	RelatedNameMetadataKey             = metadataPrefix + "/workload-name"
-	RelatedNamespaceMetadataKey        = metadataPrefix + "/workload-namespace"
 	PreviousReportTimestampMetadataKey = metadataPrefix + "/previous-report-timestamp"
 	RbacResourceMetadataKey            = metadataPrefix + "/rbac-resource"
+	RegionMetadataKey                  = metadataPrefix + "/region"
+	RelatedKindMetadataKey             = metadataPrefix + "/workload-kind"
+	RelatedNameMetadataKey             = metadataPrefix + "/workload-name"
+	RelatedNamespaceMetadataKey        = metadataPrefix + "/workload-namespace"
 	ReportSeriesIdMetadataKey          = metadataPrefix + "/report-series-id"
 	ReportTimestampMetadataKey         = metadataPrefix + "/report-timestamp"
 	ResourceSizeMetadataKey            = metadataPrefix + "/resource-size"
@@ -43,11 +49,6 @@ const (
 	ToolVersionMetadataKey             = metadataPrefix + "/tool-version"
 	UserDefinedProfileMetadataKey      = metadataPrefix + "/user-defined-profile" // should be used as a label!
 	WlidMetadataKey                    = metadataPrefix + "/wlid"
-	HostTypeMetadataKey                = metadataPrefix + "/host-type"
-	ClusterMetadataKey                 = metadataPrefix + "/cluster"
-	CloudAccountIdentifierMetadataKey  = metadataPrefix + "/cloud-account-identifier"
-	RegionMetadataKey                  = metadataPrefix + "/region"
-	HostIDMetadataKey                  = metadataPrefix + "/host-id"
 )
 
 // metadata values
