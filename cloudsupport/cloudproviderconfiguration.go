@@ -1,6 +1,7 @@
 package cloudsupport
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"strings"
@@ -16,7 +17,21 @@ const (
 	TypeCloudProviderDescription workloadinterface.ObjectType = "CloudProviderDescribe" // DEPRECATED
 	CloudProviderDescriptionKind                              = "ClusterDescription"    // DEPRECATED
 	KS_KUBE_CLUSTER_ENV_VAR                                   = "KS_KUBE_CLUSTER"
+	KS_OFFLINE_ENV_VAR                                        = "KS_OFFLINE"
 )
+
+// ErrCloudDescribeUnavailable is returned by the Get*FromCloudProvider entry
+// points when cluster cloud-describe data cannot be obtained but the failure
+// must not abort the scan (e.g. air-gapped environments, missing creds, or
+// KS_OFFLINE=true). Callers should recognise it via errors.Is and continue
+// collecting the remaining host-scanner / node-agent data.
+var ErrCloudDescribeUnavailable = errors.New("cloud describe unavailable")
+
+// cloudDescribeDisabled reports whether cloud-describe should be skipped
+// entirely. Set by the Helm chart when capabilities.kubescapeOffline=enable.
+func cloudDescribeDisabled() bool {
+	return os.Getenv(KS_OFFLINE_ENV_VAR) == "true"
+}
 
 func IsRunningInCloudProvider(cluster string) bool {
 	if cluster == "" {
@@ -44,6 +59,10 @@ func GetCloudProvider(nodeList *corev1.NodeList) string {
 
 // GetDescriptiveInfoFromCloudProvider returns the cluster description from the cloud provider wrapped in IMetadata obj
 func GetDescriptiveInfoFromCloudProvider(cluster string, cloudProvider string) (workloadinterface.IMetadata, error) {
+	if cloudDescribeDisabled() {
+		return nil, fmt.Errorf("%w: %s=true", ErrCloudDescribeUnavailable, KS_OFFLINE_ENV_VAR)
+	}
+
 	var clusterInfo *cloudsupportv1.CloudProviderDescribe
 
 	switch cloudProvider {
@@ -75,15 +94,15 @@ func GetDescriptiveInfoFromCloudProvider(cluster string, cloudProvider string) (
 		aksSupport := cloudsupportv1.NewAKSSupport()
 		subscriptionID, err := aksSupport.GetSubscriptionID()
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("%w: %v", ErrCloudDescribeUnavailable, err)
 		}
 		resourceGroup, err := aksSupport.GetResourceGroup()
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("%w: %v", ErrCloudDescribeUnavailable, err)
 		}
 		clusterInfo, err = cloudsupportv1.GetClusterDescribeAKS(aksSupport, cluster, subscriptionID, resourceGroup)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("%w: %v", ErrCloudDescribeUnavailable, err)
 		}
 	default:
 		return nil, fmt.Errorf(cloudsupportv1.NotSupportedMsg)
@@ -94,6 +113,10 @@ func GetDescriptiveInfoFromCloudProvider(cluster string, cloudProvider string) (
 
 // GetDescribeRepositoriesFromCloudProvider returns image repository descriptions from the cloud provider wrapped in IMetadata obj
 func GetDescribeRepositoriesFromCloudProvider(cluster string, cloudProvider string) (workloadinterface.IMetadata, error) {
+	if cloudDescribeDisabled() {
+		return nil, fmt.Errorf("%w: %s=true", ErrCloudDescribeUnavailable, KS_OFFLINE_ENV_VAR)
+	}
+
 	var clusterInfo *cloudsupportv1.CloudProviderDescribeRepositories
 
 	switch cloudProvider {
@@ -122,6 +145,10 @@ func GetDescribeRepositoriesFromCloudProvider(cluster string, cloudProvider stri
 
 // GetListEntitiesForPoliciesFromCloudProvider returns EntitiesForpolicies from the cloud provider wrapped in IMetadata obj
 func GetListEntitiesForPoliciesFromCloudProvider(cluster string, cloudProvider string) (workloadinterface.IMetadata, error) {
+	if cloudDescribeDisabled() {
+		return nil, fmt.Errorf("%w: %s=true", ErrCloudDescribeUnavailable, KS_OFFLINE_ENV_VAR)
+	}
+
 	var listEntitiesForPolicies *cloudsupportv1.CloudProviderListEntitiesForPolicies
 
 	switch cloudProvider {
@@ -142,15 +169,15 @@ func GetListEntitiesForPoliciesFromCloudProvider(cluster string, cloudProvider s
 		aksSupport := cloudsupportv1.NewAKSSupport()
 		subscriptionID, err := aksSupport.GetSubscriptionID()
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("%w: %v", ErrCloudDescribeUnavailable, err)
 		}
 		resourceGroup, err := aksSupport.GetResourceGroup()
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("%w: %v", ErrCloudDescribeUnavailable, err)
 		}
 		listEntitiesForPolicies, err = cloudsupportv1.GetListEntitiesForPoliciesAKS(aksSupport, cluster, subscriptionID, resourceGroup)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("%w: %v", ErrCloudDescribeUnavailable, err)
 		}
 	default:
 		return nil, fmt.Errorf(cloudsupportv1.NotSupportedMsg)
@@ -161,6 +188,10 @@ func GetListEntitiesForPoliciesFromCloudProvider(cluster string, cloudProvider s
 
 // GetPolicyVersionFromCloudProvider returns PolicyVersion from the cloud provider wrapped in IMetadata obj
 func GetPolicyVersionFromCloudProvider(cluster string, cloudProvider string) (workloadinterface.IMetadata, error) {
+	if cloudDescribeDisabled() {
+		return nil, fmt.Errorf("%w: %s=true", ErrCloudDescribeUnavailable, KS_OFFLINE_ENV_VAR)
+	}
+
 	var policyVersion *cloudsupportv1.CloudProviderPolicyVersion
 
 	switch cloudProvider {
@@ -181,15 +212,15 @@ func GetPolicyVersionFromCloudProvider(cluster string, cloudProvider string) (wo
 		aksSupport := cloudsupportv1.NewAKSSupport()
 		subscriptionID, err := aksSupport.GetSubscriptionID()
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("%w: %v", ErrCloudDescribeUnavailable, err)
 		}
 		resourceGroup, err := aksSupport.GetResourceGroup()
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("%w: %v", ErrCloudDescribeUnavailable, err)
 		}
 		policyVersion, err = cloudsupportv1.GetPolicyVersionAKS(aksSupport, cluster, subscriptionID, resourceGroup)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("%w: %v", ErrCloudDescribeUnavailable, err)
 		}
 	default:
 		return nil, fmt.Errorf(cloudsupportv1.NotSupportedMsg)
