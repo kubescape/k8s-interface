@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"time"
 
 	// "github.com/Azure/azure-sdk-for-go/services/containerservice/mgmt/2019-04-30/containerservice"
 	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
@@ -17,6 +18,16 @@ import (
 var (
 	AZURE_SUBSCRIPTION_ID_ENV_VAR = "AZURE_SUBSCRIPTION_ID"
 	AZURE_RESOURCE_GROUP_ENV_VAR  = "AZURE_RESOURCE_GROUP"
+)
+
+// Bounds Azure credential and ARM calls so an air-gapped or otherwise
+// unreachable Azure control plane cannot stall the scan loop. The single-call
+// budget is tight for cluster-describe; RBAC enumeration paginates and may
+// issue many GetByID calls on healthy subscriptions, so it gets a larger
+// budget to avoid downgrading legitimate latency to ErrCloudDescribeUnavailable.
+const (
+	aksCallTimeout            = 5 * time.Second
+	aksRBACEnumerationTimeout = 30 * time.Second
 )
 
 type IAKSSupport interface {
@@ -45,6 +56,8 @@ func NewAKSSupport() *AKSSupport {
 
 // Get descriptive info about cluster running in AKS.
 func (AKSSupport *AKSSupport) GetClusterDescribe(subscriptionId string, clusterName string, resourceGroup string) (*armcontainerservice.ManagedCluster, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), aksCallTimeout)
+	defer cancel()
 
 	cred, err := azidentity.NewDefaultAzureCredential(nil)
 	if err != nil {
@@ -54,8 +67,6 @@ func (AKSSupport *AKSSupport) GetClusterDescribe(subscriptionId string, clusterN
 	if err != nil {
 		return nil, err
 	}
-
-	ctx := context.Background()
 
 	resp, err := aksclient.Get(ctx, resourceGroup, clusterName, nil)
 	if err != nil {
@@ -94,12 +105,13 @@ func (AKSSupport *AKSSupport) GetResourceGroup() (string, error) {
 // resource group ID (format:'/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}', or
 // resource ID (format:'/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/{resourceProviderNamespace}/[{parentResourcePath}/]{resourceType}/{resourceName}'
 func (AKSSupport *AKSSupport) ListAllRolesForScope(subscriptionId string, scope string) (*ListRoleAssignment, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), aksRBACEnumerationTimeout)
+	defer cancel()
 
 	cred, err := azidentity.NewDefaultAzureCredential(nil)
 	if err != nil {
 		return nil, err
 	}
-	ctx := context.Background()
 
 	client, err := armauthorizationv2.NewRoleAssignmentsClient(subscriptionId, cred, nil)
 	if err != nil {
@@ -128,11 +140,13 @@ func (AKSSupport *AKSSupport) ListAllRolesForScope(subscriptionId string, scope 
 
 // ListAllRoleDefinitions - List all role definitions that are assigned in this scope
 func (AKSSupport *AKSSupport) ListAllRoleDefinitions(subscriptionId string, scope string) (*ListRoleDefinition, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), aksRBACEnumerationTimeout)
+	defer cancel()
+
 	cred, err := azidentity.NewDefaultAzureCredential(nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to obtain a credential: %v", err)
 	}
-	ctx := context.Background()
 	listRoleAssignment, err := AKSSupport.ListAllRolesForScope(subscriptionId, scope)
 	var roleDefinitionList []*armauthorization.RoleDefinition
 	if err != nil {
