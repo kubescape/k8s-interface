@@ -20,9 +20,15 @@ var (
 	AZURE_RESOURCE_GROUP_ENV_VAR  = "AZURE_RESOURCE_GROUP"
 )
 
-// Bounds every Azure credential and ARM call so an air-gapped or otherwise
-// unreachable Azure control plane cannot stall the scan loop.
-const aksCallTimeout = 5 * time.Second
+// Bounds Azure credential and ARM calls so an air-gapped or otherwise
+// unreachable Azure control plane cannot stall the scan loop. The single-call
+// budget is tight for cluster-describe; RBAC enumeration paginates and may
+// issue many GetByID calls on healthy subscriptions, so it gets a larger
+// budget to avoid downgrading legitimate latency to ErrCloudDescribeUnavailable.
+const (
+	aksCallTimeout            = 5 * time.Second
+	aksRBACEnumerationTimeout = 30 * time.Second
+)
 
 type IAKSSupport interface {
 	GetClusterDescribe(subscriptionId string, clusterName string, resourceGroup string) (*armcontainerservice.ManagedCluster, error)
@@ -99,7 +105,7 @@ func (AKSSupport *AKSSupport) GetResourceGroup() (string, error) {
 // resource group ID (format:'/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}', or
 // resource ID (format:'/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/{resourceProviderNamespace}/[{parentResourcePath}/]{resourceType}/{resourceName}'
 func (AKSSupport *AKSSupport) ListAllRolesForScope(subscriptionId string, scope string) (*ListRoleAssignment, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), aksCallTimeout)
+	ctx, cancel := context.WithTimeout(context.Background(), aksRBACEnumerationTimeout)
 	defer cancel()
 
 	cred, err := azidentity.NewDefaultAzureCredential(nil)
@@ -134,7 +140,7 @@ func (AKSSupport *AKSSupport) ListAllRolesForScope(subscriptionId string, scope 
 
 // ListAllRoleDefinitions - List all role definitions that are assigned in this scope
 func (AKSSupport *AKSSupport) ListAllRoleDefinitions(subscriptionId string, scope string) (*ListRoleDefinition, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), aksCallTimeout)
+	ctx, cancel := context.WithTimeout(context.Background(), aksRBACEnumerationTimeout)
 	defer cancel()
 
 	cred, err := azidentity.NewDefaultAzureCredential(nil)
