@@ -50,9 +50,13 @@ func unsetEnvWithCleanup(t *testing.T, key string) {
 	}
 	t.Cleanup(func() {
 		if had {
-			os.Setenv(key, prev)
+			if err := os.Setenv(key, prev); err != nil {
+				t.Errorf("restore %s: %v", key, err)
+			}
 		} else {
-			os.Unsetenv(key)
+			if err := os.Unsetenv(key); err != nil {
+				t.Errorf("unset %s: %v", key, err)
+			}
 		}
 	})
 }
