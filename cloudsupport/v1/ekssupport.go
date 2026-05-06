@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/url"
 	"os"
+	"regexp"
 	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -34,6 +35,12 @@ type IEKSSupport interface {
 
 type EKSSupport struct {
 }
+
+var (
+	awsRegionPattern          = regexp.MustCompile(`^[a-z]{2}(?:-[a-z]+)?-[a-z]+-\d+$`)
+	eksArnRegionPattern       = regexp.MustCompile(`^arn:[^:]+:eks:([a-z]{2}(?:-[a-z]+)?-[a-z]+-\d+):`)
+	eksDashedArnRegionPattern = regexp.MustCompile(`^arn-(?:[a-z]+-)+eks-([a-z]{2}(?:-[a-z]+)?-[a-z]+-\d+)-`)
+)
 
 const (
 	awsauthconfigmap = "aws-auth"
@@ -114,28 +121,34 @@ func (eksSupport *EKSSupport) GetName(describe *eks.DescribeClusterOutput) strin
 // GetRegion returns the region in which eks cluster is running.
 func (eksSupport *EKSSupport) GetRegion(cluster string) (string, error) {
 	region, present := os.LookupEnv(KS_CLOUD_REGION_ENV_VAR)
-	if present {
+	if present && region != "" {
 		return region, nil
 	}
-	splittedClusterContext := strings.Split(cluster, ".")
 
-	if len(splittedClusterContext) < 2 {
-		splittedClusterContext := strings.Split(cluster, ":")
-		if len(splittedClusterContext) < 4 {
-			splittedClusterContext := strings.Split(cluster, "-")
-			if len(splittedClusterContext) < 4 {
-				return "", fmt.Errorf("failed to get region")
-			} else if len(splittedClusterContext) >= 6 {
-				return strings.Join(splittedClusterContext[3:6], "-"), nil
-			} else {
-				return "", fmt.Errorf("failed to get region")
-			}
-		}
-		region = splittedClusterContext[3]
-	} else {
-		region = splittedClusterContext[1]
+	if matches := eksArnRegionPattern.FindStringSubmatch(cluster); len(matches) == 2 {
+		return matches[1], nil
 	}
-	return region, nil
+
+	if matches := eksDashedArnRegionPattern.FindStringSubmatch(cluster); len(matches) == 2 {
+		return matches[1], nil
+	}
+
+	splittedClusterContext := strings.Split(cluster, ".")
+	if len(splittedClusterContext) >= 2 && awsRegionPattern.MatchString(splittedClusterContext[1]) {
+		return splittedClusterContext[1], nil
+	}
+
+	region, present = os.LookupEnv("AWS_REGION")
+	if present && region != "" {
+		return region, nil
+	}
+
+	awsConfig, err := config.LoadDefaultConfig(context.TODO())
+	if err == nil && awsConfig.Region != "" {
+		return awsConfig.Region, nil
+	}
+
+	return "", fmt.Errorf("failed to get region: tried KS_CLOUD_REGION, cluster name parsing, AWS_REGION, and AWS config")
 }
 
 // Context can be in one of 3 ways:
