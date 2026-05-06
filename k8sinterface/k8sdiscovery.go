@@ -17,8 +17,10 @@ const (
 	ResourceForbiddenErr = "is forbidden"
 )
 
-// ResourceGroupMapping mapping of all supported Kubernetes cluster resources to apiVersion
-var resourceGroupMapping = map[string]string{}
+// ResourceGroupMapping mapping of all supported Kubernetes cluster resources to a list of apiVersions.
+// A single resource name (e.g. "ingresses") may be served by more than one API group
+// (e.g. "networking.k8s.io/v1" and "extensions/v1beta1"), so the value is a slice.
+var resourceGroupMapping = map[string][]string{}
 var resourceNamesapcedScope = []string{} // use this to determan if the resource is namespaced
 
 // RW locker to ensure we won't read/write concurrently the map/slice of resources
@@ -27,22 +29,20 @@ var resourcesInfoLock = sync.RWMutex{}
 // DEPRECATED - use the 'ResourceNamesapcedScope' instead
 var ResourceClusterScope = []string{}
 
+// GetSingleResourceFromGroupMapping returns the first known group/version for the resource.
+// Kept for backward compatibility. Callers that need every group serving a resource should
+// use GetResourceFromGroupMapping.
 func GetSingleResourceFromGroupMapping(resource string) (string, bool) {
-	resourcesInfoLock.RLock()
-	rsrcGroupMappingLength := len(resourceGroupMapping)
-	resourcesInfoLock.RUnlock()
-
-	if rsrcGroupMappingLength == 0 {
-		InitializeMapResources(nil)
+	gvs, ok := GetResourceFromGroupMapping(resource)
+	if !ok || len(gvs) == 0 {
+		return "", false
 	}
-	resourcesInfoLock.RLock()
-	defer resourcesInfoLock.RUnlock()
-	r, k := resourceGroupMapping[updateResourceKind(resource)]
-	return r, k
+	return gvs[0], true
 }
 
-// GetResourceGroupMapping returns copy of ResourceGroupMapping map object
-func GetResourceGroupMapping() map[string]string {
+// GetResourceFromGroupMapping returns every known group/version for the given resource name.
+// Returns (nil, false) when the resource is unknown.
+func GetResourceFromGroupMapping(resource string) ([]string, bool) {
 	resourcesInfoLock.RLock()
 	rsrcGroupMappingLength := len(resourceGroupMapping)
 	resourcesInfoLock.RUnlock()
@@ -52,11 +52,47 @@ func GetResourceGroupMapping() map[string]string {
 	}
 	resourcesInfoLock.RLock()
 	defer resourcesInfoLock.RUnlock()
-	copyOfresourceMapping := make(map[string]string, len(resourceGroupMapping))
-	for k := range resourceGroupMapping {
-		copyOfresourceMapping[k] = resourceGroupMapping[k]
+	gvs, ok := resourceGroupMapping[updateResourceKind(resource)]
+	if !ok {
+		return nil, false
+	}
+	out := make([]string, len(gvs))
+	copy(out, gvs)
+	return out, true
+}
+
+// GetResourceGroupMapping returns a copy of the resource→group/version map, with one
+// group per resource (the first one discovered). Kept for backward compatibility. Use
+// GetAllResourceGroupMappings if you need every group serving each resource.
+func GetResourceGroupMapping() map[string]string {
+	all := GetAllResourceGroupMappings()
+	copyOfresourceMapping := make(map[string]string, len(all))
+	for k, v := range all {
+		if len(v) > 0 {
+			copyOfresourceMapping[k] = v[0]
+		}
 	}
 	return copyOfresourceMapping
+}
+
+// GetAllResourceGroupMappings returns a copy of the full resource→[]group/version map.
+func GetAllResourceGroupMappings() map[string][]string {
+	resourcesInfoLock.RLock()
+	rsrcGroupMappingLength := len(resourceGroupMapping)
+	resourcesInfoLock.RUnlock()
+
+	if rsrcGroupMappingLength == 0 {
+		InitializeMapResources(nil)
+	}
+	resourcesInfoLock.RLock()
+	defer resourcesInfoLock.RUnlock()
+	out := make(map[string][]string, len(resourceGroupMapping))
+	for k, v := range resourceGroupMapping {
+		cp := make([]string, len(v))
+		copy(cp, v)
+		out[k] = cp
+	}
+	return out
 }
 
 func GetResourceNamesapcedScope() []string {
@@ -125,15 +161,24 @@ func setMapResources(resourceList []*metav1.APIResourceList) {
 				continue
 			}
 
-			resourcesInfoLock.RLock()
-			_, ok := resourceGroupMapping[apiResource.Name]
-			resourcesInfoLock.RUnlock()
-			if ok { // do not override resources in map
-				continue
-			}
+			gvStr := JoinGroupVersion(gv.Group, gv.Version)
 
 			resourcesInfoLock.Lock()
-			resourceGroupMapping[apiResource.Name] = JoinGroupVersion(gv.Group, gv.Version)
+			// Append the group/version, deduping in case discovery returns the same
+			// (resource, group, version) tuple twice. Multiple groups serving the same
+			// resource name (e.g. "ingresses" in networking.k8s.io and extensions) are
+			// all preserved in insertion order.
+			existing := resourceGroupMapping[apiResource.Name]
+			alreadyPresent := false
+			for _, e := range existing {
+				if e == gvStr {
+					alreadyPresent = true
+					break
+				}
+			}
+			if !alreadyPresent {
+				resourceGroupMapping[apiResource.Name] = append(existing, gvStr)
+			}
 			if apiResource.Namespaced {
 				resourceNamesapcedScope = append(resourceNamesapcedScope, JoinResourceTriplets(gv.Group, gv.Version, apiResource.Name))
 			} else { // DEPRECATED
@@ -251,35 +296,45 @@ func getResourceTriplets(group, version, resource string) []string {
 
 	resourceTriplets := []string{}
 	if resource == "" {
-		// load full map
-		for k, v := range GetResourceGroupMapping() {
-			if g := strings.Split(v, "/"); len(g) >= 2 {
-				resourceTriplets = append(resourceTriplets, JoinResourceTriplets(g[0], g[1], k))
+		// load full map - one triplet per (resource, group/version) pair so that
+		// resources served by multiple groups are not collapsed.
+		for k, vs := range GetAllResourceGroupMappings() {
+			for _, v := range vs {
+				if g := strings.Split(v, "/"); len(g) >= 2 {
+					resourceTriplets = append(resourceTriplets, JoinResourceTriplets(g[0], g[1], k))
+				}
 			}
 		}
 	} else if version == "" {
-		// load by resource
-		if v, ok := GetSingleResourceFromGroupMapping(resource); ok {
-			g := strings.Split(v, "/")
-			if len(g) >= 2 {
-				if group == "" {
-					group = g[0]
+		// load by resource - emit one triplet per known group/version for the resource.
+		if vs, ok := GetResourceFromGroupMapping(resource); ok {
+			for _, v := range vs {
+				g := strings.Split(v, "/")
+				if len(g) >= 2 {
+					triplGroup := group
+					if triplGroup == "" {
+						triplGroup = g[0]
+					} else if triplGroup != g[0] {
+						// caller pinned a specific group, skip groups that don't match
+						continue
+					}
+					resourceTriplets = append(resourceTriplets, JoinResourceTriplets(triplGroup, g[1], resource))
 				}
-				resourceTriplets = append(resourceTriplets, JoinResourceTriplets(group, g[1], resource))
 			}
-		} else {
-			// DO NOT USE GLOG
-			// glog.Errorf("Resource '%s' unknown", resource)
 		}
 	} else if group == "" {
-		// load by resource and version
-		if v, ok := GetSingleResourceFromGroupMapping(resource); ok {
-			if g := strings.Split(v, "/"); len(g) >= 1 {
-				resourceTriplets = append(resourceTriplets, JoinResourceTriplets(g[0], version, resource))
+		// load by resource and version - emit one triplet per known group serving the
+		// resource, but only for entries whose discovered version actually matches
+		// the requested version. Otherwise we'd synthesize group/version pairs the
+		// cluster never advertised (e.g. extensions/v1/ingresses when discovery
+		// only recorded extensions/v1beta1).
+		if vs, ok := GetResourceFromGroupMapping(resource); ok {
+			for _, v := range vs {
+				g := strings.Split(v, "/")
+				if len(g) >= 2 && g[1] == version {
+					resourceTriplets = append(resourceTriplets, JoinResourceTriplets(g[0], version, resource))
+				}
 			}
-		} else {
-			// DO NOT USE GLOG
-			// glog.Errorf("Resource '%s' unknown", resource)
 		}
 	} else {
 		resourceTriplets = append(resourceTriplets, JoinResourceTriplets(group, version, resource))
