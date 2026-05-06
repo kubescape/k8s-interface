@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/url"
 	"os"
+	"regexp"
 	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -34,6 +35,12 @@ type IEKSSupport interface {
 
 type EKSSupport struct {
 }
+
+var (
+	awsRegionPattern          = regexp.MustCompile(`^[a-z]{2}(?:-[a-z]+)?-[a-z]+-\d+$`)
+	eksArnRegionPattern       = regexp.MustCompile(`^arn:[^:]+:eks:([a-z]{2}(?:-[a-z]+)?-[a-z]+-\d+):`)
+	eksDashedArnRegionPattern = regexp.MustCompile(`^arn-(?:[a-z]+-)+eks-([a-z]{2}(?:-[a-z]+)?-[a-z]+-\d+)-`)
+)
 
 const (
 	awsauthconfigmap = "aws-auth"
@@ -118,6 +125,19 @@ func (eksSupport *EKSSupport) GetRegion(cluster string) (string, error) {
 		return region, nil
 	}
 
+	if matches := eksArnRegionPattern.FindStringSubmatch(cluster); len(matches) == 2 {
+		return matches[1], nil
+	}
+
+	if matches := eksDashedArnRegionPattern.FindStringSubmatch(cluster); len(matches) == 2 {
+		return matches[1], nil
+	}
+
+	splittedClusterContext := strings.Split(cluster, ".")
+	if len(splittedClusterContext) >= 2 && awsRegionPattern.MatchString(splittedClusterContext[1]) {
+		return splittedClusterContext[1], nil
+	}
+
 	region, present = os.LookupEnv("AWS_REGION")
 	if present && region != "" {
 		return region, nil
@@ -128,23 +148,7 @@ func (eksSupport *EKSSupport) GetRegion(cluster string) (string, error) {
 		return awsConfig.Region, nil
 	}
 
-	splittedClusterContext := strings.Split(cluster, ".")
-
-	if len(splittedClusterContext) >= 2 {
-		return splittedClusterContext[1], nil
-	}
-
-	splittedClusterContext = strings.Split(cluster, ":")
-	if len(splittedClusterContext) >= 4 {
-		return splittedClusterContext[3], nil
-	}
-
-	splittedClusterContext = strings.Split(cluster, "-")
-	if len(splittedClusterContext) >= 6 {
-		return strings.Join(splittedClusterContext[3:6], "-"), nil
-	}
-
-	return "", fmt.Errorf("failed to get region: tried environment variables (KS_CLOUD_REGION, AWS_REGION), AWS config, and cluster name parsing")
+	return "", fmt.Errorf("failed to get region: tried KS_CLOUD_REGION, cluster name parsing, AWS_REGION, and AWS config")
 }
 
 // Context can be in one of 3 ways:
