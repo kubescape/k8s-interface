@@ -135,6 +135,20 @@ func TestMultiGroupResource(t *testing.T) {
 	// pinning the group should narrow the result to that group only
 	pinned := ResourceGroupToString("extensions", "", "Ingress")
 	assert.Equal(t, []string{"extensions/v1beta1/ingresses"}, pinned)
+
+	// pinning the version with a wildcarded group must only emit groups whose
+	// discovered version matches. extensions only serves v1beta1 in the mock,
+	// so a v1 lookup must skip it and only return networking.k8s.io/v1.
+	versionPinned := ResourceGroupToString("*", "v1", "Ingress")
+	assert.Equal(t, []string{"networking.k8s.io/v1/ingresses"}, versionPinned)
+
+	// asking for a version no group serves should return nothing.
+	missingVersion := ResourceGroupToString("*", "v2", "Ingress")
+	assert.Empty(t, missingVersion)
+
+	// the v1beta1 lookup must hit extensions and skip networking.k8s.io's v1 entry.
+	betaPinned := ResourceGroupToString("*", "v1beta1", "Ingress")
+	assert.Equal(t, []string{"extensions/v1beta1/ingresses"}, betaPinned)
 }
 
 func TestIsTypeWorkload(t *testing.T) {

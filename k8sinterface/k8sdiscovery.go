@@ -323,10 +323,15 @@ func getResourceTriplets(group, version, resource string) []string {
 			}
 		}
 	} else if group == "" {
-		// load by resource and version - emit one triplet per known group serving the resource.
+		// load by resource and version - emit one triplet per known group serving the
+		// resource, but only for entries whose discovered version actually matches
+		// the requested version. Otherwise we'd synthesize group/version pairs the
+		// cluster never advertised (e.g. extensions/v1/ingresses when discovery
+		// only recorded extensions/v1beta1).
 		if vs, ok := GetResourceFromGroupMapping(resource); ok {
 			for _, v := range vs {
-				if g := strings.Split(v, "/"); len(g) >= 1 {
+				g := strings.Split(v, "/")
+				if len(g) >= 2 && g[1] == version {
 					resourceTriplets = append(resourceTriplets, JoinResourceTriplets(g[0], version, resource))
 				}
 			}
