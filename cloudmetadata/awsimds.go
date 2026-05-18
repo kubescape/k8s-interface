@@ -6,17 +6,28 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/armosec/armoapi-go/armotypes"
 )
 
 const (
-	metadataEndpoint = "http://169.254.169.254"
-	defaultTimeout   = 2 * time.Second
-	tokenPath        = "/latest/api/token"
-	tokenTTL         = "21600" // 6 hours in seconds
+	defaultMetadataEndpoint = "http://169.254.169.254"
+	metadataEndpointEnvVar  = "AWS_EC2_METADATA_SERVICE_ENDPOINT"
+	defaultTimeout          = 2 * time.Second
+	tokenPath               = "/latest/api/token"
+	tokenTTL                = "21600" // 6 hours in seconds
 )
+
+// metadataEndpoint returns the IMDS endpoint, honoring the
+// AWS_EC2_METADATA_SERVICE_ENDPOINT env var when set (matching the AWS SDK).
+func metadataEndpoint() string {
+	if v := os.Getenv(metadataEndpointEnvVar); v != "" {
+		return v
+	}
+	return defaultMetadataEndpoint
+}
 
 type MetadataClient struct {
 	client    *http.Client
@@ -35,7 +46,7 @@ func NewMetadataClient(useIMDSv2 bool) *MetadataClient {
 
 // getToken fetches an IMDSv2 token
 func (m *MetadataClient) getToken(ctx context.Context) (string, error) {
-	req, err := http.NewRequestWithContext(ctx, "PUT", metadataEndpoint+tokenPath, nil)
+	req, err := http.NewRequestWithContext(ctx, "PUT", metadataEndpoint()+tokenPath, nil)
 	if err != nil {
 		return "", fmt.Errorf("creating token request: %w", err)
 	}
@@ -62,7 +73,7 @@ func (m *MetadataClient) getToken(ctx context.Context) (string, error) {
 
 // get makes a GET request to the metadata service
 func (m *MetadataClient) get(ctx context.Context, path string) ([]byte, error) {
-	req, err := http.NewRequestWithContext(ctx, "GET", metadataEndpoint+path, nil)
+	req, err := http.NewRequestWithContext(ctx, "GET", metadataEndpoint()+path, nil)
 	if err != nil {
 		return nil, fmt.Errorf("creating request: %w", err)
 	}
