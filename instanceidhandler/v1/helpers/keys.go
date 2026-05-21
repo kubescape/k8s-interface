@@ -26,6 +26,7 @@ const (
 	InitContainerNameMetadataKey       = metadataPrefix + "/workload-init-container-name" // DEPRECATED - use ContainerNameMetadataKey and ContainerTypeMetadataKey
 	InstanceIDMetadataKey              = metadataPrefix + "/instance-id"
 	LearningPeriodMetadataKey          = metadataPrefix + "/learning-period"
+	OtelSpanIDMetadataKey              = metadataPrefix + "/otel-span-id"
 	ManagedByMetadataKey               = metadataPrefix + "/managed-by"
 	PreviousReportTimestampMetadataKey = metadataPrefix + "/previous-report-timestamp"
 	RbacResourceMetadataKey            = metadataPrefix + "/rbac-resource"
