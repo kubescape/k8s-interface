@@ -27,6 +27,7 @@ const (
 	InstanceIDMetadataKey              = metadataPrefix + "/instance-id"
 	LearningPeriodMetadataKey          = metadataPrefix + "/learning-period"
 	OtelSpanIDMetadataKey              = metadataPrefix + "/otel-span-id"
+	OtelTraceparentMetadataKey         = metadataPrefix + "/otel-traceparent"
 	ManagedByMetadataKey               = metadataPrefix + "/managed-by"
 	PreviousReportTimestampMetadataKey = metadataPrefix + "/previous-report-timestamp"
 	RbacResourceMetadataKey            = metadataPrefix + "/rbac-resource"
