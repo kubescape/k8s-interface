@@ -86,14 +86,15 @@ const (
 
 // Statuses
 const (
-	Initializing   = "initializing"
-	Learning       = "ready"
-	Completed      = "completed"
-	Incomplete     = "incomplete"
-	Unauthorize    = "unauthorize"
-	MissingRuntime = "missing-runtime"
-	TooLarge       = "too-large"
-	Failed         = "failed" // container exited with a non-zero code
+	Initializing      = "initializing"
+	Learning          = "ready"
+	Completed         = "completed"
+	Incomplete        = "incomplete"
+	Unauthorize       = "unauthorize"
+	MissingRuntime    = "missing-runtime"
+	TooLarge          = "too-large"
+	Failed            = "failed" // container exited with a non-zero code
+	UnsupportedSchema = "unsupported-schema"
 )
 
 // Completion
