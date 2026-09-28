@@ -40,34 +40,51 @@ func CheckIsECRImage(imageTag string) bool {
 	return strings.Contains(imageTag, "dkr.ecr")
 }
 
+/// parseECRImageTag extracts the registry ID and the region from an ECR image tag,
+// e.g. 015253967648.dkr.ecr.eu-central-1.amazonaws.com/armo:1
+func parseECRImageTag(imageTag string) (registryID, region string, err error) {
+	parts := strings.Split(imageTag, ".")
+	if len(parts) < 4 || parts[0] == "" || parts[3] == "" {
+		return "", "", fmt.Errorf("invalid ECR image tag %q: expected <registry-id>.dkr.ecr.<region>.amazonaws.com/<repo>", imageTag)
+	}
+	return parts[0], parts[3], nil
+}
+
+// parseECRAuthorizationToken decodes the base64 "user:password" token returned by ECR.
+func parseECRAuthorizationToken(token string) (string, string, error) {
+	decoded, err := base64.StdEncoding.DecodeString(token)
+	if err != nil {
+		return "", "", fmt.Errorf("in PullFromECR, failed to DecodeString: %w", err)
+	}
+	delimiterIdx := bytes.IndexByte(decoded, ':')
+	if delimiterIdx < 0 {
+		return "", "", fmt.Errorf("in PullFromECR, malformed authorization token: missing ':' delimiter")
+	}
+	return string(decoded[:delimiterIdx]), string(decoded[delimiterIdx+1:]), nil
+}
+
 // GetLoginDetailsForECR return user name + password using the default iam-role OR ~/.aws/config of the machine
 func GetLoginDetailsForECR(imageTag string) (string, string, error) {
 	// imageTag := "015253967648.dkr.ecr.eu-central-1.amazonaws.com/armo:1"
-	imageTagSlices := strings.Split(imageTag, ".")
-	repo := imageTagSlices[0]
-	region := imageTagSlices[3]
-	mySession := session.Must(session.NewSession())
+	registryID, region, err := parseECRImageTag(imageTag)
+	if err != nil {
+		return "", "", err
+	}
+	mySession, err := session.NewSession()
+	if err != nil {
+		return "", "", fmt.Errorf("in PullFromECR, failed to create AWS session: %w", err)
+	}
 	ecrClient := ecr.New(mySession, aws.NewConfig().WithRegion(region))
-	input := &ecr.GetAuthorizationTokenInput{
-		RegistryIds: []*string{&repo},
-	}
-	res, err := ecrClient.GetAuthorizationToken(input)
+	res, err := ecrClient.GetAuthorizationToken(&ecr.GetAuthorizationTokenInput{
+		RegistryIds: []*string{&registryID},
+	})
 	if err != nil {
-		return "", "", fmt.Errorf("in PullFromECR, failed to GetAuthorizationToken: %v", err)
+		return "", "", fmt.Errorf("in PullFromECR, failed to GetAuthorizationToken: %w", err)
 	}
-	res64 := (*res.AuthorizationData[0].AuthorizationToken)
-	resB, err := base64.StdEncoding.DecodeString(res64)
-	if err != nil {
-		return "", "", fmt.Errorf("in PullFromECR, failed to DecodeString: %v", err)
+	if len(res.AuthorizationData) == 0 || res.AuthorizationData[0] == nil || res.AuthorizationData[0].AuthorizationToken == nil {
+		return "", "", fmt.Errorf("in PullFromECR, no authorization data returned for registry %s", registryID)
 	}
-	delimiterIdx := bytes.IndexByte(resB, ':')
-	// userName := resB[:delimiterIdx]
-	// resB = resB[delimiterIdx+1:]
-	// resB, err = base64.StdEncoding.DecodeString(string(resB))
-	// if err != nil {
-	// 	t.Errorf("failed to DecodeString #2: %v\n\n", err)
-	// }
-	return string(resB[:delimiterIdx]), string(resB[delimiterIdx+1:]), nil
+	return parseECRAuthorizationToken(*res.AuthorizationData[0].AuthorizationToken)
 }
 
 func CheckIsACRImage(imageTag string) bool {
