@@ -167,7 +167,7 @@ func GetLoginDetailsForAzurCR(imageTag string) (string, string, error) {
 	// excahnging AAD for ACR refresh token
 	refreshToken, err := excahngeAzureAADAccessTokenForACRRefreshToken(imageTagSlices[0], fmt.Sprintf("%v", atMap["tid"]), azureIdensAT)
 	if err != nil {
-		return "", "", fmt.Errorf("failed to excahngeAzureAADAccessTokenForACRRefreshToken: %v, registry: %s, tenantID: %s, azureAADAT: %s", err, imageTagSlices[0], fmt.Sprintf("%v", atMap["tid"]), azureIdensAT)
+		return "", "", fmt.Errorf("failed to excahngeAzureAADAccessTokenForACRRefreshToken: %v, registry: %s, tenantID: %s", err, imageTagSlices[0], fmt.Sprintf("%v", atMap["tid"]))
 	}
 
 	return "00000000-0000-0000-0000-000000000000", refreshToken, nil
