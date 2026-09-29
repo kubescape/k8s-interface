@@ -66,9 +66,6 @@ func (b *BaseObject) GetNamespace() string {
 }
 func (b *BaseObject) GetID() string {
 	return fmt.Sprintf("%s/%s/%s/%s/%s", b.GetGroup(), b.GetVersion(), b.GetNamespace(), b.GetKind(), b.GetName())
-
-	// TODO - return like selfLink - e.g. /apis/apps/v1/namespaces/monitoring/statefulsets/alertmanager-prometheus-
-	// return fmt.Sprintf("apps/%s/%s/%s/%s", b.GetApiVersion(), b.GetNamespace(), b.GetKind(), b.GetName())
 }
 func (b *BaseObject) GetName() string {
 	if v, ok := InspectWorkload(b.base, "metadata", "name"); ok {
