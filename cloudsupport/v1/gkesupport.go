@@ -203,9 +203,6 @@ func (gkeSupport *GKESupport) GetIAMMappings(project string) (map[string]string,
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to create Google Cloud client: %w", err)
 	}
-	if err != nil {
-		return nil, nil, fmt.Errorf("failed to create Google Cloud client: %w", err)
-	}
 
 	iamService, err := iam.NewService(ctx, option.WithHTTPClient(client))
 	if err != nil {

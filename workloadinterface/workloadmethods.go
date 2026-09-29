@@ -212,9 +212,6 @@ func (w *Workload) GetNamespace() string {
 }
 func (w *Workload) GetID() string {
 	return fmt.Sprintf("%s/%s/%s/%s/%s", w.GetGroup(), w.GetVersion(), w.GetNamespace(), w.GetKind(), w.GetName())
-
-	// TODO - return like selfLink - e.g. /apis/apps/v1/namespaces/monitoring/statefulsets/alertmanager-prometheus-
-	// return fmt.Sprintf("apps/%s/%s/%s/%s", w.GetApiVersion(), w.GetNamespace(), w.GetKind(), w.GetName())
 }
 func (w *Workload) GetName() string {
 	if v, ok := InspectWorkload(w.workload, "metadata", "name"); ok {
