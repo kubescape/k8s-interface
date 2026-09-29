@@ -81,10 +81,21 @@ func GetLoginDetailsForECR(imageTag string) (string, string, error) {
 	if err != nil {
 		return "", "", fmt.Errorf("in PullFromECR, failed to GetAuthorizationToken: %w", err)
 	}
-	if len(res.AuthorizationData) == 0 || res.AuthorizationData[0] == nil || res.AuthorizationData[0].AuthorizationToken == nil {
-		return "", "", fmt.Errorf("in PullFromECR, no authorization data returned for registry %s", registryID)
+	token, err := extractECRAuthorizationToken(res, registryID)
+	if err != nil {
+		return "", "", err
 	}
-	return parseECRAuthorizationToken(*res.AuthorizationData[0].AuthorizationToken)
+	return parseECRAuthorizationToken(token)
+}
+
+// extractECRAuthorizationToken validates an ECR GetAuthorizationToken response and
+// returns the token to decode. Separated from GetLoginDetailsForECR so the empty/nil
+// response cases can be tested without calling AWS.
+func extractECRAuthorizationToken(res *ecr.GetAuthorizationTokenOutput, registryID string) (string, error) {
+	if res == nil || len(res.AuthorizationData) == 0 || res.AuthorizationData[0] == nil || res.AuthorizationData[0].AuthorizationToken == nil {
+		return "", fmt.Errorf("in PullFromECR, no authorization data returned for registry %s", registryID)
+	}
+	return *res.AuthorizationData[0].AuthorizationToken, nil
 }
 
 func CheckIsACRImage(imageTag string) bool {
@@ -167,10 +178,16 @@ func GetLoginDetailsForAzurCR(imageTag string) (string, string, error) {
 	// excahnging AAD for ACR refresh token
 	refreshToken, err := excahngeAzureAADAccessTokenForACRRefreshToken(imageTagSlices[0], fmt.Sprintf("%v", atMap["tid"]), azureIdensAT)
 	if err != nil {
-		return "", "", fmt.Errorf("failed to excahngeAzureAADAccessTokenForACRRefreshToken: %v, registry: %s, tenantID: %s", err, imageTagSlices[0], fmt.Sprintf("%v", atMap["tid"]))
+		return "", "", buildACRRefreshTokenError(err, imageTagSlices[0], fmt.Sprintf("%v", atMap["tid"]))
 	}
 
 	return "00000000-0000-0000-0000-000000000000", refreshToken, nil
+}
+
+// buildACRRefreshTokenError formats the ACR refresh-token exchange error without
+// including the Azure AD access token, which must never appear in logs.
+func buildACRRefreshTokenError(err error, registry, tenantID string) error {
+	return fmt.Errorf("failed to excahngeAzureAADAccessTokenForACRRefreshToken: %v, registry: %s, tenantID: %s", err, registry, tenantID)
 }
 
 func excahngeAzureAADAccessTokenForACRRefreshToken(registry, tenantID, azureAADAT string) (string, error) {

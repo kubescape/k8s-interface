@@ -2,8 +2,10 @@ package cloudsupport
 
 import (
 	"encoding/base64"
+	"errors"
 	"testing"
 
+	"github.com/aws/aws-sdk-go/service/ecr"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -61,4 +63,49 @@ func TestGetLoginDetailsForECR_MalformedTagDoesNotPanic(t *testing.T) {
 		_, _, err := GetLoginDetailsForECR("foo.dkr.ecr")
 		assert.Error(t, err)
 	})
+}
+
+func TestExtractECRAuthorizationToken(t *testing.T) {
+	tok := "dGVzdA=="
+
+	t.Run("nil response", func(t *testing.T) {
+		_, err := extractECRAuthorizationToken(nil, "015253967648")
+		assert.Error(t, err)
+	})
+
+	t.Run("empty AuthorizationData", func(t *testing.T) {
+		res := &ecr.GetAuthorizationTokenOutput{AuthorizationData: nil}
+		_, err := extractECRAuthorizationToken(res, "015253967648")
+		assert.Error(t, err)
+	})
+
+	t.Run("nil first element", func(t *testing.T) {
+		res := &ecr.GetAuthorizationTokenOutput{AuthorizationData: []*ecr.AuthorizationData{nil}}
+		_, err := extractECRAuthorizationToken(res, "015253967648")
+		assert.Error(t, err)
+	})
+
+	t.Run("nil AuthorizationToken", func(t *testing.T) {
+		res := &ecr.GetAuthorizationTokenOutput{AuthorizationData: []*ecr.AuthorizationData{{AuthorizationToken: nil}}}
+		_, err := extractECRAuthorizationToken(res, "015253967648")
+		assert.Error(t, err)
+	})
+
+	t.Run("valid token returned", func(t *testing.T) {
+		res := &ecr.GetAuthorizationTokenOutput{AuthorizationData: []*ecr.AuthorizationData{{AuthorizationToken: &tok}}}
+		got, err := extractECRAuthorizationToken(res, "015253967648")
+		assert.NoError(t, err)
+		assert.Equal(t, tok, got)
+	})
+}
+
+func TestBuildACRRefreshTokenError_DoesNotLeakToken(t *testing.T) {
+	secretToken := "super-secret-azure-aad-access-token"
+	err := buildACRRefreshTokenError(errors.New("boom"), "myregistry.azurecr.io", "tenant-123")
+
+	msg := err.Error()
+	assert.NotContains(t, msg, secretToken)
+	assert.Contains(t, msg, "myregistry.azurecr.io")
+	assert.Contains(t, msg, "tenant-123")
+	assert.Contains(t, msg, "boom")
 }
