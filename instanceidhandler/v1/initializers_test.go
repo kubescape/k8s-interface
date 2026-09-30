@@ -4,6 +4,7 @@ import (
 	_ "embed"
 	"encoding/json"
 	"fmt"
+	"hash/fnv"
 	"testing"
 
 	"github.com/kubescape/k8s-interface/instanceidhandler"
@@ -142,11 +143,11 @@ func TestGenerateInstanceID(t *testing.T) {
 					Name:          "kubevuln-scheduler-28677846",
 					ContainerName: "kubevuln-scheduler",
 					InstanceType:  Container,
-					AlternateName: "kubevuln-scheduler-5976555c87",
-					TemplateHash:  "5976555c87",
+					AlternateName: "kubevuln-scheduler-5f99858564",
+					TemplateHash:  "5f99858564",
 				},
 			},
-			wantSlug: "job-kubevuln-scheduler-5976555c87",
+			wantSlug: "job-kubevuln-scheduler-5f99858564",
 			wantErr:  assert.NoError,
 		},
 		{
@@ -272,11 +273,11 @@ func TestGenerateInstanceIDFromRuntime(t *testing.T) {
 					Name:          "kubevuln-scheduler-28677846",
 					ContainerName: "kubevuln-scheduler",
 					InstanceType:  Container,
-					AlternateName: "kubevuln-scheduler-5976555c87",
-					TemplateHash:  "5976555c87",
+					AlternateName: "kubevuln-scheduler-5f99858564",
+					TemplateHash:  "5f99858564",
 				},
 			},
-			wantSlug: "job-kubevuln-scheduler-5976555c87",
+			wantSlug: "job-kubevuln-scheduler-5f99858564",
 			wantErr:  assert.NoError,
 		},
 		{
@@ -325,10 +326,10 @@ func TestSameSlug(t *testing.T) {
 		require.NoError(t, err)
 		slug, err := ins[0].(*containerinstance.InstanceID).GetSlug(true)
 		require.NoError(t, err)
-		assert.Equal(t, "job-hello-64c875c864", slug)
+		assert.Equal(t, "job-hello-77bdd46fc5", slug)
 		slugFull, err := ins[0].(*containerinstance.InstanceID).GetSlug(false)
 		require.NoError(t, err)
-		assert.Equal(t, "job-hello-64c875c864-hello-f699-a8be", slugFull)
+		assert.Equal(t, "job-hello-77bdd46fc5-hello-6f4e-3f75", slugFull)
 	}
 }
 
@@ -366,4 +367,39 @@ func compare(t *testing.T, a, b *containerinstance.InstanceID) {
 	assert.Equal(t, a.Kind, b.Kind)
 	assert.Equal(t, a.Name, b.Name)
 	assert.Equal(t, a.ContainerName, b.ContainerName)
+}
+
+func TestDeepHashObject_ExcludedFields(t *testing.T) {
+	pod1 := &corev1.Pod{}
+	err := json.Unmarshal([]byte(cronjob), pod1)
+	require.NoError(t, err)
+
+	pod2 := &corev1.Pod{}
+	err = json.Unmarshal([]byte(cronjob), pod2)
+	require.NoError(t, err)
+
+	// Simulate pod scheduled to a different node with different dynamic/injected env vars
+	pod1.Spec.NodeName = "node-alpha"
+	pod1.Spec.Hostname = "host-alpha"
+
+	pod2.Spec.NodeName = "node-beta"
+	pod2.Spec.Hostname = "host-beta"
+	pod2.Spec.Containers[0].Env[0].Value = "different-uuid-value"
+	pod2.Spec.Containers[0].Env[1].Value = "9999999999"
+
+	// Also verify initContainers with transient Datadog env vars
+	initEnv1 := []corev1.EnvVar{{Name: "DD_INSTRUMENTATION_INSTALL_ID", Value: "init-id-1"}}
+	initEnv2 := []corev1.EnvVar{{Name: "DD_INSTRUMENTATION_INSTALL_ID", Value: "init-id-2"}}
+	pod1.Spec.InitContainers = []corev1.Container{{Name: "init-c", Env: initEnv1}}
+	pod2.Spec.InitContainers = []corev1.Container{{Name: "init-c", Env: initEnv2}}
+
+	hasher1 := fnv.New32a()
+	DeepHashObject(hasher1, &pod1.Spec, nil)
+	hash1 := hasher1.Sum32()
+
+	hasher2 := fnv.New32a()
+	DeepHashObject(hasher2, &pod2.Spec, nil)
+	hash2 := hasher2.Sum32()
+
+	assert.Equal(t, hash1, hash2, "hashes must match even when nodeName or Datadog inject env vars differ")
 }
