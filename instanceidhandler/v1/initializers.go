@@ -119,6 +119,10 @@ var defaultExcludedJSONPaths = []string{
 }
 
 func DeepHashObject(hasher hash.Hash32, pod *corev1.PodSpec, extraJsonPaths []string) {
+	if pod == nil {
+		return
+	}
+	pod = pod.DeepCopy()
 	// sanitize pod spec
 	dropProjectedVolumesAndMounts(pod)
 	jsonPaths := append([]string{}, defaultExcludedJSONPaths...)

@@ -7,6 +7,7 @@ import (
 	"github.com/kubescape/k8s-interface/instanceidhandler"
 	"github.com/kubescape/k8s-interface/instanceidhandler/v1/containerinstance"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	appsv1 "k8s.io/api/apps/v1"
 	batchv1 "k8s.io/api/batch/v1"
 	v1 "k8s.io/api/core/v1"
@@ -297,4 +298,52 @@ func TestGenerateInstanceIDFromRuntime2(t *testing.T) {
 			assert.Equalf(t, tt.want, got, "GenerateInstanceIDFromRuntimeObj(%v, %v)", tt.args.w, tt.args.jsonPaths)
 		})
 	}
+}
+
+func TestGenerateInstanceIDFromRuntimeObj_PreservesInput(t *testing.T) {
+	pod := &v1.Pod{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "hello-28686821-dj5bf",
+			Namespace: "default",
+			OwnerReferences: []metav1.OwnerReference{
+				{
+					APIVersion: "batch/v1",
+					Kind:       "Job",
+					Name:       "hello-28686821",
+				},
+			},
+		},
+		Spec: v1.PodSpec{
+			NodeName: "kind-control-plane",
+			Hostname: "test-hostname",
+			Containers: []v1.Container{
+				{
+					Name: "hello",
+					Env: []v1.EnvVar{
+						{Name: "DD_INSTRUMENTATION_INSTALL_ID", Value: "0ca6045d-9232-4ad0-bdf0-12330094bcc3"},
+						{Name: "DD_INJECT_START_TIME", Value: "1746527100"},
+						{Name: "CUSTOM_VAR", Value: "custom-value"},
+					},
+				},
+			},
+			InitContainers: []v1.Container{
+				{
+					Name: "init-hello",
+					Env: []v1.EnvVar{
+						{Name: "DD_INSTRUMENTATION_INSTALL_ID", Value: "init-id-123"},
+						{Name: "DD_INJECT_START_TIME", Value: "1746527200"},
+					},
+				},
+			},
+		},
+	}
+
+	podCopy := pod.DeepCopy()
+
+	ids, err := GenerateInstanceIDFromRuntimeObj(pod, nil)
+	require.NoError(t, err)
+	require.NotEmpty(t, ids)
+
+	// Verify that the caller-owned runtime object was not mutated by hashing or sanitization
+	assert.Equal(t, podCopy, pod, "GenerateInstanceIDFromRuntimeObj must not mutate the input runtime.Object")
 }
