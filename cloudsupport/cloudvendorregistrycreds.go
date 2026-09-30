@@ -40,34 +40,62 @@ func CheckIsECRImage(imageTag string) bool {
 	return strings.Contains(imageTag, "dkr.ecr")
 }
 
+/// parseECRImageTag extracts the registry ID and the region from an ECR image tag,
+// e.g. 015253967648.dkr.ecr.eu-central-1.amazonaws.com/armo:1
+func parseECRImageTag(imageTag string) (registryID, region string, err error) {
+	parts := strings.Split(imageTag, ".")
+	if len(parts) < 4 || parts[0] == "" || parts[3] == "" {
+		return "", "", fmt.Errorf("invalid ECR image tag %q: expected <registry-id>.dkr.ecr.<region>.amazonaws.com/<repo>", imageTag)
+	}
+	return parts[0], parts[3], nil
+}
+
+// parseECRAuthorizationToken decodes the base64 "user:password" token returned by ECR.
+func parseECRAuthorizationToken(token string) (string, string, error) {
+	decoded, err := base64.StdEncoding.DecodeString(token)
+	if err != nil {
+		return "", "", fmt.Errorf("in PullFromECR, failed to DecodeString: %w", err)
+	}
+	delimiterIdx := bytes.IndexByte(decoded, ':')
+	if delimiterIdx < 0 {
+		return "", "", fmt.Errorf("in PullFromECR, malformed authorization token: missing ':' delimiter")
+	}
+	return string(decoded[:delimiterIdx]), string(decoded[delimiterIdx+1:]), nil
+}
+
 // GetLoginDetailsForECR return user name + password using the default iam-role OR ~/.aws/config of the machine
 func GetLoginDetailsForECR(imageTag string) (string, string, error) {
 	// imageTag := "015253967648.dkr.ecr.eu-central-1.amazonaws.com/armo:1"
-	imageTagSlices := strings.Split(imageTag, ".")
-	repo := imageTagSlices[0]
-	region := imageTagSlices[3]
-	mySession := session.Must(session.NewSession())
+	registryID, region, err := parseECRImageTag(imageTag)
+	if err != nil {
+		return "", "", err
+	}
+	mySession, err := session.NewSession()
+	if err != nil {
+		return "", "", fmt.Errorf("in PullFromECR, failed to create AWS session: %w", err)
+	}
 	ecrClient := ecr.New(mySession, aws.NewConfig().WithRegion(region))
-	input := &ecr.GetAuthorizationTokenInput{
-		RegistryIds: []*string{&repo},
-	}
-	res, err := ecrClient.GetAuthorizationToken(input)
+	res, err := ecrClient.GetAuthorizationToken(&ecr.GetAuthorizationTokenInput{
+		RegistryIds: []*string{&registryID},
+	})
 	if err != nil {
-		return "", "", fmt.Errorf("in PullFromECR, failed to GetAuthorizationToken: %v", err)
+		return "", "", fmt.Errorf("in PullFromECR, failed to GetAuthorizationToken: %w", err)
 	}
-	res64 := (*res.AuthorizationData[0].AuthorizationToken)
-	resB, err := base64.StdEncoding.DecodeString(res64)
+	token, err := extractECRAuthorizationToken(res, registryID)
 	if err != nil {
-		return "", "", fmt.Errorf("in PullFromECR, failed to DecodeString: %v", err)
+		return "", "", err
 	}
-	delimiterIdx := bytes.IndexByte(resB, ':')
-	// userName := resB[:delimiterIdx]
-	// resB = resB[delimiterIdx+1:]
-	// resB, err = base64.StdEncoding.DecodeString(string(resB))
-	// if err != nil {
-	// 	t.Errorf("failed to DecodeString #2: %v\n\n", err)
-	// }
-	return string(resB[:delimiterIdx]), string(resB[delimiterIdx+1:]), nil
+	return parseECRAuthorizationToken(token)
+}
+
+// extractECRAuthorizationToken validates an ECR GetAuthorizationToken response and
+// returns the token to decode. Separated from GetLoginDetailsForECR so the empty/nil
+// response cases can be tested without calling AWS.
+func extractECRAuthorizationToken(res *ecr.GetAuthorizationTokenOutput, registryID string) (string, error) {
+	if res == nil || len(res.AuthorizationData) == 0 || res.AuthorizationData[0] == nil || res.AuthorizationData[0].AuthorizationToken == nil {
+		return "", fmt.Errorf("in PullFromECR, no authorization data returned for registry %s", registryID)
+	}
+	return *res.AuthorizationData[0].AuthorizationToken, nil
 }
 
 func CheckIsACRImage(imageTag string) bool {
@@ -150,10 +178,16 @@ func GetLoginDetailsForAzurCR(imageTag string) (string, string, error) {
 	// excahnging AAD for ACR refresh token
 	refreshToken, err := excahngeAzureAADAccessTokenForACRRefreshToken(imageTagSlices[0], fmt.Sprintf("%v", atMap["tid"]), azureIdensAT)
 	if err != nil {
-		return "", "", fmt.Errorf("failed to excahngeAzureAADAccessTokenForACRRefreshToken: %v, registry: %s, tenantID: %s, azureAADAT: %s", err, imageTagSlices[0], fmt.Sprintf("%v", atMap["tid"]), azureIdensAT)
+		return "", "", buildACRRefreshTokenError(err, imageTagSlices[0], fmt.Sprintf("%v", atMap["tid"]))
 	}
 
 	return "00000000-0000-0000-0000-000000000000", refreshToken, nil
+}
+
+// buildACRRefreshTokenError formats the ACR refresh-token exchange error without
+// including the Azure AD access token, which must never appear in logs.
+func buildACRRefreshTokenError(err error, registry, tenantID string) error {
+	return fmt.Errorf("failed to excahngeAzureAADAccessTokenForACRRefreshToken: %v, registry: %s, tenantID: %s", err, registry, tenantID)
 }
 
 func excahngeAzureAADAccessTokenForACRRefreshToken(registry, tenantID, azureAADAT string) (string, error) {
