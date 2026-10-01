@@ -71,7 +71,7 @@ func TestGenerateInstanceIDFromString(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name: "valid input - CronJob",
+			name: "valid input - CronJob child Job",
 			args: args{
 				input: "apiVersion-batch/v1/namespace-kubescape/kind-Job/name-kubevuln-scheduler-b449cf78f/containerName-kubevuln-scheduler",
 			},
@@ -79,10 +79,69 @@ func TestGenerateInstanceIDFromString(t *testing.T) {
 				ApiVersion:    "batch/v1",
 				Namespace:     "kubescape",
 				Kind:          "Job",
-				Name:          "kubevuln-scheduler-b449cf78f", // should be kubevuln-scheduler-28677846
+				Name:          "kubevuln-scheduler-b449cf78f",
 				ContainerName: "kubevuln-scheduler",
 				InstanceType:  container,
-				AlternateName: "", // should be kubevuln-scheduler-b449cf78f
+				AlternateName: "kubevuln-scheduler-b449cf78f",
+				TemplateHash:  "b449cf78f",
+			},
+			wantErr: false,
+		},
+		{
+			name: "valid input - CronJob child Job, no container",
+			args: args{
+				input: "apiVersion-batch/v1/namespace-kubescape/kind-Job/name-kubevuln-scheduler-b449cf78f",
+			},
+			want: &InstanceID{
+				ApiVersion:    "batch/v1",
+				Namespace:     "kubescape",
+				Kind:          "Job",
+				Name:          "kubevuln-scheduler-b449cf78f",
+				AlternateName: "kubevuln-scheduler-b449cf78f",
+				TemplateHash:  "b449cf78f",
+			},
+			wantErr: false,
+		},
+		{
+			name: "valid input - CronJob workload",
+			args: args{
+				input: "apiVersion-batch/v1/namespace-kubescape/kind-CronJob/name-kubevuln-scheduler/containerName-kubevuln-scheduler",
+			},
+			want: &InstanceID{
+				ApiVersion:    "batch/v1",
+				Namespace:     "kubescape",
+				Kind:          "CronJob",
+				Name:          "kubevuln-scheduler",
+				ContainerName: "kubevuln-scheduler",
+				InstanceType:  container,
+			},
+			wantErr: false,
+		},
+		{
+			name: "valid input - CronJob workload, no container",
+			args: args{
+				input: "apiVersion-batch/v1/namespace-kubescape/kind-CronJob/name-kubevuln-scheduler",
+			},
+			want: &InstanceID{
+				ApiVersion: "batch/v1",
+				Namespace:  "kubescape",
+				Kind:       "CronJob",
+				Name:       "kubevuln-scheduler",
+			},
+			wantErr: false,
+		},
+		{
+			name: "valid input - standard Job without hash",
+			args: args{
+				input: "apiVersion-batch/v1/namespace-default/kind-Job/name-nginx-job/containerName-nginx-job",
+			},
+			want: &InstanceID{
+				ApiVersion:    "batch/v1",
+				Namespace:     "default",
+				Kind:          "Job",
+				Name:          "nginx-job",
+				ContainerName: "nginx-job",
+				InstanceType:  container,
 			},
 			wantErr: false,
 		},

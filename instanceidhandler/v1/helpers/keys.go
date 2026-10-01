@@ -1,6 +1,12 @@
 package helpers
 
-import "github.com/kubescape/k8s-interface/k8sinterface"
+import (
+	"math"
+	"regexp"
+	"strconv"
+
+	"github.com/kubescape/k8s-interface/k8sinterface"
+)
 
 type InstanceType string
 
@@ -117,3 +123,20 @@ func IgnoreOwnerReference(ownerKind string) bool {
 	}
 	return false
 }
+
+var TemplateHashRegex = regexp.MustCompile(`^[0-9b-df-hj-np-tv-z]{8,10}$`)
+
+func IsUnixTimeInMinutes(s string) bool {
+	if i, err := strconv.Atoi(s); err == nil {
+		return i > 0 && i < math.MaxInt64/60
+	}
+	return false
+}
+
+func IsTemplateHash(s string) bool {
+	if IsUnixTimeInMinutes(s) {
+		return false
+	}
+	return TemplateHashRegex.MatchString(s)
+}
+

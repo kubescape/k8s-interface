@@ -2,6 +2,9 @@ package containerinstance
 
 import (
 	"fmt"
+	"strings"
+
+	"github.com/kubescape/k8s-interface/instanceidhandler/v1/helpers"
 )
 
 // GenerateInstanceIDFromString generates instance ID from string
@@ -9,8 +12,6 @@ import (
 func GenerateInstanceIDFromString(input string) (*InstanceID, error) {
 
 	instanceID := &InstanceID{}
-
-	// TODO add case for CronJobs here, or deprecate
 
 	if fields := RegexFormatted.FindStringSubmatch(input); fields != nil {
 		instanceID.ApiVersion = fields[1]
@@ -26,6 +27,15 @@ func GenerateInstanceIDFromString(input string) (*InstanceID, error) {
 		instanceID.Name = fields[4]
 	} else {
 		return nil, fmt.Errorf("invalid format: %s", input)
+	}
+
+	// Handle CronJob child Jobs where the name contains a template hash
+	if instanceID.Kind == "Job" || instanceID.Kind == "CronJob" {
+		s := strings.Split(instanceID.Name, "-")
+		if len(s) > 1 && helpers.IsTemplateHash(s[len(s)-1]) {
+			instanceID.AlternateName = instanceID.Name
+			instanceID.TemplateHash = s[len(s)-1]
+		}
 	}
 
 	if err := validateInstanceID(instanceID); err != nil {
