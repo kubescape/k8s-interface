@@ -53,7 +53,6 @@ func GenerateInstanceID(w workloadinterface.IWorkload, jsonPaths []string) ([]in
 			// if the Pod is created by a CronJob, its parent is a Job named after the CronJob
 			// with the scheduled timestamp appended to it (unix time in minutes).
 			// https://github.com/kubernetes/kubernetes/blob/master/pkg/controller/cronjob/utils.go#L277
-			// TODO add a json path to exclude some fields
 			s := strings.Split(ownerReference.Name, "-")
 			if len(s) > 1 && isUnixTimeInMinutes(s[len(s)-1]) {
 				// calculate pod template hash
@@ -110,13 +109,23 @@ func GenerateInstanceID(w workloadinterface.IWorkload, jsonPaths []string) ([]in
 	return convertContainersToIInstanceID(c), nil
 }
 
+var defaultExcludedJSONPaths = []string{
+	".hostname",
+	".nodeName",
+	".containers[*].env[?(@.name==\"DD_INJECT_START_TIME\")]",
+	".containers[*].env[?(@.name==\"DD_INSTRUMENTATION_INSTALL_ID\")]",
+	".initContainers[*].env[?(@.name==\"DD_INJECT_START_TIME\")]",
+	".initContainers[*].env[?(@.name==\"DD_INSTRUMENTATION_INSTALL_ID\")]",
+}
+
 func DeepHashObject(hasher hash.Hash32, pod *corev1.PodSpec, extraJsonPaths []string) {
-	// sanitize pod sped
-	dropProjectedVolumesAndMounts(pod)
-	jsonPaths := []string{
-		".hostname",
-		".containers[*].env[?(@.name==\"DD_INJECT_START_TIME\")]",
+	if pod == nil {
+		return
 	}
+	pod = pod.DeepCopy()
+	// sanitize pod spec
+	dropProjectedVolumesAndMounts(pod)
+	jsonPaths := append([]string{}, defaultExcludedJSONPaths...)
 	jsonPaths = append(jsonPaths, extraJsonPaths...)
 	if err := dropFieldsByJSONPath(pod, jsonPaths); err != nil {
 		logger.L().Error("failed to drop fields by JSONPath", helpers.Error(err), helpers.Interface("jsonPath", jsonPaths))

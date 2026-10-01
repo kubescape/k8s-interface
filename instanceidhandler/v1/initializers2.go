@@ -94,7 +94,6 @@ func GenerateInstanceIDFromRuntimeObj(w runtime.Object, jsonPaths []string) ([]i
 			// if the Pod is created by a CronJob, its parent is a Job named after the CronJob
 			// with the scheduled timestamp appended to it (unix time in minutes).
 			// https://github.com/kubernetes/kubernetes/blob/master/pkg/controller/cronjob/utils.go#L277
-			// TODO add a json path to exclude some fields
 			s := strings.Split(ownerReference.Name, "-")
 			if len(s) > 1 && isUnixTimeInMinutes(s[len(s)-1]) {
 				// calculate pod template hash
