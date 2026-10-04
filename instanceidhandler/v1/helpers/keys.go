@@ -124,8 +124,14 @@ func IgnoreOwnerReference(ownerKind string) bool {
 	return false
 }
 
-var TemplateHashRegex = regexp.MustCompile(`^[0-9b-df-hj-np-tv-z]{8,10}$`)
+// TemplateHashRegex matches the output domain of rand.SafeEncodeString(fmt.Sprint(podTemplateSpecHasher.Sum32())).
+// In k8s.io/apimachinery/pkg/util/rand, SafeEncodeString encodes decimal digits '0'-'9' using alphanums = "bcdfghjklmnpqrstvwxz2456789".
+// Because (int('0')+d) % 27 maps decimal digits 0..9 strictly to '4','5','6','7','8','9','b','c','d','f',
+// the producer domain consists exclusively of characters [4-9bcdf], with length 1 to 10 (decimal representation of uint32).
+var TemplateHashRegex = regexp.MustCompile(`^[4-9bcdf]{1,10}$`)
 
+// IsUnixTimeInMinutes checks if a string represents a Unix timestamp in minutes.
+// In Kubernetes, CronJob controller appends the schedule timestamp (minutes since epoch) to the child Job name.
 func IsUnixTimeInMinutes(s string) bool {
 	if i, err := strconv.Atoi(s); err == nil {
 		return i > 0 && i < math.MaxInt64/60
@@ -133,10 +139,25 @@ func IsUnixTimeInMinutes(s string) bool {
 	return false
 }
 
+// IsTemplateHash returns true if s matches the template hash domain produced by
+// rand.SafeEncodeString(fmt.Sprint(podTemplateSpecHasher.Sum32())).
+//
+// Contextual Recovery & Ambiguity Contract:
+// In Kubernetes, CronJob child Jobs are originally named "<cronjob>-<timestamp>" where timestamp
+// is the scheduled Unix time in minutes (e.g. "backup-28677846"). When Kubescape generates an InstanceID
+// for a Pod under such a Job, it computes a template hash via SafeEncodeString and sets AlternateName
+// to "<cronjob>-<templateHash>" (e.g. "backup-8698448884" or "kubevuln-scheduler-b449cf78f").
+// When serialized via GetStringFormatted(), AlternateName replaces the timestamp-bearing name in the name field.
+//
+// Because the encoder domain is strictly [4-9bcdf]{1,10}:
+//  1. Literal names or timestamps containing non-encoder characters (e.g. '0', '1', '2', '3' present in
+//     standard Unix timestamps like "28677846", or 'x' in literal names like "backup-xxxxxxxx")
+//     are rejected and preserved literally.
+//  2. Alphanumeric hashes containing 'b', 'c', 'd', 'f' are unambiguously template hashes (timestamps
+//     are purely decimal).
+//  3. Purely numeric hashes (digits '4'-'9', such as "8698448884") are valid producer outputs.
+//     In the context of Job instance ID deserialization, any suffix matching this producer domain
+//     is recovered as the template hash.
 func IsTemplateHash(s string) bool {
-	if IsUnixTimeInMinutes(s) {
-		return false
-	}
 	return TemplateHashRegex.MatchString(s)
 }
-

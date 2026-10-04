@@ -131,6 +131,100 @@ func TestGenerateInstanceIDFromString(t *testing.T) {
 			wantErr: false,
 		},
 		{
+			name: "valid input - CronJob child Job with numeric template hash",
+			args: args{
+				input: "apiVersion-batch/v1/namespace-default/kind-Job/name-backup-8698448884/containerName-backup",
+			},
+			want: &InstanceID{
+				ApiVersion:    "batch/v1",
+				Namespace:     "default",
+				Kind:          "Job",
+				Name:          "backup-8698448884",
+				ContainerName: "backup",
+				InstanceType:  container,
+				AlternateName: "backup-8698448884",
+				TemplateHash:  "8698448884",
+			},
+			wantErr: false,
+		},
+		{
+			name: "valid input - CronJob child Job with short template hash",
+			args: args{
+				input: "apiVersion-batch/v1/namespace-default/kind-Job/name-backup-5678/containerName-backup",
+			},
+			want: &InstanceID{
+				ApiVersion:    "batch/v1",
+				Namespace:     "default",
+				Kind:          "Job",
+				Name:          "backup-5678",
+				ContainerName: "backup",
+				InstanceType:  container,
+				AlternateName: "backup-5678",
+				TemplateHash:  "5678",
+			},
+			wantErr: false,
+		},
+		{
+			name: "valid input - ordinary CronJob named backup-xxxxxxxx preserves literal name",
+			args: args{
+				input: "apiVersion-batch/v1/namespace-default/kind-CronJob/name-backup-xxxxxxxx/containerName-backup",
+			},
+			want: &InstanceID{
+				ApiVersion:    "batch/v1",
+				Namespace:     "default",
+				Kind:          "CronJob",
+				Name:          "backup-xxxxxxxx",
+				ContainerName: "backup",
+				InstanceType:  container,
+			},
+			wantErr: false,
+		},
+		{
+			name: "valid input - ordinary CronJob named backup-8698448884 preserves literal name",
+			args: args{
+				input: "apiVersion-batch/v1/namespace-default/kind-CronJob/name-backup-8698448884/containerName-backup",
+			},
+			want: &InstanceID{
+				ApiVersion:    "batch/v1",
+				Namespace:     "default",
+				Kind:          "CronJob",
+				Name:          "backup-8698448884",
+				ContainerName: "backup",
+				InstanceType:  container,
+			},
+			wantErr: false,
+		},
+		{
+			name: "valid input - standard Job with timestamp suffix preserves literal name",
+			args: args{
+				input: "apiVersion-batch/v1/namespace-default/kind-Job/name-backup-28677846/containerName-backup",
+			},
+			want: &InstanceID{
+				ApiVersion:    "batch/v1",
+				Namespace:     "default",
+				Kind:          "Job",
+				Name:          "backup-28677846",
+				ContainerName: "backup",
+				InstanceType:  container,
+			},
+			wantErr: false,
+		},
+		{
+			name: "valid input - standard Job named backup-xxxxxxxx preserves literal name",
+			args: args{
+				input: "apiVersion-batch/v1/namespace-default/kind-Job/name-backup-xxxxxxxx/containerName-backup",
+			},
+			want: &InstanceID{
+				ApiVersion:    "batch/v1",
+				Namespace:     "default",
+				Kind:          "Job",
+				Name:          "backup-xxxxxxxx",
+				ContainerName: "backup",
+				InstanceType:  container,
+			},
+			wantErr: false,
+		},
+		{
 			name: "valid input - standard Job without hash",
 			args: args{
 				input: "apiVersion-batch/v1/namespace-default/kind-Job/name-nginx-job/containerName-nginx-job",

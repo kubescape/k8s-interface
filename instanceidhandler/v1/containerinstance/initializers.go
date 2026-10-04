@@ -29,8 +29,13 @@ func GenerateInstanceIDFromString(input string) (*InstanceID, error) {
 		return nil, fmt.Errorf("invalid format: %s", input)
 	}
 
-	// Handle CronJob child Jobs where the name contains a template hash
-	if instanceID.Kind == "Job" || instanceID.Kind == "CronJob" {
+	// Contextual recovery contract:
+	// For Job instance IDs (which may represent Pods owned by CronJob child Jobs where GetStringFormatted()
+	// serialized AlternateName into the name field), infer AlternateName and TemplateHash if the name suffix
+	// matches the producer's template hash domain.
+	// Ordinary CronJob workloads (Kind == "CronJob") and standard Jobs without a valid template hash suffix
+	// remain literal with empty AlternateName and TemplateHash.
+	if instanceID.Kind == "Job" {
 		s := strings.Split(instanceID.Name, "-")
 		if len(s) > 1 && helpers.IsTemplateHash(s[len(s)-1]) {
 			instanceID.AlternateName = instanceID.Name

@@ -101,13 +101,23 @@ func TestIsTemplateHash(t *testing.T) {
 		want  bool
 	}{
 		{"b449cf78f", true},
+		{"8698448884", true}, // entirely numeric hash generated from SafeEncodeString
+		{"5678", true},       // short hash (< 8 chars)
+		{"4", true},          // single character hash
+		{"456789bcdf", true}, // full producer alphabet
 		{"5f99858564", true},
 		{"77bdd46fc5", true},
 		{"84f5585d68", true},
-		{"28677846", false},
-		{"job", false},
-		{"nginx", false},
-		{"worker", false},
+		{"28677846", false},    // timestamp with digits '2' (not in producer domain)
+		{"xxxxxxxx", false},    // non-domain character 'x'
+		{"backup", false},      // non-domain word
+		{"job", false},         // non-domain word
+		{"nginx", false},       // non-domain word
+		{"worker", false},      // non-domain word
+		{"1234", false},        // digits '1','2','3' not in producer domain
+		{"0456", false},        // digit '0' not in producer domain
+		{"456789bcdf4", false}, // exceeds uint32 max length (11 chars)
+		{"", false},            // empty string
 	}
 	for _, tt := range tests {
 		if got := IsTemplateHash(tt.input); got != tt.want {
@@ -115,4 +125,3 @@ func TestIsTemplateHash(t *testing.T) {
 		}
 	}
 }
-
