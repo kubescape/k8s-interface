@@ -6,6 +6,7 @@ import (
 
 	"github.com/kubescape/k8s-interface/instanceidhandler"
 	"github.com/kubescape/k8s-interface/instanceidhandler/v1/containerinstance"
+	"github.com/kubescape/k8s-interface/instanceidhandler/v1/helpers"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	appsv1 "k8s.io/api/apps/v1"
@@ -346,4 +347,79 @@ func TestGenerateInstanceIDFromRuntimeObj_PreservesInput(t *testing.T) {
 
 	// Verify that the caller-owned runtime object was not mutated by hashing or sanitization
 	assert.Equal(t, podCopy, pod, "GenerateInstanceIDFromRuntimeObj must not mutate the input runtime.Object")
+}
+
+func TestGeneratorToParserRoundTrip(t *testing.T) {
+	// Test 1: CronJob child Job with template hash generated from Pod
+	pod := &v1.Pod{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "backup-28677846-xyz12",
+			Namespace: "default",
+			OwnerReferences: []metav1.OwnerReference{
+				{
+					APIVersion: "batch/v1",
+					Kind:       "Job",
+					Name:       "backup-28677846",
+				},
+			},
+		},
+		Spec: v1.PodSpec{
+			Containers: []v1.Container{
+				{
+					Name:  "backup",
+					Image: "backup:196",
+				},
+			},
+		},
+	}
+
+	ids, err := GenerateInstanceIDFromRuntimeObj(pod, nil)
+	require.NoError(t, err)
+	require.NotEmpty(t, ids)
+
+	generated := ids[0]
+	hash := generated.GetTemplateHash()
+	require.NotEmpty(t, hash, "generated instance ID must have template hash")
+
+	formattedStr := generated.GetStringFormatted()
+	parsed, err := containerinstance.GenerateInstanceIDFromString(formattedStr)
+	require.NoError(t, err)
+	assert.Equal(t, hash, parsed.GetTemplateHash(), "parsed template hash must match generated template hash")
+	assert.Equal(t, hash, parsed.GetLabels()[helpers.TemplateHashKey], "parsed template hash label must match")
+	assert.Equal(t, formattedStr, parsed.GetStringFormatted(), "serialized string must match")
+
+	// Test 2: Ordinary CronJob workload without hash
+	cronjob := &batchv1.CronJob{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "backup-xxxxxxxx",
+			Namespace: "default",
+		},
+		Spec: batchv1.CronJobSpec{
+			JobTemplate: batchv1.JobTemplateSpec{
+				Spec: batchv1.JobSpec{
+					Template: v1.PodTemplateSpec{
+						Spec: v1.PodSpec{
+							Containers: []v1.Container{
+								{
+									Name: "backup",
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	cronJobIDs, err := GenerateInstanceIDFromRuntimeObj(cronjob, nil)
+	require.NoError(t, err)
+	require.NotEmpty(t, cronJobIDs)
+
+	cronJobGenerated := cronJobIDs[0]
+	assert.Empty(t, cronJobGenerated.GetTemplateHash())
+
+	cronJobParsed, err := containerinstance.GenerateInstanceIDFromString(cronJobGenerated.GetStringFormatted())
+	require.NoError(t, err)
+	assert.Empty(t, cronJobParsed.GetTemplateHash(), "ordinary CronJob must not have a template hash")
+	assert.Equal(t, "backup-xxxxxxxx", cronJobParsed.GetName())
 }

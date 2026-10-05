@@ -76,3 +76,55 @@ func Test_ignoreOwnerReference(t *testing.T) {
 		})
 	}
 }
+
+func TestIsUnixTimeInMinutes(t *testing.T) {
+	tests := []struct {
+		input string
+		want  bool
+	}{
+		{"28677846", true},
+		{"0", false},
+		{"-1", false},
+		{"b449cf78f", false},
+		{"job", false},
+	}
+	for _, tt := range tests {
+		if got := IsUnixTimeInMinutes(tt.input); got != tt.want {
+			t.Errorf("IsUnixTimeInMinutes(%s) = %v, want %v", tt.input, got, tt.want)
+		}
+	}
+}
+
+func TestIsTemplateHash(t *testing.T) {
+	tests := []struct {
+		input string
+		want  bool
+	}{
+		{"b449cf78f", true},
+		{"8698448884", true}, // entirely numeric hash generated from SafeEncodeString
+		{"5678", true},       // short hash (< 8 chars)
+		{"4", true},          // single character hash (decodes to 0)
+		{"db", true},         // short alphanumeric hash (decodes to 86)
+		{"56789bcdf4", true}, // 10-character canonical hash (decodes to 1234567890 <= MaxUint32)
+		{"5f99858564", true},
+		{"77bdd46fc5", true},
+		{"84f5585d68", true},
+		{"44", false},          // non-canonical leading zero (decodes to "00")
+		{"ffffffffff", false},  // exceeds math.MaxUint32 (decodes to 9999999999 > 4294967295)
+		{"28677846", false},    // timestamp with digits '2' (not in producer domain)
+		{"xxxxxxxx", false},    // non-domain character 'x'
+		{"backup", false},      // non-domain word
+		{"job", false},         // non-domain word
+		{"nginx", false},       // non-domain word
+		{"worker", false},      // non-domain word
+		{"1234", false},        // digits '1','2','3' not in producer domain
+		{"0456", false},        // digit '0' not in producer domain
+		{"456789bcdf4", false}, // exceeds uint32 max length (11 chars)
+		{"", false},            // empty string
+	}
+	for _, tt := range tests {
+		if got := IsTemplateHash(tt.input); got != tt.want {
+			t.Errorf("IsTemplateHash(%s) = %v, want %v", tt.input, got, tt.want)
+		}
+	}
+}
