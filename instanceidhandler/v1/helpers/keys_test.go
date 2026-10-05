@@ -103,11 +103,14 @@ func TestIsTemplateHash(t *testing.T) {
 		{"b449cf78f", true},
 		{"8698448884", true}, // entirely numeric hash generated from SafeEncodeString
 		{"5678", true},       // short hash (< 8 chars)
-		{"4", true},          // single character hash
-		{"456789bcdf", true}, // full producer alphabet
+		{"4", true},          // single character hash (decodes to 0)
+		{"db", true},         // short alphanumeric hash (decodes to 86)
+		{"56789bcdf4", true}, // 10-character canonical hash (decodes to 1234567890 <= MaxUint32)
 		{"5f99858564", true},
 		{"77bdd46fc5", true},
 		{"84f5585d68", true},
+		{"44", false},          // non-canonical leading zero (decodes to "00")
+		{"ffffffffff", false},  // exceeds math.MaxUint32 (decodes to 9999999999 > 4294967295)
 		{"28677846", false},    // timestamp with digits '2' (not in producer domain)
 		{"xxxxxxxx", false},    // non-domain character 'x'
 		{"backup", false},      // non-domain word

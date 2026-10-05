@@ -225,6 +225,40 @@ func TestGenerateInstanceIDFromString(t *testing.T) {
 			wantErr: false,
 		},
 		{
+			name: "valid input - literal Job backup-db parsed as template hash acknowledging tradeoff",
+			args: args{
+				input: "apiVersion-batch/v1/namespace-default/kind-Job/name-backup-db/containerName-backup",
+			},
+			want: &InstanceID{
+				ApiVersion:    "batch/v1",
+				Namespace:     "default",
+				Kind:          "Job",
+				Name:          "backup-db",
+				ContainerName: "backup",
+				InstanceType:  container,
+				AlternateName: "backup-db",
+				TemplateHash:  "db",
+			},
+			wantErr: false,
+		},
+		{
+			name: "valid input - literal Job backup-4 parsed as template hash acknowledging tradeoff",
+			args: args{
+				input: "apiVersion-batch/v1/namespace-default/kind-Job/name-backup-4/containerName-backup",
+			},
+			want: &InstanceID{
+				ApiVersion:    "batch/v1",
+				Namespace:     "default",
+				Kind:          "Job",
+				Name:          "backup-4",
+				ContainerName: "backup",
+				InstanceType:  container,
+				AlternateName: "backup-4",
+				TemplateHash:  "4",
+			},
+			wantErr: false,
+		},
+		{
 			name: "valid input - standard Job without hash",
 			args: args{
 				input: "apiVersion-batch/v1/namespace-default/kind-Job/name-nginx-job/containerName-nginx-job",
