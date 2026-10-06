@@ -4,6 +4,7 @@ import (
 	"os"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/kubescape/k8s-interface/k8sinterface"
 	"github.com/stretchr/testify/assert"
@@ -188,4 +189,10 @@ func TestGetRegion(t *testing.T) {
 		assert.NoError(t, err)
 		assert.Equal(t, ksRegion, region)
 	})
+}
+
+func TestEKSTimeoutConstants(t *testing.T) {
+	assert.Equal(t, 5*time.Second, eksCallTimeout)
+	assert.Equal(t, 30*time.Second, eksRBACEnumerationTimeout)
+	assert.Less(t, eksCallTimeout, eksRBACEnumerationTimeout)
 }

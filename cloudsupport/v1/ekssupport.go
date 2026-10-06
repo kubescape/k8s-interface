@@ -7,6 +7,7 @@ import (
 	"net/url"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
@@ -38,6 +39,11 @@ type EKSSupport struct {
 
 const (
 	awsauthconfigmap = "aws-auth"
+
+	// Bounds AWS SDK and IAM/ECR calls so an air-gapped or otherwise
+	// unreachable AWS control plane cannot stall the scan loop.
+	eksCallTimeout            = 5 * time.Second
+	eksRBACEnumerationTimeout = 30 * time.Second
 )
 
 type awsAuth struct {
@@ -81,7 +87,10 @@ func NewEKSSupport() *EKSSupport {
 }
 
 func (eksSupport *EKSSupport) GetClusterDescribe(cluster string, region string) (*eks.DescribeClusterOutput, error) {
-	awsConfig, err := config.LoadDefaultConfig(context.TODO())
+	ctx, cancel := context.WithTimeout(context.Background(), eksCallTimeout)
+	defer cancel()
+
+	awsConfig, err := config.LoadDefaultConfig(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("error: fail to load AWS SDK default %v", err)
 	}
@@ -91,7 +100,7 @@ func (eksSupport *EKSSupport) GetClusterDescribe(cluster string, region string) 
 		Name: aws.String(cluster),
 	}
 
-	result, err := svc.DescribeCluster(context.TODO(), input)
+	result, err := svc.DescribeCluster(ctx, input)
 	if err != nil {
 		return nil, err
 	}
@@ -113,7 +122,10 @@ func (eksSupport *EKSSupport) GetRegion(cluster string) (string, error) {
 		return region, nil
 	}
 
-	awsConfig, err := config.LoadDefaultConfig(context.TODO())
+	ctx, cancel := context.WithTimeout(context.Background(), eksCallTimeout)
+	defer cancel()
+
+	awsConfig, err := config.LoadDefaultConfig(ctx)
 	if err == nil && awsConfig.Region != "" {
 		return awsConfig.Region, nil
 	}
@@ -166,7 +178,10 @@ func (eksSupport *EKSSupport) GetContextName(cluster string) string {
 func (EKSSupport *EKSSupport) GetEKSCfgMap(kapi *k8sinterface.KubernetesApi, namespace string) (*v1.ConfigMap, error) {
 	var authData awsAuth
 
-	eksCfgMap, err := kapi.KubernetesClient.CoreV1().ConfigMaps(namespace).Get(context.TODO(), awsauthconfigmap, metav1.GetOptions{})
+	ctx, cancel := context.WithTimeout(context.Background(), eksCallTimeout)
+	defer cancel()
+
+	eksCfgMap, err := kapi.KubernetesClient.CoreV1().ConfigMaps(namespace).Get(ctx, awsauthconfigmap, metav1.GetOptions{})
 	if err != nil {
 		return nil, err
 	}
@@ -191,7 +206,10 @@ func (EKSSupport *EKSSupport) GetEKSCfgMap(kapi *k8sinterface.KubernetesApi, nam
 }
 
 func (eksSupport *EKSSupport) GetDescribeRepositories(region string) (*ecr.DescribeRepositoriesOutput, error) {
-	awsConfig, err := config.LoadDefaultConfig(context.TODO())
+	ctx, cancel := context.WithTimeout(context.Background(), eksRBACEnumerationTimeout)
+	defer cancel()
+
+	awsConfig, err := config.LoadDefaultConfig(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("error: fail to load AWS SDK default %v", err)
 	}
@@ -201,7 +219,7 @@ func (eksSupport *EKSSupport) GetDescribeRepositories(region string) (*ecr.Descr
 		MaxResults: aws.Int32(100),
 	}
 
-	result, err := svc.DescribeRepositories(context.TODO(), input)
+	result, err := svc.DescribeRepositories(ctx, input)
 	if err != nil {
 		return nil, err
 	}
@@ -209,14 +227,17 @@ func (eksSupport *EKSSupport) GetDescribeRepositories(region string) (*ecr.Descr
 }
 
 func (eksSupport *EKSSupport) GetListEntitiesForPolicies(region string) (*ListEntitiesForPolicies, error) {
-	awsConfig, err := config.LoadDefaultConfig(context.TODO())
+	ctx, cancel := context.WithTimeout(context.Background(), eksRBACEnumerationTimeout)
+	defer cancel()
+
+	awsConfig, err := config.LoadDefaultConfig(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("error: fail to load AWS SDK default %v", err)
 	}
 	svc := iam.NewFromConfig(awsConfig)
 	input := &iam.ListPoliciesInput{}
 
-	result, err := listPoliciesWithPagination(svc, input)
+	result, err := listPoliciesWithPagination(ctx, svc, input)
 	if err != nil {
 		return nil, err
 	}
@@ -225,7 +246,7 @@ func (eksSupport *EKSSupport) GetListEntitiesForPolicies(region string) (*ListEn
 		inp := &iam.ListEntitiesForPolicyInput{
 			PolicyArn: policy.Arn,
 		}
-		entitiesForPolicy, err := svc.ListEntitiesForPolicy(context.TODO(), inp)
+		entitiesForPolicy, err := svc.ListEntitiesForPolicy(ctx, inp)
 		if err != nil {
 			return nil, err
 		}
@@ -235,7 +256,10 @@ func (eksSupport *EKSSupport) GetListEntitiesForPolicies(region string) (*ListEn
 }
 
 func (eksSupport *EKSSupport) GetPolicyVersion(region string) (*ListPolicyVersion, error) {
-	awsConfig, err := config.LoadDefaultConfig(context.TODO())
+	ctx, cancel := context.WithTimeout(context.Background(), eksRBACEnumerationTimeout)
+	defer cancel()
+
+	awsConfig, err := config.LoadDefaultConfig(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("error: fail to load AWS SDK default %v", err)
 	}
@@ -243,7 +267,7 @@ func (eksSupport *EKSSupport) GetPolicyVersion(region string) (*ListPolicyVersio
 	svc := iam.NewFromConfig(awsConfig)
 
 	input := &iam.ListPoliciesInput{}
-	result, err := listPoliciesWithPagination(svc, input)
+	result, err := listPoliciesWithPagination(ctx, svc, input)
 	if err != nil {
 		return nil, fmt.Errorf("error: fail to list policies: %v", err)
 	}
@@ -254,7 +278,7 @@ func (eksSupport *EKSSupport) GetPolicyVersion(region string) (*ListPolicyVersio
 			PolicyArn: policy.Arn,
 			VersionId: policy.DefaultVersionId,
 		}
-		policyVersionContent, err := svc.GetPolicyVersion(context.TODO(), policyVersionInput)
+		policyVersionContent, err := svc.GetPolicyVersion(ctx, policyVersionInput)
 		if err != nil {
 			return nil, fmt.Errorf("error: fail to get policy version: %v", err)
 		}
@@ -270,12 +294,12 @@ func (eksSupport *EKSSupport) GetPolicyVersion(region string) (*ListPolicyVersio
 	return &ListPolicyVersion{PolicyVersion: policyVersionContents}, nil
 }
 
-func listPoliciesWithPagination(svc *iam.Client, input *iam.ListPoliciesInput) ([]types.Policy, error) {
+func listPoliciesWithPagination(ctx context.Context, svc *iam.Client, input *iam.ListPoliciesInput) ([]types.Policy, error) {
 	paginator := iam.NewListPoliciesPaginator(svc, input)
 
 	var policiesList []types.Policy
 	for paginator.HasMorePages() {
-		output, err := paginator.NextPage(context.TODO())
+		output, err := paginator.NextPage(ctx)
 		if err != nil {
 			return nil, fmt.Errorf("error: fail to list policies: %v", err)
 		}
