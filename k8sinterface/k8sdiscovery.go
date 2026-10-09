@@ -438,13 +438,14 @@ func ignoreGroups() []string {
 	return []string{"metrics.k8s.io"}
 }
 
-// TODO - consider using a k8s manifest validator
-// Return if this object is a valide k8s workload
+// IsTypeWorkload returns whether the given Kubernetes object is a workload.
+// Supported workloads include standard Kubernetes workload controllers (Pod, Deployment,
+// DaemonSet, StatefulSet, ReplicaSet, Job, CronJob, ReplicationController) and custom
+// resources that embed a pod template spec or container spec.
 func IsTypeWorkload(object map[string]interface{}) bool {
 	if object == nil {
 		return false
 	}
-	// TODO - check if found in supported objects
 	apiVersion, ok := object["apiVersion"]
 	if !ok {
 		return false
@@ -455,12 +456,71 @@ func IsTypeWorkload(object map[string]interface{}) bool {
 	}
 	s, k := apiVersion.(string)
 	s2, k2 := kind.(string)
-	if !k || !k2 {
+	if !k || !k2 || s == "" || s2 == "" {
 		return false
 	}
-	group, version := SplitApiVersion(s)
+	group, _ := SplitApiVersion(s)
 
-	return len(getResourceTriplets(group, version, s2)) == 1
+	if isStandardWorkload(group, s2) {
+		return true
+	}
+
+	return hasPodOrContainerSpec(object)
+}
+
+func isStandardWorkload(group, kind string) bool {
+	switch strings.ToLower(kind) {
+	case "pod", "pods", "replicationcontroller", "replicationcontrollers":
+		return group == "" || group == "core"
+	case "deployment", "deployments", "daemonset", "daemonsets", "statefulset", "statefulsets", "replicaset", "replicasets":
+		return group == "apps" || group == "extensions" || group == ""
+	case "job", "jobs", "cronjob", "cronjobs":
+		return group == "batch" || group == ""
+	default:
+		return false
+	}
+}
+
+func hasPodOrContainerSpec(object map[string]interface{}) bool {
+	spec, ok := object["spec"].(map[string]interface{})
+	if !ok {
+		return false
+	}
+
+	if _, ok := spec["containers"].([]interface{}); ok {
+		return true
+	}
+	if _, ok := spec["initContainers"].([]interface{}); ok {
+		return true
+	}
+
+	if tmpl, ok := spec["template"].(map[string]interface{}); ok {
+		if tmplSpec, ok := tmpl["spec"].(map[string]interface{}); ok {
+			if _, ok := tmplSpec["containers"].([]interface{}); ok {
+				return true
+			}
+			if _, ok := tmplSpec["initContainers"].([]interface{}); ok {
+				return true
+			}
+		}
+	}
+
+	if jobTmpl, ok := spec["jobTemplate"].(map[string]interface{}); ok {
+		if jobSpec, ok := jobTmpl["spec"].(map[string]interface{}); ok {
+			if tmpl, ok := jobSpec["template"].(map[string]interface{}); ok {
+				if tmplSpec, ok := tmpl["spec"].(map[string]interface{}); ok {
+					if _, ok := tmplSpec["containers"].([]interface{}); ok {
+						return true
+					}
+					if _, ok := tmplSpec["initContainers"].([]interface{}); ok {
+						return true
+					}
+				}
+			}
+		}
+	}
+
+	return false
 }
 
 func GetK8SServerGitVersion() (string, error) {
