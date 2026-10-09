@@ -153,7 +153,340 @@ func TestMultiGroupResource(t *testing.T) {
 
 func TestIsTypeWorkload(t *testing.T) {
 	InitializeMapResourcesMock()
-	assert.True(t, IsTypeWorkload(cronJobObjectMock()))
+
+	tests := []struct {
+		name     string
+		object   map[string]interface{}
+		expected bool
+	}{
+		// Canonical workloads
+		{
+			name:     "CronJob mock object",
+			object:   cronJobObjectMock(),
+			expected: true,
+		},
+		{
+			name: "Pod core v1",
+			object: map[string]interface{}{
+				"apiVersion": "v1",
+				"kind":       "Pod",
+			},
+			expected: true,
+		},
+		{
+			name: "Deployment apps/v1",
+			object: map[string]interface{}{
+				"apiVersion": "apps/v1",
+				"kind":       "Deployment",
+			},
+			expected: true,
+		},
+		{
+			name: "DaemonSet apps/v1",
+			object: map[string]interface{}{
+				"apiVersion": "apps/v1",
+				"kind":       "DaemonSet",
+			},
+			expected: true,
+		},
+		{
+			name: "StatefulSet apps/v1",
+			object: map[string]interface{}{
+				"apiVersion": "apps/v1",
+				"kind":       "StatefulSet",
+			},
+			expected: true,
+		},
+		{
+			name: "ReplicaSet apps/v1",
+			object: map[string]interface{}{
+				"apiVersion": "apps/v1",
+				"kind":       "ReplicaSet",
+			},
+			expected: true,
+		},
+		{
+			name: "Job batch/v1",
+			object: map[string]interface{}{
+				"apiVersion": "batch/v1",
+				"kind":       "Job",
+			},
+			expected: true,
+		},
+		{
+			name: "CronJob batch/v1",
+			object: map[string]interface{}{
+				"apiVersion": "batch/v1",
+				"kind":       "CronJob",
+			},
+			expected: true,
+		},
+		{
+			name: "ReplicationController v1",
+			object: map[string]interface{}{
+				"apiVersion": "v1",
+				"kind":       "ReplicationController",
+			},
+			expected: true,
+		},
+		{
+			name: "Deployment extensions/v1beta1 legacy",
+			object: map[string]interface{}{
+				"apiVersion": "extensions/v1beta1",
+				"kind":       "Deployment",
+			},
+			expected: true,
+		},
+		{
+			name: "Plural kind deployments",
+			object: map[string]interface{}{
+				"apiVersion": "apps/v1",
+				"kind":       "deployments",
+			},
+			expected: true,
+		},
+		// Custom resource workloads with container specs
+		{
+			name: "CRD with spec.template.spec.containers (e.g. Argo Rollout)",
+			object: map[string]interface{}{
+				"apiVersion": "argoproj.io/v1alpha1",
+				"kind":       "Rollout",
+				"spec": map[string]interface{}{
+					"template": map[string]interface{}{
+						"spec": map[string]interface{}{
+							"containers": []interface{}{
+								map[string]interface{}{"name": "web", "image": "nginx"},
+							},
+						},
+					},
+				},
+			},
+			expected: true,
+		},
+		{
+			name: "CRD with direct spec.containers",
+			object: map[string]interface{}{
+				"apiVersion": "example.com/v1",
+				"kind":       "CustomPod",
+				"spec": map[string]interface{}{
+					"containers": []interface{}{
+						map[string]interface{}{"name": "worker", "image": "alpine"},
+					},
+				},
+			},
+			expected: true,
+		},
+		{
+			name: "CRD with spec.jobTemplate.spec.template.spec.containers",
+			object: map[string]interface{}{
+				"apiVersion": "custom.io/v1",
+				"kind":       "CustomScheduledJob",
+				"spec": map[string]interface{}{
+					"jobTemplate": map[string]interface{}{
+						"spec": map[string]interface{}{
+							"template": map[string]interface{}{
+								"spec": map[string]interface{}{
+									"containers": []interface{}{
+										map[string]interface{}{"name": "task", "image": "busybox"},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			expected: true,
+		},
+		// Non-workload resources (must return false)
+		{
+			name: "ConfigMap v1",
+			object: map[string]interface{}{
+				"apiVersion": "v1",
+				"kind":       "ConfigMap",
+			},
+			expected: false,
+		},
+		{
+			name: "Secret v1",
+			object: map[string]interface{}{
+				"apiVersion": "v1",
+				"kind":       "Secret",
+			},
+			expected: false,
+		},
+		{
+			name: "Service v1",
+			object: map[string]interface{}{
+				"apiVersion": "v1",
+				"kind":       "Service",
+			},
+			expected: false,
+		},
+		{
+			name: "ServiceAccount v1",
+			object: map[string]interface{}{
+				"apiVersion": "v1",
+				"kind":       "ServiceAccount",
+			},
+			expected: false,
+		},
+		{
+			name: "Namespace v1",
+			object: map[string]interface{}{
+				"apiVersion": "v1",
+				"kind":       "Namespace",
+			},
+			expected: false,
+		},
+		{
+			name: "PersistentVolume v1",
+			object: map[string]interface{}{
+				"apiVersion": "v1",
+				"kind":       "PersistentVolume",
+			},
+			expected: false,
+		},
+		{
+			name: "PersistentVolumeClaim v1",
+			object: map[string]interface{}{
+				"apiVersion": "v1",
+				"kind":       "PersistentVolumeClaim",
+			},
+			expected: false,
+		},
+		{
+			name: "Role rbac.authorization.k8s.io/v1",
+			object: map[string]interface{}{
+				"apiVersion": "rbac.authorization.k8s.io/v1",
+				"kind":       "Role",
+			},
+			expected: false,
+		},
+		{
+			name: "ClusterRole rbac.authorization.k8s.io/v1",
+			object: map[string]interface{}{
+				"apiVersion": "rbac.authorization.k8s.io/v1",
+				"kind":       "ClusterRole",
+			},
+			expected: false,
+		},
+		{
+			name: "RoleBinding rbac.authorization.k8s.io/v1",
+			object: map[string]interface{}{
+				"apiVersion": "rbac.authorization.k8s.io/v1",
+				"kind":       "RoleBinding",
+			},
+			expected: false,
+		},
+		{
+			name: "ClusterRoleBinding rbac.authorization.k8s.io/v1",
+			object: map[string]interface{}{
+				"apiVersion": "rbac.authorization.k8s.io/v1",
+				"kind":       "ClusterRoleBinding",
+			},
+			expected: false,
+		},
+		{
+			name: "NetworkPolicy networking.k8s.io/v1",
+			object: map[string]interface{}{
+				"apiVersion": "networking.k8s.io/v1",
+				"kind":       "NetworkPolicy",
+			},
+			expected: false,
+		},
+		{
+			name: "Ingress networking.k8s.io/v1",
+			object: map[string]interface{}{
+				"apiVersion": "networking.k8s.io/v1",
+				"kind":       "Ingress",
+			},
+			expected: false,
+		},
+		{
+			name: "CustomResourceDefinition apiextensions.k8s.io/v1",
+			object: map[string]interface{}{
+				"apiVersion": "apiextensions.k8s.io/v1",
+				"kind":       "CustomResourceDefinition",
+			},
+			expected: false,
+		},
+		{
+			name: "CRD without containers (e.g. Certificate)",
+			object: map[string]interface{}{
+				"apiVersion": "cert-manager.io/v1",
+				"kind":       "Certificate",
+				"spec": map[string]interface{}{
+					"secretName": "cert-secret",
+					"dnsNames":   []interface{}{"example.com"},
+				},
+			},
+			expected: false,
+		},
+		// Invalid / Malformed inputs
+		{
+			name:     "nil object",
+			object:   nil,
+			expected: false,
+		},
+		{
+			name:     "empty object",
+			object:   map[string]interface{}{},
+			expected: false,
+		},
+		{
+			name: "missing kind",
+			object: map[string]interface{}{
+				"apiVersion": "apps/v1",
+			},
+			expected: false,
+		},
+		{
+			name: "missing apiVersion",
+			object: map[string]interface{}{
+				"kind": "Deployment",
+			},
+			expected: false,
+		},
+		{
+			name: "non-string apiVersion",
+			object: map[string]interface{}{
+				"apiVersion": 123,
+				"kind":       "Deployment",
+			},
+			expected: false,
+		},
+		{
+			name: "non-string kind",
+			object: map[string]interface{}{
+				"apiVersion": "apps/v1",
+				"kind":       []interface{}{"Deployment"},
+			},
+			expected: false,
+		},
+		{
+			name: "empty strings",
+			object: map[string]interface{}{
+				"apiVersion": "",
+				"kind":       "",
+			},
+			expected: false,
+		},
+		{
+			name: "canonical kind in mismatched group",
+			object: map[string]interface{}{
+				"apiVersion": "rbac.authorization.k8s.io/v1",
+				"kind":       "Pod",
+			},
+			expected: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			actual := IsTypeWorkload(tt.object)
+			assert.Equal(t, tt.expected, actual, "failed for %s", tt.name)
+		})
+	}
 }
 
 func TestUpdateResourceKind(t *testing.T) {
