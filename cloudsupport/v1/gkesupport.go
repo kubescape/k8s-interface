@@ -13,6 +13,7 @@ import (
 	"github.com/kubescape/k8s-interface/k8sinterface"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
+	"golang.org/x/sync/singleflight"
 	"google.golang.org/api/cloudresourcemanager/v1"
 	"google.golang.org/api/iam/v1"
 	"google.golang.org/api/iterator"
@@ -38,6 +39,8 @@ type GKESupport struct {
 
 var (
 	KS_GKE_PROJECT_ENV_VAR = "KS_GKE_PROJECT"
+
+	defaultTokenSourceGroup singleflight.Group
 )
 
 const (
@@ -73,24 +76,37 @@ func (c *contextTokenSource) Token() (*oauth2.Token, error) {
 }
 
 func getDefaultTokenSource(ctx context.Context, scopes ...string) (oauth2.TokenSource, error) {
-	type tsRes struct {
-		ts  oauth2.TokenSource
-		err error
-	}
-	ch := make(chan tsRes, 1)
-	go func() {
-		ts, err := google.DefaultTokenSource(ctx, scopes...)
-		ch <- tsRes{ts: ts, err: err}
-	}()
+	key := strings.Join(scopes, ",")
+	resCh := defaultTokenSourceGroup.DoChan(key, func() (interface{}, error) {
+		innerCtx, innerCancel := context.WithTimeout(context.Background(), gkeRBACEnumerationTimeout)
+		defer innerCancel()
+		ts, err := google.DefaultTokenSource(innerCtx, scopes...)
+		if err != nil {
+			return nil, err
+		}
+		return ts, nil
+	})
+
 	select {
 	case <-ctx.Done():
 		return nil, ctx.Err()
-	case res := <-ch:
-		if res.err != nil {
-			return nil, res.err
+	case res := <-resCh:
+		if res.Err != nil {
+			return nil, res.Err
 		}
-		return &contextTokenSource{ctx: ctx, ts: res.ts}, nil
+		ts, ok := res.Val.(oauth2.TokenSource)
+		if !ok {
+			return nil, fmt.Errorf("unexpected token source type")
+		}
+		return &contextTokenSource{ctx: ctx, ts: ts}, nil
 	}
+}
+
+func (gkeSupport *GKESupport) getTokenSource(ctx context.Context, scopes ...string) (oauth2.TokenSource, error) {
+	if gkeSupport.tokenSource != nil {
+		return &contextTokenSource{ctx: ctx, ts: gkeSupport.tokenSource}, nil
+	}
+	return getDefaultTokenSource(ctx, scopes...)
 }
 
 func NewGKESupport() *GKESupport {
@@ -116,7 +132,14 @@ func (gkeSupport *GKESupport) GetDescribeRepositories(project string, region str
 	ctx, cancel := context.WithTimeout(context.Background(), gkeRBACEnumerationTimeout)
 	defer cancel()
 
-	client, err := artifactregistry.NewClient(ctx)
+	var opts []option.ClientOption
+	tokenSource, err := gkeSupport.getTokenSource(ctx, artifactregistry.DefaultAuthScopes()...)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get credentials: %w", err)
+	}
+	opts = append(opts, option.WithTokenSource(tokenSource))
+
+	client, err := artifactregistry.NewClient(ctx, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -157,7 +180,14 @@ func (gkeSupport *GKESupport) GetListEntitiesForPolicies(project string) (*cloud
 	ctx, cancel := context.WithTimeout(context.Background(), gkeRBACEnumerationTimeout)
 	defer cancel()
 
-	crmService, err := cloudresourcemanager.NewService(ctx)
+	var opts []option.ClientOption
+	tokenSource, err := gkeSupport.getTokenSource(ctx, cloudresourcemanager.CloudPlatformScope)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get credentials: %w", err)
+	}
+	opts = append(opts, option.WithTokenSource(tokenSource))
+
+	crmService, err := cloudresourcemanager.NewService(ctx, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -196,8 +226,14 @@ func (gkeSupport *GKESupport) GetClusterDescribe(cluster string, region string, 
 
 	var opts []option.ClientOption
 	if gkeSupport.containerEndpoint != "" {
-		opts = append(opts, option.WithEndpoint(gkeSupport.containerEndpoint), option.WithoutAuthentication())
+		opts = append(opts, option.WithEndpoint(gkeSupport.containerEndpoint))
 	}
+
+	tokenSource, err := gkeSupport.getTokenSource(ctx, container.DefaultAuthScopes()...)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get credentials: %w", err)
+	}
+	opts = append(opts, option.WithTokenSource(tokenSource))
 
 	c, err := container.NewClusterManagerClient(ctx, opts...)
 	if err != nil {
@@ -226,15 +262,9 @@ func (gkeSupport *GKESupport) GetAuthorizationKey() (string, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), gkeCallTimeout)
 	defer cancel()
 
-	tokenSource := gkeSupport.tokenSource
-	if tokenSource != nil {
-		tokenSource = &contextTokenSource{ctx: ctx, ts: tokenSource}
-	} else {
-		var err error
-		tokenSource, err = getDefaultTokenSource(ctx)
-		if err != nil {
-			return "", fmt.Errorf("failed to find creds: %w", err)
-		}
+	tokenSource, err := gkeSupport.getTokenSource(ctx)
+	if err != nil {
+		return "", fmt.Errorf("failed to find creds: %w", err)
 	}
 
 	t, err := tokenSource.Token()
@@ -272,18 +302,11 @@ func (gkeSupport *GKESupport) GetIAMMappings(project string) (map[string]string,
 	if gkeSupport.iamEndpoint != "" {
 		opts = append(opts, option.WithEndpoint(gkeSupport.iamEndpoint), option.WithoutAuthentication())
 	} else {
-		tokenSource := gkeSupport.tokenSource
-		if tokenSource != nil {
-			tokenSource = &contextTokenSource{ctx: ctx, ts: tokenSource}
-		} else {
-			var err error
-			tokenSource, err = getDefaultTokenSource(ctx, iam.CloudPlatformScope)
-			if err != nil {
-				return nil, nil, fmt.Errorf("failed to create Google Cloud client: %w", err)
-			}
+		tokenSource, err := gkeSupport.getTokenSource(ctx, iam.CloudPlatformScope)
+		if err != nil {
+			return nil, nil, fmt.Errorf("failed to create Google Cloud client: %w", err)
 		}
-		client := oauth2.NewClient(ctx, tokenSource)
-		opts = append(opts, option.WithHTTPClient(client))
+		opts = append(opts, option.WithTokenSource(tokenSource))
 	}
 
 	iamService, err := iam.NewService(ctx, opts...)

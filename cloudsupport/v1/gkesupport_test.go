@@ -12,7 +12,18 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
+	"golang.org/x/oauth2"
 )
+
+func isolateADC(t *testing.T) {
+	tempDir := t.TempDir()
+	t.Setenv("GOOGLE_APPLICATION_CREDENTIALS", "")
+	t.Setenv("CLOUDSDK_CONFIG", tempDir)
+	t.Setenv("HOME", tempDir)
+	t.Setenv("USERPROFILE", tempDir)
+	t.Setenv("APPDATA", tempDir)
+	t.Setenv("XDG_CONFIG_HOME", tempDir)
+}
 
 func TestGKETimeoutConstants(t *testing.T) {
 	assert.Equal(t, 5*time.Second, gkeCallTimeout)
@@ -87,6 +98,7 @@ func TestGKEGetContextName(t *testing.T) {
 }
 
 func TestGKEGetAuthorizationKey_MetadataTimeout(t *testing.T) {
+	isolateADC(t)
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if strings.Contains(r.URL.Path, "project-id") {
 			w.Header().Set("Metadata-Flavor", "Google")
@@ -101,7 +113,6 @@ func TestGKEGetAuthorizationKey_MetadataTimeout(t *testing.T) {
 	}))
 	defer server.Close()
 
-	t.Setenv("GOOGLE_APPLICATION_CREDENTIALS", "")
 	t.Setenv("GCE_METADATA_HOST", server.Listener.Addr().String())
 
 	gkeSupport := NewGKESupport()
@@ -110,7 +121,9 @@ func TestGKEGetAuthorizationKey_MetadataTimeout(t *testing.T) {
 	elapsed := time.Since(start)
 
 	assert.Error(t, err)
-	assert.Empty(t, token)
+	if token != "" {
+		t.Fatalf("expected empty token on timeout, got token (value redacted for security, length: %d)", len(token))
+	}
 	assert.ErrorIs(t, err, context.DeadlineExceeded)
 	// Bounds check: must abort near 5s deadline and not escape to ~20s retry duration
 	assert.Less(t, elapsed, 7*time.Second)
@@ -118,6 +131,7 @@ func TestGKEGetAuthorizationKey_MetadataTimeout(t *testing.T) {
 }
 
 func TestGKEGetAuthorizationKey_Success(t *testing.T) {
+	isolateADC(t)
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Metadata-Flavor", "Google")
 		if strings.Contains(r.URL.Path, "project-id") {
@@ -138,13 +152,14 @@ func TestGKEGetAuthorizationKey_Success(t *testing.T) {
 	}))
 	defer server.Close()
 
-	t.Setenv("GOOGLE_APPLICATION_CREDENTIALS", "")
 	t.Setenv("GCE_METADATA_HOST", server.Listener.Addr().String())
 
 	gkeSupport := NewGKESupport()
 	token, err := gkeSupport.GetAuthorizationKey()
 	assert.NoError(t, err)
-	assert.Equal(t, "ya29.mock-test-access-token", token)
+	if token != "ya29.mock-test-access-token" {
+		t.Fatalf("unexpected token returned (value redacted for security, length: %d)", len(token))
+	}
 }
 
 func TestGKEGetClusterDescribe_Timeout(t *testing.T) {
@@ -154,6 +169,7 @@ func TestGKEGetClusterDescribe_Timeout(t *testing.T) {
 
 	gkeSupport := &GKESupport{
 		containerEndpoint: listener.Addr().String(),
+		tokenSource:       oauth2.StaticTokenSource(&oauth2.Token{AccessToken: "mock-test-token"}),
 	}
 
 	start := time.Now()
@@ -163,6 +179,60 @@ func TestGKEGetClusterDescribe_Timeout(t *testing.T) {
 	assert.Error(t, err)
 	assert.Nil(t, cluster)
 	assert.Less(t, elapsed, 7*time.Second)
+}
+
+func TestGKEGetClusterDescribe_MetadataTimeout(t *testing.T) {
+	testCases := []struct {
+		name              string
+		disableNewAuthLib bool
+	}{
+		{
+			name:              "Default auth library",
+			disableNewAuthLib: false,
+		},
+		{
+			name:              "Legacy auth library (DISABLE_NEW_AUTH_LIB=true)",
+			disableNewAuthLib: true,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			isolateADC(t)
+			if tc.disableNewAuthLib {
+				t.Setenv("GOOGLE_API_GO_EXPERIMENTAL_DISABLE_NEW_AUTH_LIB", "true")
+			} else {
+				t.Setenv("GOOGLE_API_GO_EXPERIMENTAL_DISABLE_NEW_AUTH_LIB", "false")
+			}
+
+			server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				if strings.Contains(r.URL.Path, "project-id") {
+					w.Header().Set("Metadata-Flavor", "Google")
+					w.WriteHeader(http.StatusOK)
+					_, _ = w.Write([]byte("mock-project"))
+					return
+				}
+				time.Sleep(3 * time.Second)
+				w.Header().Set("Metadata-Flavor", "Google")
+				w.WriteHeader(http.StatusInternalServerError)
+			}))
+			defer server.Close()
+
+			t.Setenv("GCE_METADATA_HOST", server.Listener.Addr().String())
+
+			// Authentication is kept enabled with no mock tokenSource or endpoint bypass
+			gkeSupport := NewGKESupport()
+			start := time.Now()
+			cluster, err := gkeSupport.GetClusterDescribe("test-cluster", "us-central1", "test-project")
+			elapsed := time.Since(start)
+
+			assert.Error(t, err)
+			assert.Nil(t, cluster)
+			assert.Contains(t, err.Error(), "context deadline exceeded")
+			assert.Less(t, elapsed, 7*time.Second)
+			assert.GreaterOrEqual(t, elapsed, 4500*time.Millisecond)
+		})
+	}
 }
 
 func TestGKEGetIAMMappings_Pagination(t *testing.T) {
