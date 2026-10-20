@@ -78,9 +78,7 @@ func (c *contextTokenSource) Token() (*oauth2.Token, error) {
 func getDefaultTokenSource(ctx context.Context, scopes ...string) (oauth2.TokenSource, error) {
 	key := strings.Join(scopes, ",")
 	resCh := defaultTokenSourceGroup.DoChan(key, func() (interface{}, error) {
-		innerCtx, innerCancel := context.WithTimeout(context.Background(), gkeRBACEnumerationTimeout)
-		defer innerCancel()
-		ts, err := google.DefaultTokenSource(innerCtx, scopes...)
+		ts, err := google.DefaultTokenSource(context.Background(), scopes...)
 		if err != nil {
 			return nil, err
 		}

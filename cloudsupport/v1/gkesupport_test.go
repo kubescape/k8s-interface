@@ -3,11 +3,14 @@ package v1
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"net"
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"path/filepath"
 	"strings"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -160,6 +163,56 @@ func TestGKEGetAuthorizationKey_Success(t *testing.T) {
 	if token != "ya29.mock-test-access-token" {
 		t.Fatalf("unexpected token returned (value redacted for security, length: %d)", len(token))
 	}
+}
+
+func TestGKEGetAuthorizationKey_AuthorizedUserADC(t *testing.T) {
+	tempDir := t.TempDir()
+	var requestCount int32
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		count := atomic.AddInt32(&requestCount, 1)
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode(map[string]interface{}{
+			"access_token": fmt.Sprintf("ya29.mock-token-%d", count),
+			"token_type":   "Bearer",
+			"expires_in":   1, // 1 second lifetime to trigger refresh on subsequent request
+		})
+	}))
+	defer server.Close()
+
+	adcJSON := fmt.Sprintf(`{
+		"type": "authorized_user",
+		"client_id": "mock-client-id",
+		"client_secret": "mock-client-secret",
+		"refresh_token": "mock-refresh-token",
+		"token_uri": "%s"
+	}`, server.URL)
+
+	adcFile := filepath.Join(tempDir, "application_default_credentials.json")
+	err := os.WriteFile(adcFile, []byte(adcJSON), 0600)
+	assert.NoError(t, err)
+
+	t.Setenv("GOOGLE_APPLICATION_CREDENTIALS", adcFile)
+	t.Setenv("CLOUDSDK_CONFIG", tempDir)
+
+	gkeSupport := NewGKESupport()
+
+	// Initial token retrieval
+	token1, err := gkeSupport.GetAuthorizationKey()
+	assert.NoError(t, err)
+	if token1 != "ya29.mock-token-1" {
+		t.Fatalf("unexpected token returned (value redacted for security, length: %d)", len(token1))
+	}
+	assert.Equal(t, int32(1), atomic.LoadInt32(&requestCount))
+
+	// Wait for token expiration (expires_in = 1s) to test refresh
+	time.Sleep(1200 * time.Millisecond)
+
+	token2, err := gkeSupport.GetAuthorizationKey()
+	assert.NoError(t, err)
+	if token2 != "ya29.mock-token-2" {
+		t.Fatalf("unexpected refreshed token returned (value redacted for security, length: %d)", len(token2))
+	}
+	assert.Equal(t, int32(2), atomic.LoadInt32(&requestCount))
 }
 
 func TestGKEGetClusterDescribe_Timeout(t *testing.T) {
