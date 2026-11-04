@@ -17,8 +17,8 @@ require (
 	github.com/aws/aws-sdk-go-v2 v1.30.5
 	github.com/aws/aws-sdk-go-v2/config v1.27.35
 	github.com/aws/aws-sdk-go-v2/service/eks v1.48.5
-	github.com/docker/docker v28.3.3+incompatible
 	github.com/kubescape/go-logger v0.0.22
+	github.com/moby/moby/api v1.56.0
 	github.com/stretchr/testify v1.11.1
 	golang.org/x/oauth2 v0.30.0
 	google.golang.org/genproto v0.0.0-20250715232539-7130f93afb79
@@ -49,6 +49,7 @@ require (
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/cilium/cilium v1.16.9 // indirect
 	github.com/coreos/go-oidc/v3 v3.14.1 // indirect
+	github.com/docker/docker v28.3.3+incompatible // indirect
 	github.com/fatih/color v1.18.0 // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect
 	github.com/francoispqt/gojay v1.2.13 // indirect
