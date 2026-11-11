@@ -417,10 +417,11 @@ func StringToResourceGroup(str string) (string, string, string) {
 func updateResourceKind(resource string) string {
 	resource = strings.ToLower(resource)
 
-	if resource == "ingress" {
-		return "ingresses"
-	} else if resource == "storageclass" {
-		return "storageclasses"
+	// A kind ending in "ss" or "us" (Ingress, StorageClass, IngressClass, PriorityClass,
+	// IPAddress, ComponentStatus, ...) is singular, and its plural adds "es". No plural
+	// resource name ends in "ss" or "us", so an input that is already plural is not touched.
+	if strings.HasSuffix(resource, "ss") || strings.HasSuffix(resource, "us") {
+		return resource + "es"
 	}
 
 	if resource != "" && !strings.HasSuffix(resource, "s") {
