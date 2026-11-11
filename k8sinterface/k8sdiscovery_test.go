@@ -63,6 +63,35 @@ func TestGetGroupVersionResource(t *testing.T) {
 	}
 }
 
+// Kinds whose singular name already ends in "s", such as the *Class kinds, are
+// served under the plural "<kind>es". Discovery lists them that way, so a lookup
+// by kind has to find them.
+func TestGetGroupVersionResourceKindEndingInS(t *testing.T) {
+	InitializeMapResourcesMock()
+
+	tests := []struct {
+		kind     string
+		expected schema.GroupVersionResource
+	}{
+		{"IngressClass", schema.GroupVersionResource{Group: "networking.k8s.io", Version: "v1", Resource: "ingressclasses"}},
+		{"PriorityClass", schema.GroupVersionResource{Group: "scheduling.k8s.io", Version: "v1", Resource: "priorityclasses"}},
+		{"RuntimeClass", schema.GroupVersionResource{Group: "node.k8s.io", Version: "v1", Resource: "runtimeclasses"}},
+		{"StorageClass", schema.GroupVersionResource{Group: "storage.k8s.io", Version: "v1", Resource: "storageclasses"}},
+		{"Ingress", schema.GroupVersionResource{Group: "networking.k8s.io", Version: "v1", Resource: "ingresses"}},
+		{"VolumeSnapshotClass", schema.GroupVersionResource{Group: "snapshot.storage.k8s.io", Version: "v1", Resource: "volumesnapshotclasses"}},
+		{"ComponentStatus", schema.GroupVersionResource{Group: "", Version: "v1", Resource: "componentstatuses"}},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.kind, func(t *testing.T) {
+			gvr, err := GetGroupVersionResource(tt.kind)
+			assert.NoError(t, err)
+			assert.Equal(t, tt.expected, gvr)
+			assert.True(t, IsKindKubernetes(tt.kind))
+		})
+	}
+}
+
 func TestIsNamespaceScope(t *testing.T) {
 	InitializeMapResourcesMock()
 	assert.True(t, IsResourceInNamespaceScope("pods"))
@@ -508,6 +537,18 @@ func TestUpdateResourceKind(t *testing.T) {
 		{"networkPolicy", "networkpolicies"},
 		{"ingress", "ingresses"},
 		{"", ""},
+
+		{"IngressClass", "ingressclasses"},
+		{"PriorityClass", "priorityclasses"},
+		{"RuntimeClass", "runtimeclasses"},
+		{"StorageClass", "storageclasses"},
+		{"IPAddress", "ipaddresses"},
+		{"ComponentStatus", "componentstatuses"},
+		{"pods", "pods"},
+		{"endpoints", "endpoints"},
+		{"componentstatuses", "componentstatuses"},
+		{"ingresses", "ingresses"},
+		{"ingressclasses", "ingressclasses"},
 	}
 
 	for _, test := range tests {
