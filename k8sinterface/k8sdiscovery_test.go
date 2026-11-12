@@ -560,3 +560,26 @@ func TestUpdateResourceKind(t *testing.T) {
 		})
 	}
 }
+
+// SplitResourceTriplets is the inverse of JoinResourceTriplets. With a full
+// "group/version/resource" string it read index 3 and panicked.
+func TestSplitResourceTriplets(t *testing.T) {
+	tests := []struct {
+		in                       string
+		group, version, resource string
+	}{
+		{"apps/v1/deployments", "apps", "v1", "deployments"},
+		{"/v1/pods", "", "v1", "pods"},
+		{JoinResourceTriplets("rbac.authorization.k8s.io", "v1", "clusterroles"), "rbac.authorization.k8s.io", "v1", "clusterroles"},
+		{"apps/v1", "apps", "v1", ""},
+		{"apps", "apps", "", ""},
+	}
+	for _, tt := range tests {
+		t.Run(tt.in, func(t *testing.T) {
+			group, version, resource := SplitResourceTriplets(tt.in)
+			assert.Equal(t, tt.group, group)
+			assert.Equal(t, tt.version, version)
+			assert.Equal(t, tt.resource, resource)
+		})
+	}
+}

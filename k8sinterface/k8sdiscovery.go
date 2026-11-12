@@ -287,7 +287,7 @@ func SplitResourceTriplets(resourceTriplets string) (string, string, string) {
 		version = splitted[1]
 	}
 	if len(splitted) >= 3 {
-		resource = splitted[3]
+		resource = splitted[2]
 	}
 	return group, version, resource
 }
