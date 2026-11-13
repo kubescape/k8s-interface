@@ -11,7 +11,9 @@ import (
 	"cloud.google.com/go/artifactregistry/apiv1/artifactregistrypb"
 	container "cloud.google.com/go/container/apiv1"
 	"github.com/kubescape/k8s-interface/k8sinterface"
+	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
+	"golang.org/x/sync/singleflight"
 	"google.golang.org/api/cloudresourcemanager/v1"
 	"google.golang.org/api/iam/v1"
 	"google.golang.org/api/iterator"
@@ -30,16 +32,80 @@ type IGKESupport interface {
 	GetIAMMappings(project string) (map[string]string, map[string]string, error)
 }
 type GKESupport struct {
+	tokenSource       oauth2.TokenSource
+	iamEndpoint       string
+	containerEndpoint string
 }
 
 var (
 	KS_GKE_PROJECT_ENV_VAR = "KS_GKE_PROJECT"
+
+	defaultTokenSourceGroup singleflight.Group
 )
 
 const (
+	// Bounds GCP credential and SDK calls so an air-gapped or otherwise
+	// unreachable GCP control plane cannot stall the scan loop.
+	gkeCallTimeout = 5 * time.Second
+
 	// gkeRBACEnumerationTimeout is the budget for paginated enumeration calls which take longer
 	gkeRBACEnumerationTimeout = 30 * time.Second
 )
+
+type contextTokenSource struct {
+	ctx context.Context
+	ts  oauth2.TokenSource
+}
+
+func (c *contextTokenSource) Token() (*oauth2.Token, error) {
+	type tokenRes struct {
+		tok *oauth2.Token
+		err error
+	}
+	ch := make(chan tokenRes, 1)
+	go func() {
+		tok, err := c.ts.Token()
+		ch <- tokenRes{tok: tok, err: err}
+	}()
+	select {
+	case <-c.ctx.Done():
+		return nil, c.ctx.Err()
+	case res := <-ch:
+		return res.tok, res.err
+	}
+}
+
+func getDefaultTokenSource(ctx context.Context, scopes ...string) (oauth2.TokenSource, error) {
+	key := strings.Join(scopes, ",")
+	resCh := defaultTokenSourceGroup.DoChan(key, func() (interface{}, error) {
+		ts, err := google.DefaultTokenSource(context.Background(), scopes...)
+		if err != nil {
+			return nil, err
+		}
+		return ts, nil
+	})
+
+	select {
+	case <-ctx.Done():
+		return nil, ctx.Err()
+	case res := <-resCh:
+		if res.Err != nil {
+			return nil, res.Err
+		}
+		ts, ok := res.Val.(oauth2.TokenSource)
+		if !ok {
+			return nil, fmt.Errorf("unexpected token source type")
+		}
+		return &contextTokenSource{ctx: ctx, ts: ts}, nil
+	}
+}
+
+func (gkeSupport *GKESupport) getTokenSource(ctx context.Context, scopes ...string) (oauth2.TokenSource, error) {
+	if gkeSupport.tokenSource != nil {
+		return &contextTokenSource{ctx: ctx, ts: gkeSupport.tokenSource}, nil
+	}
+	return getDefaultTokenSource(ctx, scopes...)
+}
 
 func NewGKESupport() *GKESupport {
 	return &GKESupport{}
@@ -64,7 +130,14 @@ func (gkeSupport *GKESupport) GetDescribeRepositories(project string, region str
 	ctx, cancel := context.WithTimeout(context.Background(), gkeRBACEnumerationTimeout)
 	defer cancel()
 
-	client, err := artifactregistry.NewClient(ctx)
+	var opts []option.ClientOption
+	tokenSource, err := gkeSupport.getTokenSource(ctx, artifactregistry.DefaultAuthScopes()...)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get credentials: %w", err)
+	}
+	opts = append(opts, option.WithTokenSource(tokenSource))
+
+	client, err := artifactregistry.NewClient(ctx, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -105,7 +178,14 @@ func (gkeSupport *GKESupport) GetListEntitiesForPolicies(project string) (*cloud
 	ctx, cancel := context.WithTimeout(context.Background(), gkeRBACEnumerationTimeout)
 	defer cancel()
 
-	crmService, err := cloudresourcemanager.NewService(ctx)
+	var opts []option.ClientOption
+	tokenSource, err := gkeSupport.getTokenSource(ctx, cloudresourcemanager.CloudPlatformScope)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get credentials: %w", err)
+	}
+	opts = append(opts, option.WithTokenSource(tokenSource))
+
+	crmService, err := cloudresourcemanager.NewService(ctx, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -139,8 +219,21 @@ func (gkeSupport *GKESupport) GetProject(cluster string) (string, error) {
 
 // Get descriptive info about cluster running in GKE.
 func (gkeSupport *GKESupport) GetClusterDescribe(cluster string, region string, project string) (*containerpb.Cluster, error) {
-	ctx := context.Background()
-	c, err := container.NewClusterManagerClient(ctx)
+	ctx, cancel := context.WithTimeout(context.Background(), gkeCallTimeout)
+	defer cancel()
+
+	var opts []option.ClientOption
+	if gkeSupport.containerEndpoint != "" {
+		opts = append(opts, option.WithEndpoint(gkeSupport.containerEndpoint))
+	}
+
+	tokenSource, err := gkeSupport.getTokenSource(ctx, container.DefaultAuthScopes()...)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get credentials: %w", err)
+	}
+	opts = append(opts, option.WithTokenSource(tokenSource))
+
+	c, err := container.NewClusterManagerClient(ctx, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -164,13 +257,15 @@ func (gkeSupport *GKESupport) GetName(clusterDescribe *containerpb.Cluster) stri
 
 // GetAuthorizationKey retrieves the GCP access token
 func (gkeSupport *GKESupport) GetAuthorizationKey() (string, error) {
-	ctx := context.Background()
+	ctx, cancel := context.WithTimeout(context.Background(), gkeCallTimeout)
+	defer cancel()
 
-	token, err := google.DefaultTokenSource(ctx, nil...)
+	tokenSource, err := gkeSupport.getTokenSource(ctx)
 	if err != nil {
 		return "", fmt.Errorf("failed to find creds: %w", err)
 	}
-	t, err := token.Token()
+
+	t, err := tokenSource.Token()
 	if err != nil {
 		return "", fmt.Errorf("failed to parse token: %w", err)
 	}
@@ -198,13 +293,21 @@ func (gkeSupport *GKESupport) GetContextName(cluster string) string {
 
 // GetIAMMappings returns iam-roles and service accounts
 func (gkeSupport *GKESupport) GetIAMMappings(project string) (map[string]string, map[string]string, error) {
-	ctx := context.Background()
-	client, err := google.DefaultClient(ctx, iam.CloudPlatformScope)
-	if err != nil {
-		return nil, nil, fmt.Errorf("failed to create Google Cloud client: %w", err)
+	ctx, cancel := context.WithTimeout(context.Background(), gkeRBACEnumerationTimeout)
+	defer cancel()
+
+	var opts []option.ClientOption
+	if gkeSupport.iamEndpoint != "" {
+		opts = append(opts, option.WithEndpoint(gkeSupport.iamEndpoint), option.WithoutAuthentication())
+	} else {
+		tokenSource, err := gkeSupport.getTokenSource(ctx, iam.CloudPlatformScope)
+		if err != nil {
+			return nil, nil, fmt.Errorf("failed to create Google Cloud client: %w", err)
+		}
+		opts = append(opts, option.WithTokenSource(tokenSource))
 	}
 
-	iamService, err := iam.NewService(ctx, option.WithHTTPClient(client))
+	iamService, err := iam.NewService(ctx, opts...)
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to create IAM service client: %w", err)
 	}
@@ -212,7 +315,7 @@ func (gkeSupport *GKESupport) GetIAMMappings(project string) (map[string]string,
 	roleMappings := make(map[string]string)
 	saMappings := make(map[string]string)
 
-	roleIterator, err := iamService.Projects.Roles.List("projects/" + project).Do()
+	roleIterator, err := iamService.Projects.Roles.List("projects/" + project).Context(ctx).Do()
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to retrieve roles: %w", err)
 	}
@@ -225,18 +328,17 @@ func (gkeSupport *GKESupport) GetIAMMappings(project string) (map[string]string,
 			break
 		}
 
-		roleIterator, err = iamService.Projects.Roles.List("projects/" + project).PageToken(roleIterator.NextPageToken).Do()
+		roleIterator, err = iamService.Projects.Roles.List("projects/" + project).PageToken(roleIterator.NextPageToken).Context(ctx).Do()
 		if err != nil {
 			return nil, nil, fmt.Errorf("failed to retrieve roles: %w", err)
 		}
 	}
 
-	saIterator, err := iamService.Projects.ServiceAccounts.List("projects/" + project).Do()
+	saIterator, err := iamService.Projects.ServiceAccounts.List("projects/" + project).Context(ctx).Do()
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to retrieve service accounts: %w", err)
 	}
 	for {
-
 		for _, sa := range saIterator.Accounts {
 			saMappings[sa.Name] = sa.Name
 		}
@@ -245,7 +347,7 @@ func (gkeSupport *GKESupport) GetIAMMappings(project string) (map[string]string,
 			break
 		}
 
-		saIterator, err = iamService.Projects.ServiceAccounts.List("projects/" + project).PageToken(saIterator.NextPageToken).Do()
+		saIterator, err = iamService.Projects.ServiceAccounts.List("projects/" + project).PageToken(saIterator.NextPageToken).Context(ctx).Do()
 		if err != nil {
 			return nil, nil, fmt.Errorf("failed to retrieve service accounts: %w", err)
 		}
