@@ -391,11 +391,54 @@ func TestGetListEntitiesForPolicies_ConfigurableTimeout(t *testing.T) {
 	_, err := eksSupport.GetListEntitiesForPolicies("us-east-1")
 	assert.Error(t, err)
 
-	// When KS_EKS_INVENTORY_TIMEOUT is unset, individual calls succeed and the full inventory completes
-	os.Unsetenv(KS_EKS_INVENTORY_TIMEOUT_ENV_VAR)
+	// An invalid value ("30" has no unit) is ignored with a warning, so the full inventory completes
+	t.Setenv(KS_EKS_INVENTORY_TIMEOUT_ENV_VAR, "30")
 	out, err := eksSupport.GetListEntitiesForPolicies("us-east-1")
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Len(t, out.EntitiesForPolicies, 2)
+
+	// When KS_EKS_INVENTORY_TIMEOUT is empty, individual calls succeed and the full inventory completes
+	t.Setenv(KS_EKS_INVENTORY_TIMEOUT_ENV_VAR, "")
+	out, err = eksSupport.GetListEntitiesForPolicies("us-east-1")
+	require.NoError(t, err)
+	assert.Len(t, out.EntitiesForPolicies, 2)
+}
+
+func TestInventoryTimeout(t *testing.T) {
+	tests := []struct {
+		name    string
+		value   string
+		want    time.Duration
+		wantErr bool
+	}{
+		{name: "empty", value: "", want: 0},
+		{name: "minutes", value: "2m", want: 2 * time.Minute},
+		{name: "milliseconds", value: "200ms", want: 200 * time.Millisecond},
+		{name: "missing unit", value: "30", wantErr: true},
+		{name: "zero", value: "0", wantErr: true},
+		{name: "negative", value: "-1s", wantErr: true},
+		{name: "not a duration", value: "abc", wantErr: true},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Setenv(KS_EKS_INVENTORY_TIMEOUT_ENV_VAR, tt.value)
+			got, err := inventoryTimeout()
+			if tt.wantErr {
+				assert.Error(t, err)
+			} else {
+				assert.NoError(t, err)
+			}
+			assert.Equal(t, tt.want, got)
+		})
+	}
+
+	t.Run("unset", func(t *testing.T) {
+		t.Setenv(KS_EKS_INVENTORY_TIMEOUT_ENV_VAR, "") // restores the original value after the test
+		require.NoError(t, os.Unsetenv(KS_EKS_INVENTORY_TIMEOUT_ENV_VAR))
+		got, err := inventoryTimeout()
+		assert.NoError(t, err)
+		assert.Equal(t, time.Duration(0), got)
+	})
 }
 
 func TestGetListEntitiesForPolicies_RegressionBeyond30s(t *testing.T) {
@@ -446,7 +489,7 @@ func TestGetListEntitiesForPolicies_RegressionBeyond30s(t *testing.T) {
 	t.Setenv("AWS_ACCESS_KEY_ID", "test")
 	t.Setenv("AWS_SECRET_ACCESS_KEY", "test")
 	t.Setenv("AWS_REGION", "us-east-1")
-	os.Unsetenv(KS_EKS_INVENTORY_TIMEOUT_ENV_VAR)
+	t.Setenv(KS_EKS_INVENTORY_TIMEOUT_ENV_VAR, "")
 
 	eksSupport := NewEKSSupport()
 	start := time.Now()

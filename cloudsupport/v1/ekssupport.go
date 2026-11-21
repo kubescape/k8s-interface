@@ -21,6 +21,8 @@ import (
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/ecr"
 	"github.com/aws/aws-sdk-go-v2/service/eks"
+	"github.com/kubescape/go-logger"
+	"github.com/kubescape/go-logger/helpers"
 	"github.com/kubescape/k8s-interface/k8sinterface"
 )
 
@@ -38,10 +40,12 @@ type EKSSupport struct {
 }
 
 var (
-	// KS_EKS_INVENTORY_TIMEOUT_ENV_VAR optionally configures an overall deadline
-	// for IAM inventory enumeration. By default, individual calls are bounded
-	// by eksCallTimeout without an artificial overall ceiling that drops healthy
-	// inventories.
+	// KS_EKS_INVENTORY_TIMEOUT_ENV_VAR sets an optional overall deadline for
+	// the IAM inventory (all ListPolicies pages plus one call per policy), as a
+	// Go duration such as "2m". Unset or empty means no overall deadline, so a
+	// large but healthy inventory is not cut off; each request is still bounded
+	// by eksCallTimeout. A value that does not parse or is not positive (for
+	// example "30" with no unit) is logged as a warning and ignored.
 	KS_EKS_INVENTORY_TIMEOUT_ENV_VAR = "KS_EKS_INVENTORY_TIMEOUT"
 )
 
@@ -234,18 +238,34 @@ func (eksSupport *EKSSupport) GetDescribeRepositories(region string) (*ecr.Descr
 	return result, nil
 }
 
+// inventoryTimeout reads KS_EKS_INVENTORY_TIMEOUT_ENV_VAR. It returns 0 when
+// the variable is unset or empty, and an error when it is set to anything
+// other than a positive duration.
+func inventoryTimeout() (time.Duration, error) {
+	val := os.Getenv(KS_EKS_INVENTORY_TIMEOUT_ENV_VAR)
+	if val == "" {
+		return 0, nil
+	}
+	d, err := time.ParseDuration(val)
+	if err != nil {
+		return 0, err
+	}
+	if d <= 0 {
+		return 0, fmt.Errorf("inventory timeout must be positive, got %q", val)
+	}
+	return d, nil
+}
+
 func getInventoryContext() (context.Context, context.CancelFunc) {
-	if val, ok := os.LookupEnv(KS_EKS_INVENTORY_TIMEOUT_ENV_VAR); ok && val != "" {
-		if d, err := time.ParseDuration(val); err == nil && d > 0 {
-			return context.WithTimeout(context.Background(), d)
-		}
+	d, err := inventoryTimeout()
+	if err != nil {
+		logger.L().Warning("ignoring invalid EKS inventory timeout, the IAM inventory runs without an overall deadline",
+			helpers.String("environment", KS_EKS_INVENTORY_TIMEOUT_ENV_VAR), helpers.Error(err))
 	}
-	if val, ok := os.LookupEnv("KS_EKS_RBAC_TIMEOUT"); ok && val != "" {
-		if d, err := time.ParseDuration(val); err == nil && d > 0 {
-			return context.WithTimeout(context.Background(), d)
-		}
+	if d == 0 {
+		return context.Background(), func() {}
 	}
-	return context.Background(), func() {}
+	return context.WithTimeout(context.Background(), d)
 }
 
 func (eksSupport *EKSSupport) GetListEntitiesForPolicies(region string) (*ListEntitiesForPolicies, error) {
