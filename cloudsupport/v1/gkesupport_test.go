@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net"
 	"net/http"
 	"net/http/httptest"
@@ -32,6 +33,9 @@ func TestGKETimeoutConstants(t *testing.T) {
 	assert.Equal(t, 5*time.Second, gkeCallTimeout)
 	assert.Equal(t, 30*time.Second, gkeRBACEnumerationTimeout)
 	assert.Less(t, gkeCallTimeout, gkeRBACEnumerationTimeout)
+	assert.Equal(t, 30*time.Second, tokenHTTPTimeout)
+	// a token request gets at least as long as the longest caller waits for it
+	assert.LessOrEqual(t, gkeRBACEnumerationTimeout, tokenHTTPTimeout)
 }
 
 func TestGKEGetRegion(t *testing.T) {
@@ -213,6 +217,67 @@ func TestGKEGetAuthorizationKey_AuthorizedUserADC(t *testing.T) {
 		t.Fatalf("unexpected refreshed token returned (value redacted for security, length: %d)", len(token2))
 	}
 	assert.Equal(t, int32(2), atomic.LoadInt32(&requestCount))
+}
+
+// A token endpoint that accepts the request and never answers must not leave
+// requests open once callers give up. Each call still returns at the caller
+// deadline; the token request behind it is cut off by tokenHTTPTimeout rather
+// than staying open and piling up across calls.
+func TestGKEGetAuthorizationKey_StalledTokenEndpointDrains(t *testing.T) {
+	isolateADC(t)
+
+	oldTimeout := tokenHTTPTimeout
+	tokenHTTPTimeout = gkeCallTimeout + time.Second // outlives the caller, but not forever
+	t.Cleanup(func() { tokenHTTPTimeout = oldTimeout })
+
+	var inFlight, total int32
+	release := make(chan struct{})
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// The server only notices the client hanging up once the request
+		// body is read, so read it before stalling.
+		_, _ = io.Copy(io.Discard, r.Body)
+		atomic.AddInt32(&total, 1)
+		atomic.AddInt32(&inFlight, 1)
+		defer atomic.AddInt32(&inFlight, -1)
+		select {
+		case <-r.Context().Done(): // the client gave up and closed the connection
+		case <-release: // test cleanup
+		}
+	}))
+	t.Cleanup(func() {
+		close(release)
+		server.Close()
+	})
+
+	adcJSON := fmt.Sprintf(`{
+		"type": "authorized_user",
+		"client_id": "mock-client-id",
+		"client_secret": "mock-client-secret",
+		"refresh_token": "mock-refresh-token",
+		"token_uri": "%s"
+	}`, server.URL)
+	adcFile := filepath.Join(t.TempDir(), "application_default_credentials.json")
+	assert.NoError(t, os.WriteFile(adcFile, []byte(adcJSON), 0600))
+	t.Setenv("GOOGLE_APPLICATION_CREDENTIALS", adcFile)
+
+	gkeSupport := NewGKESupport()
+	const calls = 2
+	for i := 0; i < calls; i++ {
+		start := time.Now()
+		token, err := gkeSupport.GetAuthorizationKey()
+		elapsed := time.Since(start)
+
+		assert.ErrorIs(t, err, context.DeadlineExceeded)
+		if token != "" {
+			t.Fatalf("expected empty token on timeout, got token (value redacted for security, length: %d)", len(token))
+		}
+		assert.Less(t, elapsed, gkeCallTimeout+2*time.Second)
+	}
+	assert.Equal(t, int32(calls), atomic.LoadInt32(&total))
+
+	assert.Eventually(t, func() bool { return atomic.LoadInt32(&inFlight) == 0 },
+		tokenHTTPTimeout+2*time.Second, 50*time.Millisecond,
+		"token requests still open after the callers gave up")
 }
 
 func TestGKEGetClusterDescribe_Timeout(t *testing.T) {

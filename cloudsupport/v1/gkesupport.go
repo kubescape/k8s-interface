@@ -3,6 +3,7 @@ package v1
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"os"
 	"strings"
 	"time"
@@ -41,6 +42,15 @@ var (
 	KS_GKE_PROJECT_ENV_VAR = "KS_GKE_PROJECT"
 
 	defaultTokenSourceGroup singleflight.Group
+
+	// tokenHTTPTimeout bounds each OAuth2 token request (authorized-user
+	// refresh, service-account token exchange). The caller deadline only stops
+	// the caller waiting: the token source has to outlive a single call, so it
+	// cannot carry that deadline. Without a timeout here the request runs on
+	// http.DefaultClient, so a token endpoint that accepts the connection and
+	// never answers keeps it open forever, and every later scan adds another.
+	// 30s matches the default HTTP client of the Google auth library.
+	tokenHTTPTimeout = 30 * time.Second
 )
 
 const (
@@ -78,7 +88,12 @@ func (c *contextTokenSource) Token() (*oauth2.Token, error) {
 func getDefaultTokenSource(ctx context.Context, scopes ...string) (oauth2.TokenSource, error) {
 	key := strings.Join(scopes, ",")
 	resCh := defaultTokenSourceGroup.DoChan(key, func() (interface{}, error) {
-		ts, err := google.DefaultTokenSource(context.Background(), scopes...)
+		// Not the caller's ctx: canceling it would also cancel every later
+		// refresh of this token source. oauth2 picks its token HTTP client
+		// from this context instead.
+		tokenCtx := context.WithValue(context.Background(), oauth2.HTTPClient,
+			&http.Client{Timeout: tokenHTTPTimeout})
+		ts, err := google.DefaultTokenSource(tokenCtx, scopes...)
 		if err != nil {
 			return nil, err
 		}
