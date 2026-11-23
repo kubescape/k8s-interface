@@ -7,6 +7,7 @@ import (
 	"net/url"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
@@ -20,6 +21,8 @@ import (
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/ecr"
 	"github.com/aws/aws-sdk-go-v2/service/eks"
+	"github.com/kubescape/go-logger"
+	"github.com/kubescape/go-logger/helpers"
 	"github.com/kubescape/k8s-interface/k8sinterface"
 )
 
@@ -36,8 +39,23 @@ type IEKSSupport interface {
 type EKSSupport struct {
 }
 
+var (
+	// KS_EKS_INVENTORY_TIMEOUT_ENV_VAR sets an optional overall deadline for
+	// the IAM inventory (all ListPolicies pages plus one call per policy), as a
+	// Go duration such as "2m". Unset or empty means no overall deadline, so a
+	// large but healthy inventory is not cut off; each request is still bounded
+	// by eksCallTimeout. A value that does not parse or is not positive (for
+	// example "30" with no unit) is logged as a warning and ignored.
+	KS_EKS_INVENTORY_TIMEOUT_ENV_VAR = "KS_EKS_INVENTORY_TIMEOUT"
+)
+
 const (
 	awsauthconfigmap = "aws-auth"
+
+	// Bounds AWS SDK and IAM/ECR calls so an air-gapped or otherwise
+	// unreachable AWS control plane cannot stall the scan loop.
+	eksCallTimeout            = 5 * time.Second
+	eksRBACEnumerationTimeout = 30 * time.Second
 )
 
 type awsAuth struct {
@@ -81,7 +99,10 @@ func NewEKSSupport() *EKSSupport {
 }
 
 func (eksSupport *EKSSupport) GetClusterDescribe(cluster string, region string) (*eks.DescribeClusterOutput, error) {
-	awsConfig, err := config.LoadDefaultConfig(context.TODO())
+	ctx, cancel := context.WithTimeout(context.Background(), eksCallTimeout)
+	defer cancel()
+
+	awsConfig, err := config.LoadDefaultConfig(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("error: fail to load AWS SDK default %v", err)
 	}
@@ -91,7 +112,7 @@ func (eksSupport *EKSSupport) GetClusterDescribe(cluster string, region string) 
 		Name: aws.String(cluster),
 	}
 
-	result, err := svc.DescribeCluster(context.TODO(), input)
+	result, err := svc.DescribeCluster(ctx, input)
 	if err != nil {
 		return nil, err
 	}
@@ -113,7 +134,10 @@ func (eksSupport *EKSSupport) GetRegion(cluster string) (string, error) {
 		return region, nil
 	}
 
-	awsConfig, err := config.LoadDefaultConfig(context.TODO())
+	ctx, cancel := context.WithTimeout(context.Background(), eksCallTimeout)
+	defer cancel()
+
+	awsConfig, err := config.LoadDefaultConfig(ctx)
 	if err == nil && awsConfig.Region != "" {
 		return awsConfig.Region, nil
 	}
@@ -166,7 +190,10 @@ func (eksSupport *EKSSupport) GetContextName(cluster string) string {
 func (EKSSupport *EKSSupport) GetEKSCfgMap(kapi *k8sinterface.KubernetesApi, namespace string) (*v1.ConfigMap, error) {
 	var authData awsAuth
 
-	eksCfgMap, err := kapi.KubernetesClient.CoreV1().ConfigMaps(namespace).Get(context.TODO(), awsauthconfigmap, metav1.GetOptions{})
+	ctx, cancel := context.WithTimeout(context.Background(), eksCallTimeout)
+	defer cancel()
+
+	eksCfgMap, err := kapi.KubernetesClient.CoreV1().ConfigMaps(namespace).Get(ctx, awsauthconfigmap, metav1.GetOptions{})
 	if err != nil {
 		return nil, err
 	}
@@ -191,7 +218,10 @@ func (EKSSupport *EKSSupport) GetEKSCfgMap(kapi *k8sinterface.KubernetesApi, nam
 }
 
 func (eksSupport *EKSSupport) GetDescribeRepositories(region string) (*ecr.DescribeRepositoriesOutput, error) {
-	awsConfig, err := config.LoadDefaultConfig(context.TODO())
+	ctx, cancel := context.WithTimeout(context.Background(), eksRBACEnumerationTimeout)
+	defer cancel()
+
+	awsConfig, err := config.LoadDefaultConfig(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("error: fail to load AWS SDK default %v", err)
 	}
@@ -201,31 +231,71 @@ func (eksSupport *EKSSupport) GetDescribeRepositories(region string) (*ecr.Descr
 		MaxResults: aws.Int32(100),
 	}
 
-	result, err := svc.DescribeRepositories(context.TODO(), input)
+	result, err := svc.DescribeRepositories(ctx, input)
 	if err != nil {
 		return nil, err
 	}
 	return result, nil
 }
 
+// inventoryTimeout reads KS_EKS_INVENTORY_TIMEOUT_ENV_VAR. It returns 0 when
+// the variable is unset or empty, and an error when it is set to anything
+// other than a positive duration.
+func inventoryTimeout() (time.Duration, error) {
+	val := os.Getenv(KS_EKS_INVENTORY_TIMEOUT_ENV_VAR)
+	if val == "" {
+		return 0, nil
+	}
+	d, err := time.ParseDuration(val)
+	if err != nil {
+		return 0, err
+	}
+	if d <= 0 {
+		return 0, fmt.Errorf("inventory timeout must be positive, got %q", val)
+	}
+	return d, nil
+}
+
+func getInventoryContext() (context.Context, context.CancelFunc) {
+	d, err := inventoryTimeout()
+	if err != nil {
+		logger.L().Warning("ignoring invalid EKS inventory timeout, the IAM inventory runs without an overall deadline",
+			helpers.String("environment", KS_EKS_INVENTORY_TIMEOUT_ENV_VAR), helpers.Error(err))
+	}
+	if d == 0 {
+		return context.Background(), func() {}
+	}
+	return context.WithTimeout(context.Background(), d)
+}
+
 func (eksSupport *EKSSupport) GetListEntitiesForPolicies(region string) (*ListEntitiesForPolicies, error) {
-	awsConfig, err := config.LoadDefaultConfig(context.TODO())
+	parentCtx, parentCancel := getInventoryContext()
+	defer parentCancel()
+
+	loadCtx, loadCancel := context.WithTimeout(parentCtx, eksCallTimeout)
+	awsConfig, err := config.LoadDefaultConfig(loadCtx)
+	loadCancel()
 	if err != nil {
 		return nil, fmt.Errorf("error: fail to load AWS SDK default %v", err)
 	}
 	svc := iam.NewFromConfig(awsConfig)
 	input := &iam.ListPoliciesInput{}
 
-	result, err := listPoliciesWithPagination(svc, input)
+	result, err := listPoliciesWithPagination(parentCtx, svc, input)
 	if err != nil {
 		return nil, err
 	}
 	allEntitiesForPolicies := map[string]*iam.ListEntitiesForPolicyOutput{}
 	for _, policy := range result {
+		if policy.Arn == nil {
+			continue
+		}
 		inp := &iam.ListEntitiesForPolicyInput{
 			PolicyArn: policy.Arn,
 		}
-		entitiesForPolicy, err := svc.ListEntitiesForPolicy(context.TODO(), inp)
+		callCtx, callCancel := context.WithTimeout(parentCtx, eksCallTimeout)
+		entitiesForPolicy, err := svc.ListEntitiesForPolicy(callCtx, inp)
+		callCancel()
 		if err != nil {
 			return nil, err
 		}
@@ -235,7 +305,12 @@ func (eksSupport *EKSSupport) GetListEntitiesForPolicies(region string) (*ListEn
 }
 
 func (eksSupport *EKSSupport) GetPolicyVersion(region string) (*ListPolicyVersion, error) {
-	awsConfig, err := config.LoadDefaultConfig(context.TODO())
+	parentCtx, parentCancel := getInventoryContext()
+	defer parentCancel()
+
+	loadCtx, loadCancel := context.WithTimeout(parentCtx, eksCallTimeout)
+	awsConfig, err := config.LoadDefaultConfig(loadCtx)
+	loadCancel()
 	if err != nil {
 		return nil, fmt.Errorf("error: fail to load AWS SDK default %v", err)
 	}
@@ -243,20 +318,28 @@ func (eksSupport *EKSSupport) GetPolicyVersion(region string) (*ListPolicyVersio
 	svc := iam.NewFromConfig(awsConfig)
 
 	input := &iam.ListPoliciesInput{}
-	result, err := listPoliciesWithPagination(svc, input)
+	result, err := listPoliciesWithPagination(parentCtx, svc, input)
 	if err != nil {
 		return nil, fmt.Errorf("error: fail to list policies: %v", err)
 	}
 
 	policyVersionContents := map[string]*PolicyVersionDocument{}
 	for _, policy := range result {
+		if policy.DefaultVersionId == nil || policy.Arn == nil {
+			continue
+		}
 		policyVersionInput := &iam.GetPolicyVersionInput{
 			PolicyArn: policy.Arn,
 			VersionId: policy.DefaultVersionId,
 		}
-		policyVersionContent, err := svc.GetPolicyVersion(context.TODO(), policyVersionInput)
+		callCtx, callCancel := context.WithTimeout(parentCtx, eksCallTimeout)
+		policyVersionContent, err := svc.GetPolicyVersion(callCtx, policyVersionInput)
+		callCancel()
 		if err != nil {
 			return nil, fmt.Errorf("error: fail to get policy version: %v", err)
+		}
+		if policyVersionContent.PolicyVersion == nil || policyVersionContent.PolicyVersion.Document == nil {
+			continue
 		}
 		policyVersionDocument, err := url.QueryUnescape(*policyVersionContent.PolicyVersion.Document)
 		if err != nil {
@@ -270,12 +353,14 @@ func (eksSupport *EKSSupport) GetPolicyVersion(region string) (*ListPolicyVersio
 	return &ListPolicyVersion{PolicyVersion: policyVersionContents}, nil
 }
 
-func listPoliciesWithPagination(svc *iam.Client, input *iam.ListPoliciesInput) ([]types.Policy, error) {
+func listPoliciesWithPagination(parentCtx context.Context, svc *iam.Client, input *iam.ListPoliciesInput) ([]types.Policy, error) {
 	paginator := iam.NewListPoliciesPaginator(svc, input)
 
 	var policiesList []types.Policy
 	for paginator.HasMorePages() {
-		output, err := paginator.NextPage(context.TODO())
+		pageCtx, pageCancel := context.WithTimeout(parentCtx, eksCallTimeout)
+		output, err := paginator.NextPage(pageCtx)
+		pageCancel()
 		if err != nil {
 			return nil, fmt.Errorf("error: fail to list policies: %v", err)
 		}
