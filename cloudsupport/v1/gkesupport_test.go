@@ -280,6 +280,78 @@ func TestGKEGetAuthorizationKey_StalledTokenEndpointDrains(t *testing.T) {
 		"token requests still open after the callers gave up")
 }
 
+// The clients get a token source rather than loading ADC themselves, so the
+// quota project from the ADC file has to be passed to them explicitly.
+// GOOGLE_CLOUD_QUOTA_PROJECT keeps its precedence over the file.
+func TestGKEGetListEntitiesForPolicies_QuotaProject(t *testing.T) {
+	tests := []struct {
+		name      string
+		fileQuota string
+		envQuota  string
+		want      string
+	}{
+		{name: "from the ADC file", fileQuota: "quota-from-adc", want: "quota-from-adc"},
+		{name: "env wins over the file", fileQuota: "quota-from-adc", envQuota: "quota-from-env", want: "quota-from-env"},
+		{name: "env only", envQuota: "quota-from-env", want: "quota-from-env"},
+		{name: "none", want: ""},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			isolateADC(t)
+
+			var gotQuota, gotAuth string
+			var policyCalls int32
+			server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				w.Header().Set("Content-Type", "application/json")
+				if r.URL.Path == "/token" {
+					_ = json.NewEncoder(w).Encode(map[string]interface{}{
+						"access_token": "ya29.mock-token",
+						"token_type":   "Bearer",
+						"expires_in":   3600,
+					})
+					return
+				}
+				if strings.HasSuffix(r.URL.Path, ":getIamPolicy") {
+					atomic.AddInt32(&policyCalls, 1)
+					gotQuota = r.Header.Get("X-Goog-User-Project")
+					gotAuth = r.Header.Get("Authorization")
+					_, _ = w.Write([]byte(`{"version":3,"bindings":[]}`))
+					return
+				}
+				http.NotFound(w, r)
+			}))
+			defer server.Close()
+
+			adc := map[string]string{
+				"type":          "authorized_user",
+				"client_id":     "mock-client-id",
+				"client_secret": "mock-client-secret",
+				"refresh_token": "mock-refresh-token",
+				"token_uri":     server.URL + "/token",
+			}
+			if tt.fileQuota != "" {
+				adc["quota_project_id"] = tt.fileQuota
+			}
+			adcJSON, err := json.Marshal(adc)
+			assert.NoError(t, err)
+			adcFile := filepath.Join(t.TempDir(), "application_default_credentials.json")
+			assert.NoError(t, os.WriteFile(adcFile, adcJSON, 0600))
+			t.Setenv("GOOGLE_APPLICATION_CREDENTIALS", adcFile)
+			t.Setenv(quotaProjectEnvVar, tt.envQuota)
+
+			gkeSupport := &GKESupport{crmEndpoint: server.URL + "/"}
+			policy, err := gkeSupport.GetListEntitiesForPolicies("my-project")
+			if !assert.NoError(t, err) {
+				return
+			}
+			assert.NotNil(t, policy)
+			assert.Equal(t, int32(1), atomic.LoadInt32(&policyCalls))
+			assert.Equal(t, "Bearer ya29.mock-token", gotAuth, "the request must use the ADC token")
+			assert.Equal(t, tt.want, gotQuota)
+		})
+	}
+}
+
 func TestGKEGetClusterDescribe_Timeout(t *testing.T) {
 	listener, err := net.Listen("tcp", "127.0.0.1:0")
 	assert.NoError(t, err)
