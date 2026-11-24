@@ -2,7 +2,9 @@ package v1
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"net/http"
 	"os"
 	"strings"
 	"time"
@@ -11,7 +13,9 @@ import (
 	"cloud.google.com/go/artifactregistry/apiv1/artifactregistrypb"
 	container "cloud.google.com/go/container/apiv1"
 	"github.com/kubescape/k8s-interface/k8sinterface"
+	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
+	"golang.org/x/sync/singleflight"
 	"google.golang.org/api/cloudresourcemanager/v1"
 	"google.golang.org/api/iam/v1"
 	"google.golang.org/api/iterator"
@@ -30,16 +34,138 @@ type IGKESupport interface {
 	GetIAMMappings(project string) (map[string]string, map[string]string, error)
 }
 type GKESupport struct {
+	tokenSource       oauth2.TokenSource
+	iamEndpoint       string
+	containerEndpoint string
+	crmEndpoint       string
 }
 
 var (
 	KS_GKE_PROJECT_ENV_VAR = "KS_GKE_PROJECT"
+
+	defaultTokenSourceGroup singleflight.Group
+
+	// tokenHTTPTimeout bounds each OAuth2 token request (authorized-user
+	// refresh, service-account token exchange). The caller deadline only stops
+	// the caller waiting: the token source has to outlive a single call, so it
+	// cannot carry that deadline. Without a timeout here the request runs on
+	// http.DefaultClient, so a token endpoint that accepts the connection and
+	// never answers keeps it open forever, and every later scan adds another.
+	// 30s matches the default HTTP client of the Google auth library.
+	tokenHTTPTimeout = 30 * time.Second
 )
 
 const (
+	// Bounds GCP credential and SDK calls so an air-gapped or otherwise
+	// unreachable GCP control plane cannot stall the scan loop.
+	gkeCallTimeout = 5 * time.Second
+
 	// gkeRBACEnumerationTimeout is the budget for paginated enumeration calls which take longer
 	gkeRBACEnumerationTimeout = 30 * time.Second
+
+	// quotaProjectEnvVar is read by the Google client libraries themselves,
+	// even when they are given a token source.
+	quotaProjectEnvVar = "GOOGLE_CLOUD_QUOTA_PROJECT"
 )
+
+type contextTokenSource struct {
+	ctx context.Context
+	ts  oauth2.TokenSource
+}
+
+func (c *contextTokenSource) Token() (*oauth2.Token, error) {
+	type tokenRes struct {
+		tok *oauth2.Token
+		err error
+	}
+	ch := make(chan tokenRes, 1)
+	go func() {
+		tok, err := c.ts.Token()
+		ch <- tokenRes{tok: tok, err: err}
+	}()
+	select {
+	case <-c.ctx.Done():
+		return nil, c.ctx.Err()
+	case res := <-ch:
+		return res.tok, res.err
+	}
+}
+
+type defaultCredentials struct {
+	ts           oauth2.TokenSource
+	quotaProject string
+}
+
+// adcQuotaProject returns the quota_project_id of a credentials file, as set
+// by `gcloud auth application-default set-quota-project`.
+func adcQuotaProject(credsJSON []byte) string {
+	if len(credsJSON) == 0 {
+		return ""
+	}
+	var f struct {
+		QuotaProjectID string `json:"quota_project_id"`
+	}
+	if err := json.Unmarshal(credsJSON, &f); err != nil {
+		return ""
+	}
+	return f.QuotaProjectID
+}
+
+// getDefaultTokenSource returns the ADC token source, bounded by ctx, and
+// the quota project named in the ADC file, if any.
+func getDefaultTokenSource(ctx context.Context, scopes ...string) (oauth2.TokenSource, string, error) {
+	key := strings.Join(scopes, ",")
+	resCh := defaultTokenSourceGroup.DoChan(key, func() (interface{}, error) {
+		// Not the caller's ctx: canceling it would also cancel every later
+		// refresh of this token source. oauth2 picks its token HTTP client
+		// from this context instead.
+		tokenCtx := context.WithValue(context.Background(), oauth2.HTTPClient,
+			&http.Client{Timeout: tokenHTTPTimeout})
+		creds, err := google.FindDefaultCredentials(tokenCtx, scopes...)
+		if err != nil {
+			return nil, err
+		}
+		return &defaultCredentials{ts: creds.TokenSource, quotaProject: adcQuotaProject(creds.JSON)}, nil
+	})
+
+	select {
+	case <-ctx.Done():
+		return nil, "", ctx.Err()
+	case res := <-resCh:
+		if res.Err != nil {
+			return nil, "", res.Err
+		}
+		creds, ok := res.Val.(*defaultCredentials)
+		if !ok {
+			return nil, "", fmt.Errorf("unexpected credentials type")
+		}
+		return &contextTokenSource{ctx: ctx, ts: creds.ts}, creds.quotaProject, nil
+	}
+}
+
+func (gkeSupport *GKESupport) getTokenSource(ctx context.Context, scopes ...string) (oauth2.TokenSource, string, error) {
+	if gkeSupport.tokenSource != nil {
+		return &contextTokenSource{ctx: ctx, ts: gkeSupport.tokenSource}, "", nil
+	}
+	return getDefaultTokenSource(ctx, scopes...)
+}
+
+// authOptions returns the client options that authenticate a Google Cloud
+// client. Given only a token source, the client libraries no longer read the
+// ADC file, so they would drop its quota_project_id and stop sending
+// x-goog-user-project. Pass it back, unless GOOGLE_CLOUD_QUOTA_PROJECT is set:
+// the libraries still read that and it wins over the file, as before.
+func (gkeSupport *GKESupport) authOptions(ctx context.Context, scopes ...string) ([]option.ClientOption, error) {
+	tokenSource, quotaProject, err := gkeSupport.getTokenSource(ctx, scopes...)
+	if err != nil {
+		return nil, err
+	}
+	opts := []option.ClientOption{option.WithTokenSource(tokenSource)}
+	if quotaProject != "" && os.Getenv(quotaProjectEnvVar) == "" {
+		opts = append(opts, option.WithQuotaProject(quotaProject))
+	}
+	return opts, nil
+}
 
 func NewGKESupport() *GKESupport {
 	return &GKESupport{}
@@ -64,7 +190,12 @@ func (gkeSupport *GKESupport) GetDescribeRepositories(project string, region str
 	ctx, cancel := context.WithTimeout(context.Background(), gkeRBACEnumerationTimeout)
 	defer cancel()
 
-	client, err := artifactregistry.NewClient(ctx)
+	opts, err := gkeSupport.authOptions(ctx, artifactregistry.DefaultAuthScopes()...)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get credentials: %w", err)
+	}
+
+	client, err := artifactregistry.NewClient(ctx, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -105,7 +236,15 @@ func (gkeSupport *GKESupport) GetListEntitiesForPolicies(project string) (*cloud
 	ctx, cancel := context.WithTimeout(context.Background(), gkeRBACEnumerationTimeout)
 	defer cancel()
 
-	crmService, err := cloudresourcemanager.NewService(ctx)
+	opts, err := gkeSupport.authOptions(ctx, cloudresourcemanager.CloudPlatformScope)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get credentials: %w", err)
+	}
+	if gkeSupport.crmEndpoint != "" {
+		opts = append(opts, option.WithEndpoint(gkeSupport.crmEndpoint))
+	}
+
+	crmService, err := cloudresourcemanager.NewService(ctx, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -139,8 +278,21 @@ func (gkeSupport *GKESupport) GetProject(cluster string) (string, error) {
 
 // Get descriptive info about cluster running in GKE.
 func (gkeSupport *GKESupport) GetClusterDescribe(cluster string, region string, project string) (*containerpb.Cluster, error) {
-	ctx := context.Background()
-	c, err := container.NewClusterManagerClient(ctx)
+	ctx, cancel := context.WithTimeout(context.Background(), gkeCallTimeout)
+	defer cancel()
+
+	var opts []option.ClientOption
+	if gkeSupport.containerEndpoint != "" {
+		opts = append(opts, option.WithEndpoint(gkeSupport.containerEndpoint))
+	}
+
+	authOpts, err := gkeSupport.authOptions(ctx, container.DefaultAuthScopes()...)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get credentials: %w", err)
+	}
+	opts = append(opts, authOpts...)
+
+	c, err := container.NewClusterManagerClient(ctx, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -164,13 +316,15 @@ func (gkeSupport *GKESupport) GetName(clusterDescribe *containerpb.Cluster) stri
 
 // GetAuthorizationKey retrieves the GCP access token
 func (gkeSupport *GKESupport) GetAuthorizationKey() (string, error) {
-	ctx := context.Background()
+	ctx, cancel := context.WithTimeout(context.Background(), gkeCallTimeout)
+	defer cancel()
 
-	token, err := google.DefaultTokenSource(ctx, nil...)
+	tokenSource, _, err := gkeSupport.getTokenSource(ctx)
 	if err != nil {
 		return "", fmt.Errorf("failed to find creds: %w", err)
 	}
-	t, err := token.Token()
+
+	t, err := tokenSource.Token()
 	if err != nil {
 		return "", fmt.Errorf("failed to parse token: %w", err)
 	}
@@ -198,13 +352,21 @@ func (gkeSupport *GKESupport) GetContextName(cluster string) string {
 
 // GetIAMMappings returns iam-roles and service accounts
 func (gkeSupport *GKESupport) GetIAMMappings(project string) (map[string]string, map[string]string, error) {
-	ctx := context.Background()
-	client, err := google.DefaultClient(ctx, iam.CloudPlatformScope)
-	if err != nil {
-		return nil, nil, fmt.Errorf("failed to create Google Cloud client: %w", err)
+	ctx, cancel := context.WithTimeout(context.Background(), gkeRBACEnumerationTimeout)
+	defer cancel()
+
+	var opts []option.ClientOption
+	if gkeSupport.iamEndpoint != "" {
+		opts = append(opts, option.WithEndpoint(gkeSupport.iamEndpoint), option.WithoutAuthentication())
+	} else {
+		authOpts, err := gkeSupport.authOptions(ctx, iam.CloudPlatformScope)
+		if err != nil {
+			return nil, nil, fmt.Errorf("failed to create Google Cloud client: %w", err)
+		}
+		opts = append(opts, authOpts...)
 	}
 
-	iamService, err := iam.NewService(ctx, option.WithHTTPClient(client))
+	iamService, err := iam.NewService(ctx, opts...)
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to create IAM service client: %w", err)
 	}
@@ -212,7 +374,7 @@ func (gkeSupport *GKESupport) GetIAMMappings(project string) (map[string]string,
 	roleMappings := make(map[string]string)
 	saMappings := make(map[string]string)
 
-	roleIterator, err := iamService.Projects.Roles.List("projects/" + project).Do()
+	roleIterator, err := iamService.Projects.Roles.List("projects/" + project).Context(ctx).Do()
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to retrieve roles: %w", err)
 	}
@@ -225,18 +387,17 @@ func (gkeSupport *GKESupport) GetIAMMappings(project string) (map[string]string,
 			break
 		}
 
-		roleIterator, err = iamService.Projects.Roles.List("projects/" + project).PageToken(roleIterator.NextPageToken).Do()
+		roleIterator, err = iamService.Projects.Roles.List("projects/" + project).PageToken(roleIterator.NextPageToken).Context(ctx).Do()
 		if err != nil {
 			return nil, nil, fmt.Errorf("failed to retrieve roles: %w", err)
 		}
 	}
 
-	saIterator, err := iamService.Projects.ServiceAccounts.List("projects/" + project).Do()
+	saIterator, err := iamService.Projects.ServiceAccounts.List("projects/" + project).Context(ctx).Do()
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to retrieve service accounts: %w", err)
 	}
 	for {
-
 		for _, sa := range saIterator.Accounts {
 			saMappings[sa.Name] = sa.Name
 		}
@@ -245,7 +406,7 @@ func (gkeSupport *GKESupport) GetIAMMappings(project string) (map[string]string,
 			break
 		}
 
-		saIterator, err = iamService.Projects.ServiceAccounts.List("projects/" + project).PageToken(saIterator.NextPageToken).Do()
+		saIterator, err = iamService.Projects.ServiceAccounts.List("projects/" + project).PageToken(saIterator.NextPageToken).Context(ctx).Do()
 		if err != nil {
 			return nil, nil, fmt.Errorf("failed to retrieve service accounts: %w", err)
 		}
